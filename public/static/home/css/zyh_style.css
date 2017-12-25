@@ -1,0 +1,793 @@
+/*icon 初始化*/
+.icon {
+    width: 1em; height: 1em;
+    vertical-align: -0.15em;
+    fill: currentColor;
+    overflow: hidden;
+}
+/*--end--*/
+.color-ffae3b{
+    color: #ffae3b;
+}
+/*隐藏滚动条*/
+html {
+    -ms-overflow-style:none;
+    overflow:-moz-scrollbars-none;
+}
+::-webkit-scrollbar{width:0px}
+/*--end--*/
+body{
+    font-size: 16px;
+    margin: 0;
+}
+/*----公用样式----*/
+/*选项*/
+.my-select{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 3rem;
+    padding: 0 1rem;
+}
+.my-select-text{
+    width: 100vw;
+    display: flex;
+}
+.my-select-icon{
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.select-style-1{
+    background-color: #f5f5f5;
+    margin-bottom: 1px;
+}
+.span-left{
+    padding-left: 1rem;
+    justify-content: flex-start;
+}
+.span-right{
+    padding-right: 1rem;
+    justify-content: flex-end;
+}
+
+
+
+/*app头尾固定中滚动骨架*/
+.my-app{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+}
+.app-head{
+    background-color: rgba(255, 255, 255, 0);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 3.5rem;
+    box-shadow: 0px 0px 5px 0px #dadada;
+}
+.app-content{
+    flex: 1;
+    overflow:auto;
+}
+.app-footer{
+    display: flex;
+    flex-direction: row;
+    height: 4rem;
+}
+/*--end--*/
+
+/*app-head 头部组件*/
+.app-head .head-icon{
+    position: absolute;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+.left-1{
+    left: 1rem;
+}
+.right-1{
+    right: 1rem;
+}
+/*head 单文字/多文字通用*/
+.toggle-label{
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+.toggle-label span{
+    padding: 0 1.2rem;
+}
+.toggle-label a{
+    text-decoration: none;
+    color: inherit;
+}
+.toggle-check{
+    color: #e97220;
+}
+.toggle-check::after{
+    content: '';
+    display: block;
+    position: absolute;
+    margin-top: 0.9rem;
+    width: 2.4rem;
+    height: 2px;
+    background-color: #e97220;
+}
+/*--end--*/
+
+
+/*productPage style*/
+/*轮播图预设宽度*/
+.hot-img img{
+    width: 100vw;
+}
+.shop-info{
+    background-color: white;
+    padding: 0.8rem 1rem;
+}
+.product-info{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-top: 0.8rem;
+    align-items: flex-end;
+}
+.myinput{
+    border: 1px solid #dadada;
+    width: 7rem;
+    height: 1.5rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+}
+.myinput-span{
+    width: 3rem;
+    text-align: center;
+}
+.myinput-sign{
+    width: 1px;
+    height: 80%;
+    background-color: #dadada;
+}
+.myinput-value{
+    width: 5rem;
+    text-align: center;
+}
+.shop-select{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 1rem;
+}
+shop-pic{
+    color: red;
+}
+span[name=shopPic]{
+    font-size: 1.8rem;
+}
+shop-sale{
+    color: #999999;
+}
+.app-footer button{
+    border: 0;
+    font-size: 1.4rem;
+    color: white;
+    flex: 1;
+    border: 0;
+    margin: 0;
+    width: 100%;
+}
+.add-Button{
+    background: linear-gradient(to right, #f6b72f , #f6a02f);
+}
+.just-Button{
+    background: linear-gradient(to right, #f5912f , #e0620a);
+}
+
+.split-line{
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    background-color: #f6f6f6;
+}
+.shopInfo-imgs img{
+    width: 100vw;
+}
+shop-details{
+    display: block;
+    background-color: white;
+    font-size: 0.7rem;
+    color:#666666;
+}
+.shopInfo-title{
+    text-align: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e6e6e6;
+
+}
+.shopInfo-dl{
+    margin-top: 0.5rem;
+}
+.shopInfo-dl dl{
+    display: flex;
+    flex-direction: row;
+    background-color: #f6f6f6;
+    height: 3rem;
+    margin: 0 1rem;
+    line-height: 3rem;
+}
+.shopInfo-dl dt{
+    width: 5rem;
+    text-align: center;
+    border-right: 1px solid white;
+}
+.shopInfo-dl dd{
+    margin-left: 1rem;
+}
+.shopInfo-dl .dl-Highlight{
+    background-color: #e6e6e6;
+}
+.shopInfo-span{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.shopInfo-span span{
+    padding: 0.5rem 0;
+}
+.shopInfo-span span:nth-child(1){
+    color: black;
+    font-size: 1.2rem;
+}
+
+/*覆盖swiper style*/
+.swiper-pagination-bullet {
+    background: #f9f9f9;
+    opacity: .9;
+}
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    background: #fd740f;
+}
+
+/*myAccount style*/
+body{
+    margin: 0;
+}
+.myAccount{
+    background-color: #f1f2f6;
+    width: 100vw;
+}
+.myIcon{
+    width: 80px;
+    height: 80px;
+    border-radius: 80px;
+    border: 5px solid #f56645;
+    position: relative;
+}
+.myIcon img{
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+}
+
+/*会员标识*/
+/*金色*/
+.myIcon-color-gold{
+    background-color: #ffc016;
+}
+/*银色*/
+.myIcon-color-ag{
+    background-color: #c2c5d9;
+}
+/*铜色*/
+.myIcon-color-cu{
+    background-color: #f7ad90;
+}
+/*角标*/
+.myIcon::after {
+    content: attr(data-text);
+    display: block;
+    position: absolute;
+    background-color: inherit;
+    height: 20px;
+    line-height: 20px;
+    color: white;
+    font-size: 0.8rem;
+    bottom: 5px;
+    text-align: center;
+    left: 50px;
+    z-index: 3;
+    border-radius: 30px;
+    padding: 0 10px;
+    white-space: nowrap;
+    font-weight: bold;
+}
+.myButton-bg{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    margin-top: -25px;
+    margin-bottom: 12.8px;
+    margin-bottom: 0.8rem;
+}
+.myButton{
+    margin: 0 auto;
+    width: 150px;
+    height: 50px;
+    border-radius: 50px;
+    text-align: center;
+    border: 0;
+    color: #c47117;
+    font-size: 17.6px;
+    font-size: 1.1rem;
+    position: relative;
+    background-color: #ffd247;
+}
+.myButton:before {
+    content: "";
+    width: inherit;
+    height: inherit;
+    display: block;
+    top: -7px;
+    z-index: 1;
+    left: -7px;
+    position: absolute;
+    border-radius: inherit;
+    border: 7px solid #f1f2f6;
+}
+.myButton:after{
+    content: "";
+    display: block;
+    width: inherit;
+    height: inherit;
+    z-index: 2;
+    top:0;
+    left:0;
+    position: absolute;
+    border-radius: inherit;
+    box-shadow: 0 4px 0 #f09134;
+}
+.liner-bg{
+    background: linear-gradient(to bottom, #f97749 , #f96249);
+}
+.my-bg{
+    color: white;
+    background-color: #f97749;
+}
+
+.myOther{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    color: #686868;
+    padding: 0 10px 10px 10px;
+    background-color: #f1f2f6;
+}
+.other-boxs{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+}
+.other-boxs>div{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    border-radius: 8%;
+    background-color: white;
+    margin: 5px;
+    min-width: calc(50% - 10px);
+}
+.myOther div img{
+    width: 100px;
+    height: 100px;
+    padding: 1rem;
+    border-radius: 8%;
+}
+.myOther div span{
+    display: block;
+    margin-top: -1rem;
+    padding: 0.5rem;
+}
+myInfo{
+    padding-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+}
+myInfo{
+    padding-top: 12.8px;
+    padding-top: 0.8rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    color: white;
+}
+.myMoneyInfo{
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+.myMoneyInfo{
+    width: 100vw;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -ms-flex-pack: distribute;
+    justify-content: space-around;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.myMoneyInfo div{
+    display: flex;
+    flex-direction: column;
+    padding: 0 1rem;
+    align-items: center;
+    width: 50vw;
+
+}
+span[name=myMoney],span[name=myOucher]{
+    font-size: 2rem;
+}
+.myMoneyInfo-line{
+    width: 2px;
+    height: 50px;
+    background-color: #fba692;
+    display: block;
+}
+
+
+/*mention style*/
+.mention-footer{
+    background-color: #e97220;
+}
+.mention-moneyBoxs{
+    display: flex;
+    align-items: center;
+    font-size: 2.5rem;
+    height: 9rem;
+    font-weight: 900;
+    padding-left: 0.5rem;
+}
+.mention-moneyInput{
+    height: 2.5rem;
+    line-height: 2.5rem;
+    font-size: 1.25rem;
+    text-indent: 1rem;
+    border: 0;
+}
+.mention-line{
+    width: 2px;
+    height: 2rem;
+    margin-left: 1rem;
+    background-color: #8b8b8b;
+}
+.padding-border{
+    border-top: 8px solid #f5f5f5;
+}
+/*promotionLevel style*/
+.level-diy-div{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 6rem;
+    margin: 0 1rem;
+    border-bottom: 1px solid #b3b3b3;
+}
+.level-select{
+    -webkit-appearance:none;
+    width: 50%;
+    height: 2rem;
+    text-indent: 0.5rem;
+    border-radius: 5px;
+}
+.level-space{
+    padding: 0 0.8rem;
+}
+.color-red{
+    color: red;
+}
+
+/*address style*/
+.address-select{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 48px;
+    height: 3rem;
+    padding: 0 16px;
+    padding: 0 1rem;
+}
+.color-666666{
+    color: #666666;
+}
+.color-balck{
+    color: black;
+}
+.color-666{
+    background-color: #666666;
+}
+.padding-ea-top{
+    border-top: 1px solid #eaeaea;
+}
+.padding-ea-bottom{
+    border-bottom: 1px solid #eaeaea;
+}
+.padding-left-1{
+    padding: 0 1rem;
+}
+
+/*addNewAddress style*/
+/*重置address-select*/
+.margin-padding{
+    padding: 0;
+    margin: 0 1rem;
+}
+.icon-3rem{
+    width: 3rem;
+    height: 3rem;
+}
+.icon-2rem{
+    width: 2rem;
+    height: 2rem;
+}
+.color-999{
+    color: #999999;
+}
+.textDiv{
+    max-width: 100%;
+    padding: 1rem;
+}
+.addNewAddress-textarea{
+    width: 100%;
+    height: 6rem;
+    line-height: 1.5rem;
+    border: 0;
+    text-indent: 20px;
+    outline: none;
+    font-size: 14px;
+    padding: 0;
+}
+.addNewAddress-textarea::-webkit-input-placeholder{
+    text-indent: 20px;
+}
+/*设置placeholder的颜色跟随父级*/
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+    color: inherit;
+}
+input:-moz-placeholder, textarea:-moz-placeholder {
+    color: inherit;
+}
+input::-moz-placeholder, textarea::-moz-placeholder {
+    color: inherit;
+}
+input:-ms-input-placeholder, textarea:-ms-input-placeholder {
+    color: inherit;
+}
+
+/*修正a链接错位*/
+/*为svg外套a和div在div上添加以下class,删除left-1*/
+.head-link-icon{
+    width: 1.2rem;
+    height: 1.2rem;
+    position: absolute;
+    /*为了更容易点击*/
+    padding: 1rem;
+}
+.head-link-icon a{
+    text-decoration: none;
+    color: inherit;
+}
+
+/**/
+.padding-top-bottom{
+    padding: 1rem 0;
+}
+
+.color-ffae3b{
+    color: #ffae3b;
+}
+.app-content.iphone4-add{
+    display: none;
+}
+/**
+ * iPhone 4/4s landscape & portrait
+ */
+@media only screen and (max-device-width: 320px)
+and (max-device-width: 480px)
+{
+    .app-content{
+        min-height: 380px;
+        padding-bottom: 50px;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    .app-footer{
+        height: 60px;
+        position: fixed;
+        bottom: 0;
+        background-color: red;
+        width: 100%;
+    }
+    .app-footer button{
+        height: 100%;
+    }
+    .toggle-label{
+        text-align: center;
+        height: 100%;
+        line-height: 3.5rem;
+    }
+    .address-select span{
+        /*float: left;*/
+        line-height: 3rem;
+    }
+    .address-select input{
+        float: right;
+        height: 2rem;
+        margin-top: 0.1rem;
+        line-height: 3rem;
+    }
+    .address-select:after{
+        content: '';
+        clear: both;
+    }
+    #demo2{
+        margin-top: 0.5rem;
+    }
+    div[name='zyh-address'] i{
+        display: block;
+        width: 50%;
+        text-align: right;
+    }
+    .app-footer button.b-50{
+        float: left;
+        width: 50vw;
+    }
+    shop-sale {
+
+        float: right;
+        line-height: 3rem;
+    }
+    .myinput{
+        float: right;
+        border: 1px solid #dadada;
+        width: 7rem;
+        height: 1.5rem;
+        line-height: 1.5rem;
+    }
+    .myinput-span {
+        float: left;
+        display: block;
+        width: 1.9rem;
+        text-align: center;
+    }
+    .myinput-sign {
+        float: left;
+        display: block;
+        margin-top: 0.15rem;
+        width: 1px;
+        height: 80%;
+        background-color: #dadada;
+    }
+    .myinput-value {
+        display: block;
+        width: 3rem;
+        text-align: center;
+        float: left;
+    }
+    .myButton-bg{
+        margin-left: 25%;
+    }
+    .myMoneyInfo div{
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        padding: 0 16px;
+        padding: 0 1rem;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        width: 40vw;
+        height: 50px;
+    }
+    .myMoneyInfo div span{
+        display: block;
+    }
+    .address-select.padding-ea-top>div{
+        width: 50%;
+        text-align: right;
+    }
+    .address-select div[name='ad-select']{
+        text-align: left;
+    }
+    .address-select span{
+        width: 50%;
+        text-align: right;
+    }
+    .address-select span:nth-child(1){
+        text-align: left;
+    }
+
+   .in-laber{
+        display: block;
+        width: calc(100% - 2rem);
+        height: 48px;
+        line-height: 48px;
+    }
+    .in-left{
+        display: block;
+        float: left;
+    }
+    .in-right{
+        display: block;
+        float: right;
+        text-align: right;
+        margin-top: 0.5rem;
+        height: 2rem;
+        width: auto;
+        border: 0;
+        outline: none;
+        font-size: 16px;
+        color: black;
+    }
+    .app-content.iphone4-add{
+        display: block;
+    }
+    .app-content.ipone4-hide{
+        display: none;
+    }
+}

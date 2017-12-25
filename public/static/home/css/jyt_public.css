@@ -1,0 +1,177 @@
+/*
+* @Author: Administrator
+* @Date:   2017-07-26 14:07:45
+* @Last Modified by:   Administrator
+* @Last Modified time: 2017-07-26 18:11:27
+*/
+.clear{
+	clear: both;
+}
+.jyt_box{
+	width: 100vw;
+	min-height: 100vh;
+	background: url( "../images/jyt_loginbg.jpg") no-repeat top left;
+	background-size: cover;
+}
+.jyt_header{
+	width: 100%;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    font-size: 18px;
+    position: relative;
+    color: #fff;
+}
+.header_left{
+    position: absolute;
+    left: 3%;
+    font-size: 20px;
+    color: #fff;
+}
+.header_right {
+    position: absolute;
+    right: 3%;
+    font-size: 16px;
+    color: #fff;
+}
+.jyt_logo{
+	margin: 0 auto;
+	width: 43%;
+	margin-top: 40px;
+}
+.jyt_logo img{
+	display: block;
+	width: 100%;
+}
+.jyt_loginul{
+	width: 80%;
+	margin: 0 auto;
+	margin-top: 70px;
+}
+.jyt_loginul li{
+	overflow: hidden;
+	border: 1px solid #f5cad2;
+	height: 50px;
+	line-height: 50px;
+	padding: 0 3%;
+	border-radius: 40px;
+	margin-bottom: 15px;
+}
+.jyt_loginul li .iconfont{
+	float: left;
+	color: #fff;
+}
+.jyt_loginul li input{
+	float: left;
+	color: #f5cad2;
+	font-size: 16px;
+	padding: 17px 10px;
+	width: 80%;
+}
+.jyt_login{
+	border: 0;
+	background: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+    background: #ffffff;
+    box-sizing: border-box;
+    color: #e97220;
+    width: 78%;
+	margin: 40px auto;
+	height: 40px;
+	line-height: 40px;
+	font-size: 16px;
+	display: block;
+	border-radius: 40px;
+}
+.zlb-pwd-opt{
+    width: 78%;
+    margin: 0 auto;
+    display: block;
+    font-size: 15px;
+    color: #ffffff;
+    margin-top: 40px;
+}
+.zlb-icon{
+    color: #fff;
+}
+.jyt_left1{
+	float: left;
+}
+.jyt_left1 i{
+	padding-right: 10px;
+}
+.jyt_right1{
+	float: right;
+}
+/*注册*/
+.jyt_regbox{
+	background: url(../images/jyt_regbg.jpg) no-repeat top left;
+	background-size: cover;
+
+}
+.jyt_regnul{
+	width: 80%;
+	margin: 0 auto;
+	margin-top: 70px;
+}
+.jyt_regnul li{
+	overflow: hidden;
+	border: 1px solid #e97220;
+	height: 50px;
+	line-height: 50px;
+	padding: 0 3%;
+	border-radius: 40px;
+	margin-bottom: 15px;
+	box-sizing: border-box;
+}
+.jyt_regnul li .iconfont{
+	float: left;
+	color: #ed8e4c;
+}
+.jyt_regnul li input{
+	float: left;
+	color: #f5cad2;
+	font-size: 16px;
+	padding: 17px 10px;
+	width: 80%;
+}
+.jyt_regbtn{
+	border: 0;
+	background: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+    background: #e97220;
+    box-sizing: border-box;
+    color: #fff;
+    width: 78%;
+	margin: 40px auto;
+	height: 40px;
+	line-height: 40px;
+	font-size: 16px;
+	display: block;
+	border-radius: 40px;
+}
+.jyt_small{
+	width: 60%;
+	float: left;
+}
+.jyt_yzm{
+	border: 0;
+	background: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	float: right;
+	width: 38%;
+	height: 50px;
+	line-height: 50px;
+	font-size: 14px;
+	color: #ae6533;
+	background: #f6e0d0;
+	border: 1px solid #e97220;
+	border-radius: 40px;
+	box-sizing: border-box;
+}

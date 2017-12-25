@@ -1,0 +1,78 @@
+.zlb-input-box{
+    width: calc(100% - 0.44rem);
+    height: 0.40rem;
+    position: absolute;
+    left: 0.22rem;
+    box-sizing: border-box;
+    border: 1px solid #fff;
+    border-radius: 0.20rem;
+    font-size: 0.12rem;
+    vertical-align: middle;
+    padding-left: 0.44rem;
+}
+
+.zlb-login-mobile{
+    bottom: 3rem;
+}
+
+.zlb-input-pwd{
+    bottom: 2.45rem;
+}
+
+.input-text{
+    width: calc(100% - 0.44rem);
+    height: 0.40rem;
+    line-height: 0.40rem;
+    font-size: 0.12rem;
+    color: #ffffff;
+}
+
+.zlb-login-btn{
+    background-color: #ffffff;
+    box-sizing: border-box;
+    bottom: 1.8rem;
+    color: #e97220;
+    text-align: center;
+    line-height: 0.40rem;
+    font-size: 0.15rem;
+    padding-left: 0;
+}
+
+.zlb-pwd-opt{
+    width: calc(100% - 0.44rem);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: 0.12rem;
+    position: absolute;
+    left: 0.22rem;
+    color: #ffffff;
+    bottom: 1.28rem;
+}
+
+.zlb-icon{
+    color: #fff;
+    position: absolute;
+    top: 0.13rem;
+    left: 0.22rem;
+}
+
+.zlb-rem-pwd{
+    margin-right: 0.05rem;
+}
+
+.zlb-clear-fix:after{
+    display: table;
+    content: '';
+    width: 0;
+    clear: both;
+}
+
+.zlb-pull-left{
+    float: left;
+}
+
+.zlb-pull-right{
+    float: right;
+}
