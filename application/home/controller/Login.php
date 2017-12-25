@@ -6,7 +6,7 @@ use app\backsystem\model\UserModel;
 use Service\MsgCode;
 use think\Controller;
 use think\Db;
-use think\image\Exception;
+use think\Exception;
 use think\Loader;
 use think\Request;
 use think\Validate;
@@ -85,6 +85,8 @@ class Login extends Controller
             $addr['area'] = $input['area'];
             $addr['created_at'] = date('YmdHis');
             AddressModel::create($addr);
+            //保存用户关系
+            $this->saveUserRelation($res['id'],$res['pid']);
             //TODO:发送短信,告知用户账号密码
             //修改验证码状态
             $msg = new MsgCode();
@@ -186,6 +188,33 @@ class Login extends Controller
 
 
 
+
+
+    public function saveUserRelation($userId,$prentId){
+        Db::startTrans();
+        try{
+            $allPrent = Db::table('sql_user_relation')
+                ->field('user_id,pid,pidlay')
+                ->where('pid',$prentId)->select();
+            $last = 0;
+            foreach($allPrent as $key=>$val){
+                $allPrent[$key]['user_id'] = $userId;
+                $allPrent[$key]['pidlay'] += 1;
+                $allPrent[$key]['created_at'] = date('YmdHis');
+                $last += 1;
+            }
+            $allPrent[$last+1]['user_id'] = $userId;
+            $allPrent[$last+1]['pid'] = $prentId;
+            $allPrent[$last+1]['pidlay'] = 1;
+            $allPrent[$last+1]['created_at'] = date('YmdHis');
+            Db::table('sql_user_relation')->insertAll($allPrent);
+            Db::commit();
+            return true;
+        }catch(Exception $e){
+            Db::rollback();
+            return false;
+        }
+    }
 
 
 
