@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小白的后台</title>
+    <link rel="shortcut icon" href="favicon.ico">
+	<link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+</head>
+
+<body class="gray-bg">
+    <div style="margin-top:10px;">
+        <div class="col-sm-3" onclick="javascript:location.href='/backsystem/user/index'">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>没有下级会员统计</h5>
+                    <h1 class="no-margins">{$noDown}</h1>
+                </div>
+            </div>
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>今日新增会员量</h5>
+                    <h1 class="no-margins">{$day_user}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3" onclick="javascript:location.href='/backsystem/user/index'">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>累计会员总量</h5>
+                    <h1 class="no-margins">{$all_user}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/order/index'">
+                    <h5>历史累计收入总额</h5>
+                    <h1 class="no-margins">{$all_money}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/user/index'">
+                    <h5>会员账户余额总计</h5>
+                    <h1 class="no-margins">{$user_all_money}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/order/index'">
+                    <h5>今日订单统计</h5>
+                    <h1 class="no-margins">{$day_order}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/user/index'">
+                    <h5>今日申请合伙人统计</h5>
+                    <h1 class="no-margins">{$apply_day_partner}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/withdraw/index'">
+                    <h5>已发放提现总额</h5>
+                    <h1 class="no-margins">{$withdraw_true}</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/withdraw/index'">
+                    <h5>今日提现总额</h5>
+                    <h1 class="no-margins">{$day_withdraw_money}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/withdraw/index'">
+                    <h5>今日提现人数</h5>
+                    <h1 class="no-margins">{$day_withdraw_user_nums}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="ibox">
+                <div class="ibox-content" onclick="javascript:location.href='/backsystem/withdraw/index'">
+                    <h5>今日已驳回提现</h5>
+                    <h1 class="no-margins">{$day_withdraw_false}</h1>
+                </div>
+            </div>
+        </div>
+   
+        <div class="col-sm-3" onclick="javascript:location.href='/backsystem/user/index'">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>未消费会员</h5>
+                    <h1 class="no-margins">{$one_user}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3" onclick="javascript:location.href='/backsystem/user/index'">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>合伙人统计</h5>
+                    <h1 class="no-margins">{$three_user}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3" onclick="javascript:location.href='/backsystem/user/index'">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h5>报单中心统计</h5>
+                    <h1 class="no-margins">{$four_user}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="__JS__/jquery.min.js?v=2.1.4"></script>
+    <script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+</body>
+</html>
