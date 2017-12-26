@@ -51,7 +51,7 @@ class Login extends Controller
         if(!$validate->scene('register')->check($input)){
             return json(['msg'=>$validate->getError(),'code'=>1001]);
         }
-        $code = $input['code'];
+/*        $code = $input['code'];
         $time = time() - 600;
         $codeData = db('code')->where(['phone'=>$input['phone'],'type'=>1,'status'=>1])->order('id','desc')->find();
         if(strtotime($codeData['created_at']) < $time ){
@@ -60,13 +60,13 @@ class Login extends Controller
         //TODO:获取验证码
         if($input['phone'] != $codeData['phone'] || $code != $codeData['code']){
             return json(['msg'=>'验证码不正确','code'=>1002]);
-        }
+        }*/
 
         Db::startTrans();
         try{
             //增加用户
             $userData = [];
-            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
+//            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
             $falg = ['password'=>123456,'two_password'=>123456];      //获取登陆密码支付密码
             $userData['pid'] = $prentId;
             $userData['phone'] = $input['phone'];
@@ -89,10 +89,11 @@ class Login extends Controller
             $this->saveUserRelation($res['id'],$res['pid']);
             //TODO:发送短信,告知用户账号密码
             //修改验证码状态
-            $msg = new MsgCode();
-            $result = $msg->sendMsg($res['phone'],4,$falg);
+       /*     $msg = new MsgCode();
+            $result = $msg->sendMsg($res['phone'],4,$falg);*/
+            $result = true;
             if($result){
-               db('code')->where('id',$codeData['id'])->update(['status'=>2]);
+//               db('code')->where('id',$codeData['id'])->update(['status'=>2]);
                 Db::commit();
                 return json(['msg'=>'注册成功','code'=>200]);
             }
@@ -192,10 +193,10 @@ class Login extends Controller
 
     public function saveUserRelation($userId,$prentId){
         Db::startTrans();
-        try{
+            try{
             $allPrent = Db::table('sql_user_relation')
                 ->field('user_id,pid,pidlay')
-                ->where('pid',$prentId)->select();
+                ->where('user_id',$prentId)->select();
             $last = 0;
             foreach($allPrent as $key=>$val){
                 $allPrent[$key]['user_id'] = $userId;
