@@ -26,11 +26,20 @@ class Shopgoods extends Base
             $offset = ($param['pageNumber'] - 1) * $limit;
 
             $where = [];
-            if (!empty($param['searchText'])) {
-                $where['title'] = ['like', '%' . $param['searchText'] . '%'];
+            if (!empty($param['name'])) {
+                $where['name'] = ['like', '%' . $param['name'] . '%'];
+            }
+
+            if (!empty($param['cid'])) {
+                $where['cid'] = $param['cid'];
+            }
+
+            if ($param['is_under'] !== '') {
+                $where['is_under'] = $param['is_under'];
             }
 
             $shopgoods = new ShopGoodsModel();
+            // $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit,'is_under , sort desc ,id desc');
             $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit);
 
             foreach($selectResult as $key=>$vo){
@@ -48,6 +57,8 @@ class Shopgoods extends Base
             return json($return);
         }
 
+        $classList = model('ShopGoodsClassModel')->getShopGoodsClassList();
+        $this->assign('classList',$classList);
         return $this->fetch();
     }
 

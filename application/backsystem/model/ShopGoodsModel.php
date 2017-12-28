@@ -13,9 +13,9 @@ class ShopGoodsModel extends Model
      * @param $offset
      * @param $limit
      */
-    public function getShopGoodsByWhere($where, $offset, $limit)
+    public function getShopGoodsByWhere($where, $offset, $limit,$order='id desc')
     {
-         return $this->where($where)->limit($offset, $limit)->order('id desc')->select();
+         return $this->where($where)->limit($offset, $limit)->order($order)->select();
     }
 
     /**

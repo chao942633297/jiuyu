@@ -91,7 +91,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">商品参数：</label>
                             <div class="col-sm-3">
-                                <input type="hidden" value="" name="canshu" id="canshu"/>
+                                <input type="hidden" value="{$shopgoods.canshu}" name="canshu" id="canshu"/>
                                 <img style="width: 200px;height: 200px;" class="form-control canshuurl"
                                      src="{$shopgoods.canshu}" onclick="javascript:$('#canshuurl').click();"/>
                             </div>
@@ -101,6 +101,12 @@
                             <div class="input-group col-sm-4">
                                 <textarea id="remark" type="text" class="form-control" name="remark"
                                           required="" aria-required="true">{$shopgoods.remark}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">排序（数值越大越靠前）：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="{$shopgoods.sort}" id="sort" name="sort" class="form-control" />
                             </div>
                         </div>
                         <div class="form-group">

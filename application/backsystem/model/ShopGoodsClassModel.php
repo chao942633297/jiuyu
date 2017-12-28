@@ -28,6 +28,15 @@ class ShopGoodsClassModel extends Model
     }
 
     /**
+     * 根据搜索条件获取所有的商品分类
+     * @param $where
+     */
+    public function getShopGoodsClassList($where='1=1')
+    {
+        return $this->where($where)->select();
+    }
+
+    /**
      * 插入商品分类
      * @param $param
      */

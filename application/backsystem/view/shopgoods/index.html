@@ -25,23 +25,28 @@
             <form id='commentForm' role="form" method="post" class="form-inline">
                 <div class="content clearfix m-b">
                     <div class="form-group">
+                        <label>分类：</label>
+                        <select class="form-control" name="cid" id="cid">
+                            <option value="">全部</option>
+                            {foreach $classList as $v}
+                                <option value="{$v.id}">{$v.classname}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>商品名称：</label>
                         <input type="text" class="form-control" id="name" name="name">
                     </div>
-                    <div class="form-group">
-                        <label>分类：</label>
-                        <input type="text" class="form-control" id="class" name="class">
-                    </div>
-                   <!--  <div class="form-group">
+                    <!-- <div class="form-group">
                         <label>是否下架：</label>
                         <input type="text" class="form-control" id="classid" name="classid">
                     </div> -->
                     <div class="form-group">
-                        <label>状态：</label>
-                        <select class="form-control" name="status" id="status">
-                            <option value="0">未选择</option>
-                            <option value="1">销售中</option>
-                            <option value="2">已下架</option>
+                        <label>销售状态：</label>
+                        <select class="form-control" name="is_under" id="is_under">
+                            <option value="">全部</option>
+                            <option value="0">销售中</option>
+                            <option value="1">已下架</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -66,7 +71,7 @@
                         <th data-field="price">本店售价</th>
                         <th data-field="unit">单位</th>
                         <th data-field="remark">简要描述</th>
-                        <!-- <th data-field="sort">排序</th> -->
+                        <th data-field="sort">排序</th>
                         <!-- <th data-field="num">库存</th> -->
                         <th data-field="is_under">是否下架</th>
                         <th data-field="operate">操作</th>
@@ -140,8 +145,8 @@
                     pageSize: params.pageSize,
                     name:$('#name').val(),
                     // brank:$('#brank').val(),
-                    classid:$('#classid').val(),
-                    status:$('#status').val()
+                    cid:$('#cid').val(),
+                    is_under:$('#is_under').val()
                 };
                 return param;
             },

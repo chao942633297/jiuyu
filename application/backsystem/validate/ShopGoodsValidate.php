@@ -18,7 +18,7 @@ class ShopGoodsValidate extends Validate
         ['name', 'require', '商品名称不能为空'],
         ['cid', 'require', '分类不能为空'],
         ['price', 'require', '价格不能为空'],
-        ['imgurl', 'require', '商品图片不能为空']
+        ['imgurl', 'require', '商品图片不能为空'],
         ['is_under', 'require', '请设置商品是否上架']
     ];
 
