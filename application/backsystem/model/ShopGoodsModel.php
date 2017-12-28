@@ -8,18 +8,20 @@ class ShopGoodsModel extends Model
     protected $table = 'sql_shop_goods';
 
     /**
-     * 根据搜索条件获取商品列表信息
+     * 根据搜索条件获取商城商品列表信息
      * @param $where
      * @param $offset
      * @param $limit
+     * @param $order
+     * @param $field
      */
-    public function getShopGoodsByWhere($where, $offset, $limit,$order='id desc')
+    public function getShopGoodsByWhere($where, $offset, $limit,$order='id desc',$field='*')
     {
-         return $this->where($where)->limit($offset, $limit)->order($order)->select();
+         return $this->where($where)->field($field)->limit($offset, $limit)->order($order)->select();
     }
 
     /**
-     * 根据搜索条件获取所有的商品数量
+     * 根据搜索条件获取所有的商城商品数量
      * @param $where
      */
     public function getAllShopGoods($where)
@@ -28,7 +30,7 @@ class ShopGoodsModel extends Model
     }
 
     /**
-     * 插入商品
+     * 插入商城商品
      * @param $param
      */
     public function addShopGoods($param)
@@ -36,9 +38,12 @@ class ShopGoodsModel extends Model
         try{
             // var_dump($param);die;
             // $result =  $this->validate('UserValidate')->save($param);
-            $exist = $this->where('name',$param['name'])->find();
+            $where = array();
+            $where['name'] = $param['name'];
+            $where['cid'] = $param['cid'];
+            $exist = $this->where($where)->find();
             if ($exist) {
-                return ['code' => -3, 'data' => '', 'msg' => '此商品名称已存在'];
+                return ['code' => -3, 'data' => '', 'msg' => '此分类下商品名称已存在'];
             }
             $result =  $this->validate('ShopGoodsValidate')->insert($param);
              
@@ -47,7 +52,7 @@ class ShopGoodsModel extends Model
                 return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
             }else{
 
-                return ['code' => 1, 'data' => '', 'msg' => '添加商品成功'];
+                return ['code' => 1, 'data' => '', 'msg' => '添加商城商品成功'];
             }
         }catch( PDOException $e){
 
@@ -56,7 +61,7 @@ class ShopGoodsModel extends Model
     }
 
     /**
-     * 编辑商品信息
+     * 编辑商城商品信息
      * @param $param
      */
     public function editShopGoods($param)
@@ -69,7 +74,7 @@ class ShopGoodsModel extends Model
                 return ['code' => 0, 'data' => '', 'msg' => $this->getError()];
             }else{
 
-                return ['code' => 1, 'data' => '', 'msg' => '编辑商品成功'];
+                return ['code' => 1, 'data' => '', 'msg' => '编辑商城商品成功'];
             }
         }catch( PDOException $e){
             return ['code' => 0, 'data' => '', 'msg' => $e->getMessage()];
@@ -77,24 +82,25 @@ class ShopGoodsModel extends Model
     }
 
     /**
-     * 根据商品id获取商品信息
+     * 根据商城商品id获取商城商品信息
      * @param $id
+     * @param $field
      */
-    public function getOneShopGoods($id)
+    public function getOneShopGoods($id,$field="*")
     {
-        return $this->where('id', $id)->find();
+        return $this->where('id', $id)->field($field)->find();
     }
 
 
     /**
-     * 删除商品
+     * 删除商城商品
      * @param $id
      */
     public function delShopGoods($id)
     {
         try{
             $this->where('id', $id)->delete();
-            return ['code' => 1, 'data' => '', 'msg' => '删除商品成功'];
+            return ['code' => 1, 'data' => '', 'msg' => '删除商城商品成功'];
 
         }catch( PDOException $e){
             return ['code' => 0, 'data' => '', 'msg' => $e->getMessage()];

@@ -30,10 +30,11 @@ class ShopGoodsClassModel extends Model
     /**
      * 根据搜索条件获取所有的商品分类
      * @param $where
+     * @param $field
      */
-    public function getShopGoodsClassList($where='1=1')
+    public function getShopGoodsClassList($where='1=1',$field="*")
     {
-        return $this->where($where)->select();
+        return $this->where($where)->field($field)->select();
     }
 
     /**
@@ -47,7 +48,7 @@ class ShopGoodsClassModel extends Model
             // $result =  $this->validate('UserValidate')->save($param);
             $exist = $this->where('classname',$param['classname'])->find();
             if ($exist) {
-                return ['code' => -3, 'data' => '', 'msg' => '此分类已存在'];
+                return ['code' => -3, 'data' => '', 'msg' => '此分类名称已存在'];
             }
             $result =  $this->validate('ShopGoodsClassValidate')->insert($param);
              
@@ -113,6 +114,13 @@ class ShopGoodsClassModel extends Model
     public function delShopGoodsClass($id)
     {
         try{
+            //删除前首先查询其下有没有商品
+            $num = model('ShopGoodsModel')->getAllShopGoods(['cid'=>$id]);
+            if ($num > 0) {
+                return ['code' => 0, 'data' => '', 'msg' => '此分类下还有商品，无法删除'];
+            }
+
+
             $this->where('id', $id)->delete();
             return ['code' => 1, 'data' => '', 'msg' => '删除商品分类成功'];
 

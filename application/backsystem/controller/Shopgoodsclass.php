@@ -87,7 +87,7 @@ class Shopgoodsclass extends Base
     public function ShopGoodsClassDel()
     {
         $id = input('param.id');
-
+        
         $ShopGoodsClass = new ShopGoodsClassModel();
         $flag = $ShopGoodsClass->delShopGoodsClass($id);
         return json(msg($flag['code'], $flag['data'], $flag['msg']));
