@@ -32,9 +32,6 @@ class Users extends Validate{
 
     protected $scene = [
         'register'  => [
-            'province',
-            'city',
-            'area',
             'phone',
             'code'
         ],
