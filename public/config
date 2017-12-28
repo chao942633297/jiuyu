@@ -1,1 +1,1 @@
-a:10:{s:8:"area_ach";s:1:"3";s:8:"city_ach";s:1:"3";s:12:"province_ach";s:1:"1";s:5:"times";s:3:"100";s:6:"charge";s:1:"5";s:4:"push";s:4:"6000";s:6:"thanks";s:4:"3000";s:6:"manage";s:3:"800";s:4:"comp";s:5:"10600";s:3:"act";s:3:"300";}
+a:14:{s:8:"area_ach";s:1:"3";s:8:"city_ach";s:1:"3";s:12:"province_ach";s:1:"1";s:8:"head_ach";s:1:"0";s:5:"times";s:3:"100";s:6:"charge";s:1:"5";s:5:"pushA";s:4:"5000";s:7:"thanksA";s:5:"12000";s:5:"pushB";s:4:"2500";s:7:"thanksB";s:4:"6000";s:5:"pushC";s:3:"500";s:7:"thanksC";s:4:"1200";s:4:"comp";s:5:"10600";s:3:"act";s:3:"300";}
