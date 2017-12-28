@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>编辑商品分类</title>
+    <title>添加商品</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
@@ -24,7 +24,7 @@
 <!-- 图片上传 -->
 <form id="fmform" action="" method="POST" enctype="multipart/form-data">
     <input type="hidden" value="fmimg" name="imgtype"/>
-    <input id="fmimg" style="display: none;" name="files" type="file" onchange="upload('fmform','imgurl')"/>
+    <input id="fmimg" style="display: none;" name="files" type="file" onchange="upload('fmform','goodsimg')"/>
 </form>
 <input type="file" name="files" id="canshuurl" class="layui-upload-file" style="display: none;">
 <div class="wrapper wrapper-content animated fadeInRight">
@@ -32,7 +32,7 @@
         <div class="col-sm-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>编辑商品分类</h5>
+                    <h5>添加商品</h5>
                     <div class="ibox-tools">
                         <a class="collapse-link">
                             <i class="fa fa-chevron-up"></i>
@@ -47,18 +47,67 @@
                 </div>
                 <div class="ibox-content">
                     <form class="form-horizontal m-t" id="commentForm" method="post" onsubmit="return toVaild()">
-                        <input type="hidden" name="id" value="{$ShopGoodsClass.id}">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品分类名称：</label>
+                            <label class="col-sm-3 control-label">商品名称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="name" type="text" value="{$ShopGoodsClass.classname}" class="form-control" name="classname" required=""
+                                <input id="name" type="text" class="form-control" name="name" required=""
                                        aria-required="true">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品分类简介：</label>
+                            <label class="col-sm-3 control-label">商品价格：</label>
+                            <div class="input-group col-sm-3">
+                                <input id="price" type="text" class="form-control" name="price" required=""
+                                       aria-required="true">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">单位：</label>
+                            <div class="input-group col-sm-1">
+                                <input id="unit" type="text" class="form-control" name="unit">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品分类：</label>
+                            <div class="input-group col-sm-2">
+                                <select name="cid" id="cid" class="form-control">
+                                    {foreach $shopgoodsclass as $v}
+                                    <option value="{$v.id}">{$v.classname}</option>
+                                    {/foreach}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品缩略图：</label>
+                            <div class="col-sm-3">
+                                <input type="hidden" value="" name="imgurl" id="imgurl"/>
+                                <img id="goodsimg" style="width: 200px;height: 200px;" class="form-control"
+                                     src="__IMG__/default.png" onclick="javascript:$('#fmimg').click();"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品参数：</label>
+                            <div class="col-sm-3">
+                                <input type="hidden" value="" id="canshu" name="canshu"/>
+                                <img style="width: 200px;height: 200px;" class="form-control canshuurl"
+                                     src="__IMG__/default.png" onclick="javascript:$('#canshuurl').click();"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品简介：</label>
                             <div class="input-group col-sm-4">
-                                <textarea id="remark" type="text" class="form-control" name="remark">{$ShopGoodsClass.remark}</textarea>
+                                <textarea id="remark" type="text" class="form-control" name="remark"
+                                          required="" aria-required="true"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">是否上架：</label>
+                            是: <input type="radio" value="0" name="is_under" style="margin-top:11px;margin-right:20px;" checked="checked">
+                            否: <input type="radio" value="1" name="is_under" >
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <textarea id="myEditor" type="text" class="form-control myEditor" name="description" style="height:500px;"></textarea>
                             </div>
                         </div>
                         <div class="form-group">
@@ -95,7 +144,7 @@
     //表单提交
     function toVaild() {
         var jz;
-        var url = "./goodsEdit";
+        var url = "./shopgoodsadd";
 //        console.log($('#commentForm').serialize());
 
         $.ajax({
@@ -131,15 +180,14 @@
     function upload(fromID, imgid) {
         var vars = $("#" + fromID);
         var options = {
-            type: "POST",
-            url: "{:url('backsystem/File/upload')}",// 你的formid
+            url: "{:url('/backsystem/File/upload')}",// 你的formid
             dataType: 'json',
             contentType: "application/json;charset=utf-8",
             success: function (data) {
                 // console.log(data);
                 if (data['code'] == 1) {
                     $("#" + imgid).attr('src', data['data']);
-                    $("#img").val(data['data']);
+                    $("#imgurl").val(data['data']);
                 }
             }
         };
