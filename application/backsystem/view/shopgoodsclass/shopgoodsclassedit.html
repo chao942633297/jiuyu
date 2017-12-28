@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑商品分类</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__CSS__/plugins/iCheck/custom.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <!-- Sweet Alert -->
+    <link href="__CSS__/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="__JS__/plugins/layui/css/layui.css" rel="stylesheet">
+    <link href="__JS__/umeditor/themes/default/css/umeditor.css" type="text/css" rel="stylesheet">
+    <style>
+        .layui-upload-button{
+            display: none;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+<!-- 图片上传 -->
+<form id="fmform" action="" method="POST" enctype="multipart/form-data">
+    <input type="hidden" value="fmimg" name="imgtype"/>
+    <input id="fmimg" style="display: none;" name="files" type="file" onchange="upload('fmform','imgurl')"/>
+</form>
+<input type="file" name="files" id="canshuurl" class="layui-upload-file" style="display: none;">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>编辑商品分类</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="form_basic.html#">
+                            <i class="fa fa-wrench"></i>
+                        </a>
+                        <a class="close-link">
+                            <i class="fa fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form class="form-horizontal m-t" id="commentForm" method="post" onsubmit="return toVaild()">
+                        <input type="hidden" name="id" value="{$ShopGoodsClass.id}">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品分类名称：</label>
+                            <div class="input-group col-sm-4">
+                                <input id="name" type="text" value="{$ShopGoodsClass.classname}" class="form-control" name="classname" required=""
+                                       aria-required="true">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品分类简介：</label>
+                            <div class="input-group col-sm-4">
+                                <textarea id="remark" type="text" class="form-control" name="remark">{$ShopGoodsClass.remark}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-3">
+                                <!--<input type="button" value="提交" class="btn btn-primary" id="postform"/>-->
+                                <button class="btn btn-primary" type="submit">提交</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="__JS__/jquery.min.js?v=2.1.4"></script>
+<script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+<script src="__JS__/content.min.js?v=1.0.0"></script>
+<script src="__JS__/plugins/validate/jquery.validate.min.js"></script>
+<script src="__JS__/plugins/validate/messages_zh.min.js"></script>
+<script src="__JS__/plugins/iCheck/icheck.min.js"></script>
+<script src="__JS__/plugins/sweetalert/sweetalert.min.js"></script>
+<script src="__JS__/plugins/layer/laydate/laydate.js"></script>
+<script src="__JS__/plugins/suggest/bootstrap-suggest.min.js"></script>
+<script src="__JS__/plugins/layer/layer.min.js"></script>
+<script src="__JS__/plugins/layui/layui.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/third-party/jquery.min.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/third-party/template.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="__JS__/umeditor/umeditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="__JS__/umeditor/umeditor.min.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/lang/zh-cn/zh-cn.js"></script>
+<script type="text/javascript">
+    var um = UM.getEditor('myEditor');
+    //表单提交
+    function toVaild() {
+        var jz;
+        var url = "./goodsEdit";
+//        console.log($('#commentForm').serialize());
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: $('#commentForm').serialize(),// 你的formid
+            async: false,
+            beforeSend: function () {
+                jz = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+            },
+            error: function (request) {
+                layer.close(jz);
+                swal("网络错误!", "", "error");
+            },
+            success: function (data) {
+                //关闭加载层
+                layer.close(jz);
+                if (data.code == 1) {
+                    swal(data.msg, "", "success");
+                } else {
+                    swal(data.msg, "", "error");
+                }
+            }
+        });
+        return false;
+    }
+</script>
+</body>
+</html>
+<!-- <script src="__JS__/jquery-2.0.3.min.js"></script> -->
+<script src="__JS__/jquery.form.js"></script>
+<script type="text/javascript">
+    function upload(fromID, imgid) {
+        var vars = $("#" + fromID);
+        var options = {
+            type: "POST",
+            url: "{:url('backsystem/File/upload')}",// 你的formid
+            dataType: 'json',
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                // console.log(data);
+                if (data['code'] == 1) {
+                    $("#" + imgid).attr('src', data['data']);
+                    $("#img").val(data['data']);
+                }
+            }
+        };
+        vars.ajaxSubmit(options);
+        // return false;
+    }
+
+    layui.use('upload', function(){
+        layui.upload({
+            url: "{:url('backsystem/File/upload')}",
+            success: function(res){
+                console.log(res); //上传成功返回值，必须为json格式
+                $('.canshuurl').attr('src',res.data);
+                $('#canshu').val(res.data);
+            }
+        });
+    });
+
+</script>
