@@ -4,8 +4,8 @@ namespace app\home\controller;
 
 use think\Controller;
 use think\Db;
+use think\Loader;
 use think\Request;
-use think\Validate;
 
 class Address extends Controller
 {
@@ -42,28 +42,8 @@ class Address extends Controller
      */
     public function addAddr(Request $request)
     {
-        $rule = [
-            'consignee' => 'require|max:20',
-            'phone' => 'require|/^1[34578]\d{9}$/',
-            'province'=>'require|max:50',
-            'city'=>'require|max:100',
-            'area'=>'require|max:100',
-
-        ];
-        $msg = [
-            'consignee.require' =>'收货人姓名不能为空',
-            'consignee.max:20' =>'收货人姓名不能超过20个字符',
-            'phone.require' => '手机号不能为空',
-            'phone./^1[34578]\d{9}$/' => '手机号格式错误',
-            'province.require'=>'省份不能为空',
-            'province.max:50'=>'省份最多不能超过50个字符',
-            'city.require'=>'城市不能为空',
-            'city.max:100'=>'城市最多不能超过100个字符',
-            'area.require'=>'区/县不能为空',
-            'area.max:100'=>'区/县最多不能超过100个字符',
-        ];
         $input = $request->post();
-        $validate = new Validate($rule, $msg);
+        $validate = Loader::validate('Address');
         if (!$validate->check($input)) {
             return json(['msg' => $validate->getError(), 'code' => 1001]);
         }
@@ -100,26 +80,12 @@ class Address extends Controller
      * 执行编辑收货地址
      */
     public function actEditAddr(Request $request){
-        $rule = [
-            'addrId' => 'require',
-            'consignee' => 'max:20',
-            'phone' => '/^1[34578]\d{9}$/',
-            'province'=>'max:50',
-            'city'=>'max:100',
-            'area'=>'max:100',
-
-        ];
-        $msg = [
-            'addrId.require' => '参数错误',
-            'consignee.max:20' =>'收货人姓名不能超过20个字符',
-            'phone./^1[34578]\d{9}$/' => '手机号格式错误',
-            'province.max:50'=>'省份最多不能超过50个字符',
-            'city.max:100'=>'城市最多不能超过100个字符',
-            'area.max:100'=>'区/县最多不能超过100个字符',
-        ];
         $input = $request->post();
-        $validate = new Validate($rule, $msg);
-        if (!$validate->check($input)) {
+        if(empty($input['addrId'])){
+            return json(['msg'=>'参数错误','code'=>1001]);
+        }
+        $validate = Loader::validate('Address');
+        if (!$validate->scene('update')->check($input)) {
             return json(['msg' => $validate->getError(), 'code' => 1001]);
         }
         $input['updated_at'] = date('YmdHis');
