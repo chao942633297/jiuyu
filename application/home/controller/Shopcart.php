@@ -14,6 +14,7 @@ class Shopcart extends Base
 	{
 	    parent::_initialize(); // 判断用户是否登陆
 	    $this->userId = session('home_user_id');
+	    // $this->userId = input('param.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
 	    	return json(['code'=>0,'data'=>'','msg'=>'获取用户信息失败']);
 	    }
@@ -34,7 +35,17 @@ class Shopcart extends Base
 		$page = !empty(input('param.page')) && input('param.page') > 0 ? input('param.page') : '1' ;
 		$limit = !empty(input('param.limit')) && input('param.limit') > 0 ? input('param.limit') : '10' ;
 
-		$cartList = db('shop_cart')->alias('c')->join('shop_goods g','c.goodsid = g.id','RIGHT')->where('c.userid',$this->userId)->page($page,$limit)->field('*')->select();
+		//过滤商品已经被后台下架或者被删除的商品数据
+		$cartData = db('shop_cart')->where('userid',$this->userId)->select();
+		$gids = array();
+		foreach ($cartData as $key => $value) {
+			$goodsinfo = db('shop_goods')->where('id',$value['goodsid'])->field('is_under')->find();
+			if (!empty($goodsinfo) && $goodsinfo['is_under'] == '0') {
+				$gids[] = $value['goodsid'];
+			}
+		}
+
+		$cartList = db('shop_cart')->alias('c')->join('shop_goods g','c.goodsid = g.id','RIGHT')->where('c.userid',$this->userId)->where('c.goodsid','in',$gids)->page($page,$limit)->field('*')->select();
 
 		return json(['code'=>1,'data'=>$cartList,'msg'=>'success']);
 	}
@@ -66,8 +77,11 @@ class Shopcart extends Base
 		$insertData['goodsid'] = input('param.goodsid');
 		$insertData['userid'] = $this->userId;
 
-		//查询商品库存
-		$kucun = db('shop_goods')->where('id',$insertData['goodsid'])->field('num')->find();
+		//查询商品库存 和是否下架
+		$kucun = db('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under')->find();
+		if ($kucun['is_under'] == '1') {
+			return json(['code'=>0,'data'=>'','msg'=>'商品已经下架']);
+		}
 		if ($kucun['num'] < input('param.goodsnum')) {
 			return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
 		}
@@ -126,15 +140,20 @@ class Shopcart extends Base
 		foreach ($data as $key => $value) {
 			// $updateData[$key]['userid'] = $this->userId;  
 			// $updateData[$key]['goodsid'] = $value['goodsid'];  
+			// 查询商品是否已经下架 和库存
 			$where = array();
 			$where['goodsid'] = $value['goodsid'];
-			$kucun = db('shop_goods')->where($where)->field('num')->find();
-			if ($kucun['num'] < $value['goodsnum']) {
-				return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);	
-			}else{
-				$updateData[$key]['goodsnum'] = $value['goodsnum'];  
-				$updateData[$key]['cartid'] = $value['id'];  
+			$kucun = db('shop_goods')->where($where)->field('num,is_under')->find();
+			if ($kucun['is_under'] == '1') {
+				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架']);
 			}
+			if ($kucun['num'] < $value['goodsnum']) {
+				return json(['code'=>0,'data'=>'','msg'=>'部分商品库存不足']);	
+			}
+			
+			$updateData[$key]['goodsnum'] = $value['goodsnum'];  
+			$updateData[$key]['cartid'] = $value['id'];  
+			
 		}
 
 		$re = db('shop_cart')->saveAll($updateData);
