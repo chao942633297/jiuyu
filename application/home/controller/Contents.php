@@ -59,9 +59,18 @@ class Contents extends Controller
         $noticeId = $request->param('noticeId');
         $data = ArticleModel::get($noticeId);
         $return = [];
-        $return['title'] = $data->title;
-        $return['content'] = $data->content;
+        $return['title'] = $data['title'];
+        $return['content'] = $data['content'];
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
+    }
+
+
+    /**
+     * 客服中心
+     */
+    public function service(){
+        $service = ArticleModel::get(15)['content'];
+        return json(['data'=>$service,'msg'=>'查询成功','code'=>200]);
     }
 
     /**
