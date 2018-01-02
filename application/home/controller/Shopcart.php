@@ -13,6 +13,7 @@ class Shopcart extends Base
 	public function _initialize()
 	{
 	    parent::_initialize(); // 判断用户是否登陆
+	    session('home_user_id','13');
 	    $this->userId = session('home_user_id');
 	    // $this->userId = input('param.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
@@ -144,7 +145,7 @@ class Shopcart extends Base
 			$where = array();
 			$where['goodsid'] = $value['goodsid'];
 			$kucun = db('shop_goods')->where($where)->field('num,is_under')->find();
-			if ($kucun['is_under'] == '1') {
+			if ($kucun['is_under'] == '1' || empty($kucun)) {
 				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架']);
 			}
 			if ($kucun['num'] < $value['goodsnum']) {
