@@ -79,17 +79,17 @@ class Shoporder extends Base
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		$_POST['province'] = '河南'; 
-		$_POST['city'] = '郑州'; 
-		$_POST['area'] = '金水'; 
+		$_POST['province'] = '河南省'; 
+		$_POST['city'] = '郑州市'; 
+		$_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
 		$_POST['buyer_name'] = '王先生'; 
 		$_POST['buyer_phone'] = '18236952689'; 
 		$_POST['goodsinfo'] = array(
 			// array('goodsid'=>34,'goodsnum'=>'3'),
-			array('goodsid'=>35,'goodsnum'=>'2'),
+			array('goodsid'=>35,'goodsnum'=>'1'),	
 			// array('goodsid'=>33,'goodsnum'=>'1'),
 			array('goodsid'=>32,'goodsnum'=>'1'),
-			array('goodsid'=>31,'goodsnum'=>'5'),
+			array('goodsid'=>31,'goodsnum'=>'1'),
 		); 
 
 		$input = input('post.');
