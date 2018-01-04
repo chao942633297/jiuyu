@@ -43,6 +43,9 @@ class Shopcart extends Base
 			$goodsinfo = db('shop_goods')->where('id',$value['goodsid'])->field('is_under')->find();
 			if (!empty($goodsinfo) && $goodsinfo['is_under'] == '0') {
 				$gids[] = $value['goodsid'];
+			}else if (empty($goodsinfo) || $goodsinfo['is_under'] == '1') {
+				//删除购物车中添加过之后被下架或者删除的商品记录 以防垃圾数据
+				db('shop_cart')->where(['userid'=>$this->userId,'goodsid'=>$value['goodsid']])->delete();
 			}
 		}
 
