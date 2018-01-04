@@ -15,7 +15,9 @@ use think\Exception;
 class Rebate extends Controller
 {
 
-    protected $match;
+    protected $matchA;
+    protected $matchB;
+    protected $matchC;
     protected $directA;
     protected $directB;
     protected $directC;
@@ -42,7 +44,10 @@ class Rebate extends Controller
         $this->thanksB = $conf['thanksB'];                  //公排获得感恩奖
         $this->thanksC = $conf['thanksC'];                  //公排获得感恩奖
 
-        $this->match = $conf['act'];                    //匹配报单中心奖励
+        $this->matchA = $conf['actA'];                    //匹配报单中心奖励
+        $this->matchB = $conf['actB'];                    //匹配报单中心奖励
+        $this->matchC = $conf['actC'];                    //匹配报单中心奖励
+
         $this->area_ach = $conf['area_ach'];            //县级报单中心业绩比例
         $this->city_ach = $conf['city_ach'];            //市级报单中心业绩比例
         $this->province_ach = $conf['province_ach'];    //省级报单中心业绩比例
@@ -56,22 +61,27 @@ class Rebate extends Controller
      * 用户成为合伙人,地址匹配报单中心返佣
      * 上级报单中心业绩增加
      */
-    public function partnerRebate($actId, $userId)
+    public function partnerRebate($actId, $userId,$voucherId)
     {
         //报单中心业绩计算
-        $money = 0;
+        if(empty($voucherId)){
+            return false;
+        }
+        $voucher = Db::table('sql_voucher')->where('id',$voucherId)->find();
+        $match = 'match'.$voucher['type'];          //套餐对应报单中心奖励
+
         $achievement = 0;
         $reword = UserModel::get($actId);
         if ($reword['class'] == 3) {
-            $achievement = $this->comp * $this->area_ach * 0.01;           //业绩分红
+            $achievement = $voucher['money'] * $this->area_ach * 0.01;           //业绩分红
         } else if ($reword['class'] == 4) {
-            $achievement = $this->comp * $this->city_ach * 0.01;          //业绩分红
+            $achievement = $voucher['money'] * $this->city_ach * 0.01;          //业绩分红
         } else if ($reword['class'] == 5) {
-            $achievement = $this->comp * $this->province_ach * 0.01;     //业绩分红
+            $achievement = $voucher['money'] * $this->province_ach * 0.01;     //业绩分红
         } else if ($actId == 1) {
-            $achievement = $this->comp * $this->head_ach * 0.01;         //业绩分红
+            $achievement = $voucher['money'] * $this->head_ach * 0.01;         //业绩分红
         }
-        $money = $this->match + $achievement;       //用户余额总增加
+        $money = $this->$match + $achievement;       //用户余额总增加
 
         Db::startTrans();
         try {
@@ -83,9 +93,9 @@ class Rebate extends Controller
             ];
             db('users')->update($newList);
             //增加余额记录
-            $lists[0] = AccountModel::getAccountData($actId, $this->match, '激活奖', 8, 1, $userId);
+            $lists[0] = AccountModel::getAccountData($actId, $this->$match, '激活奖', 8, 1,$voucher['type'], $userId);
             if ($achievement > 0) {
-                $lists[1] = AccountModel::getAccountData($actId, $achievement, '业绩分红', 9, 1, $userId);
+                $lists[1] = AccountModel::getAccountData($actId, $achievement, '业绩分红', 9, 1, $voucher['type'],$userId);
             }
             db('account')->insertAll($lists);
             Db::commit();
@@ -93,7 +103,6 @@ class Rebate extends Controller
         } catch (Exception $e) {
             Db::rollback();
             return false;
-//            return $e->getMessage();
         }
     }
 
@@ -233,7 +242,7 @@ class Rebate extends Controller
             $user['frozen_price'] += $this->$thanks;
             $user->save();
             //余额增加记录
-            $list = AccountModel::getAccountData($rows[0]['user_id'], $this->$thanks, '感恩奖', 2, 1, $userId);
+            $list = AccountModel::getAccountData($rows[0]['user_id'], $this->$thanks, '感恩奖', 2, 1,$voucher['type'], $userId);
             AccountModel::create($list);
         }
         //判断第七名进入公排

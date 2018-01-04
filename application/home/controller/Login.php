@@ -42,14 +42,21 @@ class Login extends Controller
      * @param Request $request
      * @return \think\response\Json
      * 用户注册
+     * 手机号 phone
+     * 上级id
      */
     public function actRegister(Request $request)
     {
         $input = $request->post();
-        $prentId = isset($input['prentId']) ? $input['prentId'] : 0;
-        if ($prentId != 0) {
-            $prentId = Db::table('sql_users')->where('unique', $prentId)->value('id');
+        $unique = isset($input['prentId']) ? $input['prentId'] : 0;
+        $prentPhone = isset($input['prentPhone'])? $input['prentPhone'] : 0;
+        $where = [];
+        if($prentPhone != 0){
+            $where['phone'] = $prentPhone;
+        }else if($unique != 0){
+            $where['unique'] = $unique;
         }
+        $prentId = Db::table('sql_users')->where($where)->value('id');
         $validate = Loader::validate('Users');
         if (!$validate->scene('register')->check($input)) {
             return json(['msg' => $validate->getError(), 'code' => 1001]);
