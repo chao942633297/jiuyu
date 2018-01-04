@@ -51,8 +51,12 @@ class Package extends Controller
 		if(empty($packageId)){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
-		$packageDetail = Db::table('sql_goods')->field('name,price,img')
+		$packageDetail = Db::table('sql_goods')->field('name,price,img,unit')
 			->where('id',$packageId)->find();
+		$user = UserModel::get($this->userId);
+		if(!strstr($user['pusers']['level'],$packageDetail['unit'])){
+			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
+		}
 		if($request->has('addrId')){
 			$where['id'] = $request->param('addrId');
 		}else{
@@ -85,6 +89,12 @@ class Package extends Controller
 			session('home_package_id',$packageId);
 			return json(['msg'=>'收货地址不能为空','code'=>2001]);
 		}
+		$package = Db::table('sql_goods')
+			->where('id',$packageId)->find();
+		$user =  UserModel::get($this->userId);
+		if(!strstr($user['pusers']['level'],$package['unit'])){
+			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
+		}
 		$address = Db::table('sql_address')
 			->field('id,province,city,area')
 			->where('id',$addrId)->find();
@@ -92,9 +102,7 @@ class Package extends Controller
 		$qrcode = Db::table('sql_qrcode')
 			->field('uid,wqcode,aqcode')
 			->where('uid',$agentId)->find();
-		$packageMoney = Db::table('sql_goods')
-			->where('id',$packageId)->value('price');
-		return json(['data'=>['qrcode'=>$qrcode,'packageMoney'=>$packageMoney],'msg'=>'查询成功','code'=>200]);
+		return json(['data'=>['qrcode'=>$qrcode,'packageMoney'=>$package['price']],'msg'=>'查询成功','code'=>200]);
 	}
 
 
@@ -133,6 +141,9 @@ class Package extends Controller
 		$package = Db::table('sql_goods')
 			->field('name,price,img')
 			->where('id',$packageId)->find();
+		if(!strstr($user['pusers']['level'],$package['unit'])){
+			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
+		}
  		//获取收货地址,省,市,区/县
 		$address = Db::table('sql_address')
 			->field('id,province,city,area')
@@ -143,6 +154,7 @@ class Package extends Controller
 		$data['uid'] = $this->userId;
 		$data['actid'] = $prentId;         //激活id
 		$data['money'] = $package['price'];
+		$data['type'] = $package['unit'].'套餐';  //套餐类别
 		$data['pay_type'] = $address['type'];        //1支付宝支付 2 微信支付
 		$data['package_name'] = $package['name'];
 		$data['package_price'] = $package['price'];

@@ -16,13 +16,16 @@ class Rebate extends Controller
 {
 
     protected $match;
-    protected $direct;
+    protected $directA;
+    protected $directB;
+    protected $directC;
+    protected $thanksA;
+    protected $thanksB;
+    protected $thanksC;
     protected $area_ach;
     protected $city_ach;
     protected $province_ach;
     protected $head_ach;
-    protected $comp;
-    protected $thanks;
     static $times;
 
     public function _initialize()
@@ -31,17 +34,21 @@ class Rebate extends Controller
         //参数设置,从配置读取
         $config = file_get_contents('config');
         $conf = unserialize($config);
-        $this->direct = $conf['push'];                  //报单中心直推奖励
+        $this->directA = $conf['pushA'];                  //报单中心直推奖励
+        $this->directB = $conf['pushB'];                  //报单中心直推奖励
+        $this->directC = $conf['pushC'];                  //报单中心直推奖励
+
+        $this->thanksA = $conf['thanksA'];                  //公排获得感恩奖
+        $this->thanksB = $conf['thanksB'];                  //公排获得感恩奖
+        $this->thanksC = $conf['thanksC'];                  //公排获得感恩奖
+
         $this->match = $conf['act'];                    //匹配报单中心奖励
         $this->area_ach = $conf['area_ach'];            //县级报单中心业绩比例
         $this->city_ach = $conf['city_ach'];            //市级报单中心业绩比例
         $this->province_ach = $conf['province_ach'];    //省级报单中心业绩比例
         $this->head_ach = $conf['head_ach'];    //总部报单中心
-        $this->comp = $conf['comp'];    //注册合伙人费用
 //        $this->manage = $conf['manage'];    //管理奖
-        $this->thanks = $conf['thanks'];    //感恩奖
     }
-
 
     /**
      * @param $addr
@@ -49,59 +56,36 @@ class Rebate extends Controller
      * 用户成为合伙人,地址匹配报单中心返佣
      * 上级报单中心业绩增加
      */
-    public function partnerRebate($addr, $userId)
+    public function partnerRebate($actId, $userId)
     {
-        //首先匹配报单中心,从县级,市级,省级
-//        $areaId = db('apply')->where(['province'=>$addr['province'],'city'=>$addr['city'],'area'=>$addr['area'],'status'=>2,'level'=>3])->value('uid');
         //报单中心业绩计算
         $money = 0;
         $achievement = 0;
-        $rewordId = getAgentId($addr['province'], $addr['city'], $addr['area']);
-        $reword = UserModel::get($rewordId);
+        $reword = UserModel::get($actId);
         if ($reword['class'] == 3) {
-            $achievement = $this->comp * $this->area_ach * 0.01;
-            $money = $this->match + $achievement;           //用户余额总增加
+            $achievement = $this->comp * $this->area_ach * 0.01;           //业绩分红
         } else if ($reword['class'] == 4) {
-            $achievement = $this->comp * $this->city_ach * 0.01;
-            $money = $this->match + $achievement;           //用户余额总增加
+            $achievement = $this->comp * $this->city_ach * 0.01;          //业绩分红
         } else if ($reword['class'] == 5) {
-            $achievement = $this->comp * $this->province_ach * 0.01;
-            $money = $this->match + $achievement;       //用户余额总增加
-        } else if ($rewordId == 1) {
-            $achievement = $this->comp * $this->head_ach * 0.01;
-            $money = $this->match + $achievement;       //用户余额总增加
+            $achievement = $this->comp * $this->province_ach * 0.01;     //业绩分红
+        } else if ($actId == 1) {
+            $achievement = $this->comp * $this->head_ach * 0.01;         //业绩分红
         }
-//        if(isset($areaId)){
-//            $rewordId = $areaId;
-//            $achievement = $this->comp * $this->area_ach * 0.01;
-//            $money = $this->match + $achievement;           //用户余额总增加
-//        }else if($cityId = db('apply')->where(['province'=>$addr['province'],'city'=>$addr['city'],'status'=>2])->value('uid')){
-//            $rewordId = $cityId;
-//            $achievement = $this->comp * $this->city_ach * 0.01;
-//            $money = $this->match + $achievement;           //用户余额总增加
-//        }else if($provinceId = db('apply')->where(['province'=>$addr['province'],'status'=>2])->value('uid')){
-//            $rewordId = $provinceId;
-//            $achievement = $this->comp * $this->province_ach * 0.01;
-//            $money = $this->match + $achievement;       //用户余额总增加
-//        }else{
-//            //为0则默认系统
-//            $rewordId = 1;
-//            $achievement = $this->comp * $this->head_ach * 0.01;
-//            $money = $this->match + $achievement;       //用户余额总增加
-//        }
+        $money = $this->match + $achievement;       //用户余额总增加
+
         Db::startTrans();
         try {
             //增加用户余额
             $newList = [
                 'balance' => ['exp', 'balance + ' . $money],
                 'total_price' => ['exp', 'total_price + ' . $money],
-                'id' => $rewordId
+                'id' => $actId
             ];
             db('users')->update($newList);
             //增加余额记录
-            $lists[0] = AccountModel::getAccountData($rewordId, $this->match, '激活奖', 8, 1, $userId);
+            $lists[0] = AccountModel::getAccountData($actId, $this->match, '激活奖', 8, 1, $userId);
             if ($achievement > 0) {
-                $lists[1] = AccountModel::getAccountData($rewordId, $achievement, '业绩分红', 9, 1, $userId);
+                $lists[1] = AccountModel::getAccountData($actId, $achievement, '业绩分红', 9, 1, $userId);
             }
             db('account')->insertAll($lists);
             Db::commit();
@@ -119,7 +103,7 @@ class Rebate extends Controller
      * @return bool
      * 成为合伙人,上级报单中心返佣
      */
-    public function superRebate($userId, $prentId = '')
+    public function superRebate($userId, $prentId = '', $voucherId)
     {
         if (empty($prentId)) {
             $prentId = db('users')->where('id', $userId)->value('pid');
@@ -128,39 +112,30 @@ class Rebate extends Controller
         if (empty($prentId)) {
             return true;
         }
-        $prent = UserModel::get($prentId);
-        //路人甲没有返佣
-        if ($prent['class'] < 2) {
+        $voucher = Db::table('sql_voucher')->where('id', $voucherId)->find();
+        if (empty($voucher)) {
             return true;
         }
+        $packageType = $voucher['type'];
+        //拼接直推奖金额
+        $direct = 'direct' . $packageType;
+
         Db::startTrans();
         try {
             //上级余额增加
-            $newList = [
+            $prentList = [
                 'id' => $prentId,
-                'recommend_num' =>['exp','recommend_num + 1'],
-                'balance' => ['exp', 'balance + ' . $this->direct],
-                'total_price'=>['exp','total_price + '.$this->direct]
+                'recommend_num' => ['exp', 'recommend_num + 1'],
+                'balance' => ['exp', 'balance + ' . $this->$direct],
+                'total_price' => ['exp', 'total_price + ' . $this->$direct]
             ];
-            $status = 2;
-            $once_direct = 0;
-            if (db('users')->where(['pid'=>$prentId,'class'=>['GT',1]])->count() < 2) {
-                $newList = [
-                    'id' => $prentId,
-                    'recommend_num' =>['exp','recommend_num + 1'],
-                    'direct_frozen' => ['exp', 'direct_frozen + ' . $this->direct]
-                ];
-                $status = 1;
-                $once_direct = 1;
-            }
-            db('users')->update($newList);
-            //增加余额记录
-            $list = AccountModel::getAccountData($prentId, $this->direct, '直推奖', 1, 1, $userId, '', $status, $once_direct);
-            AccountModel::create($list);
-            //查看上级是否存在上级, 上二级冻结金额转化为余额
+            Db::table('sql_users')->update($prentList);
+
+
+            //查看上级是否存在上级, 上二级冻结金额转化为余额  -- 指定套餐的直推奖
             $twoId = db('users')->where('id', $prentId)->value('pid');
             if ($twoId) {
-                $totalMoney = db('account')->where(['uid' => $twoId, 'from_uid' => $prentId, 'once_direct' => 0, 'type' => 1, 'status' => 1])->sum('balance');
+                $totalMoney = db('account')->where(['uid' => $twoId, 'from_uid' => $prentId, 'type' => 1, 'package_type' => $packageType, 'status' => 1])->sum('balance');
                 $newList = [
                     'id' => $twoId,
                     'balance' => ['exp', 'balance + ' . $totalMoney],
@@ -169,45 +144,48 @@ class Rebate extends Controller
                 ];
                 db('users')->update($newList);
                 //修改直推奖状态
-                db('account')->where(['uid' => $twoId, 'from_uid' => $prentId, 'once_direct' => 0, 'type' => 1, 'status' => 1])->update(['status' => 2]);
+                db('account')->where(['uid' => $twoId, 'from_uid' => $prentId, 'package_type' => $packageType, 'type' => 1, 'status' => 1])->update(['status' => 2]);
             }
-            //查看上级是否存在复投2000的感恩奖
-//            if ($prentId != 1) {
-//            if (count($selfCount) > 1) {
-            if (db('users')->where(['pid'=>$prentId,'class'=>['GT',1]])->count() < 2) {
-                $selfCount = db('row')->where(['user_id' => $prentId, 'position' => 1])->select();
-                foreach ($selfCount as $key => $val) {
-                    $time = $val['time'];
-                    $row = RowModel::all(function ($query) use ($time) {
-                        $query->order('position', 'asc');
-                        $query->field('id,user_id,user_phone,time,position');
-                        $query->where('time', $time);
-                    });
-                    if (count($row) == 7) {
-                        $conversion = $this->thanks * 4 - $this->comp;
 
-                        //感恩奖纪录改变
-                        $fourId = [
-                            $row[3]['user_id'],
-                            $row[4]['user_id'],
-                            $row[5]['user_id'],
-                            $row[6]['user_id']
-                        ];
-                        $res = db('account')->where(['uid' => $prentId, 'type' => 2, 'from_uid' => ['in', $fourId], 'status' => 1])->update(['status' => 2]);
-                        if($res){
-                            $data = [
-                                'id' => $prentId,
-                                'balance' => ['exp', 'balance +' . $conversion],
-                                'total_price' => ['exp', 'total_price + ' . $conversion],
-                                'frozen_price' => ['exp', 'frozen_price -' . $conversion]
+            //判断激活用户是否是上级第一个直推人,是的话就判断上级是否存在感恩奖
+            $row = 'sql_row' . $packageType;
+            if ($prentId != 1 && db('users')->where(['pid' => $prentId, 'class' => ['GT', 1]])->count() < 2) {      //判断是否是上级用户第一个直推人
+                $selfCount = Db::table($row)->where(['user_id' => $prentId, 'position' => 1])->select();   //获取上级用户出局情况,(是否获得感恩奖)
+                if ($selfCount) {    //若已获得感恩奖,则解冻获得的感恩奖
+                    $list = [];
+                    foreach ($selfCount as $key => $val) {
+                        $time = $val['time'];
+                        $row = Db::table($row)
+                            ->order('position', 'asc')
+                            ->field('id,user_id,user_phone,time,position')
+                            ->where('time', $time)->select();
+                        if (count($row) == 7) {
+                            $thanks = 'thanks' . $packageType;
+                            $conversion = $this->$thanks * 4 - $voucher['money'];
+
+                            //感恩奖纪录改变
+                            $fourId = [
+                                $row[3]['user_id'],
+                                $row[4]['user_id'],
+                                $row[5]['user_id'],
+                                $row[6]['user_id']
                             ];
-                            db('users')->update($data);
-                            $list[] = AccountModel::getAccountData($prentId, $conversion, '冻结金额转化', 10, 1, $row[6]['user_id']);
+                            $res = db('account')->where(['uid' => $prentId, 'type' => 2, 'from_uid' => ['in', $fourId], 'status' => 1])->update(['status' => 2]);
+                            if ($res) {
+                                $data = [
+                                    'id' => $prentId,
+                                    'balance' => ['exp', 'balance +' . $conversion],
+                                    'total_price' => ['exp', 'total_price + ' . $conversion],
+                                    'frozen_price' => ['exp', 'frozen_price -' . $conversion]
+                                ];
+                                db('users')->update($data);
+                                $list[] = AccountModel::getAccountData($prentId, $conversion, '冻结金额转化', 10, 1, $row[6]['user_id']);
+                            }
+                            //增加余额增加记录
                         }
-                        //增加余额增加记录
                     }
+                    db('account')->insertAll($list);
                 }
-                db('account')->insertAll($list);
             }
             Db::commit();
             return true;
@@ -221,7 +199,7 @@ class Rebate extends Controller
     }
 
     //成为合伙人进入公排
-    public function goQualifying($userId, $user_phone, $prentId = '')
+    public function goQualifying($userId, $user_phone, $voucherId, $prentId = '')
     {
         if (empty($prentId)) {
             $prentId = db('users')->where('id', $userId)->value('pid');
@@ -229,82 +207,46 @@ class Rebate extends Controller
         if (empty($prentId)) {
             return false;
         }
+        $voucher = Db::table('sql_voucher')->where('id', $voucherId)->find();
+        if (empty($voucher)) {
+            return false;
+        }
+        $row = 'sql_row' . $voucher['type'];         //对应公排
+        $thanks = 'thanks'.$voucher['type'];        //对应的感恩奖
         //根据上级在公排的位置,获取自己的位置,
-        /*  $result = $this->getPosition($prentId,3);
-          $time = self::$times;
-          $position = isset($result[0])?$result[0]:0;
-          if(isset($result['time']) && $result['time']){
-              $arr = [1,2,3,4,5,6,7];
-              $time = explode(',',$result['time'])[0];
-              $pos = explode(',',$result['position']);
-              $position = array_values(array_diff($arr,$pos))[0];
-          }*/
-        $result = $this->getPosition($prentId);
+        $result = $this->getPosition($prentId, $row);
         $time = $result['time'];
         $position = $result['position'];
         if ($time && $position) {
             $list = RowModel::getRowData($userId, $user_phone, $time, $position);
-            $rowlist = RowModel::create($list);
-        }else{
-            return false;
+            $rowlist = Db::table($row)->insert($list);
+        } else {
+            return false;                  //若上级7人小组满,则新建小组
         }
         //用户进入公排,第一名获得3000奖励
-        $rows = RowModel::all(function ($query) use ($time) {
-            $query->order('position', 'asc');
-            $query->field('id,user_id,user_phone,time,position');
-            $query->where('time', $time);
-        });
+        $rows = Db::table($row)
+            ->field('id,user_id,user_phone,time,position')
+            ->where('time', $time)
+            ->order('position', 'asc')->select();
         if (in_array($position, [4, 5, 6, 7])) {
             $user = UserModel::get($rows[0]['user_id']);
-            $user['frozen_price'] += $this->thanks;
+            $user['frozen_price'] += $this->$thanks;
             $user->save();
             //余额增加记录
-            $list = AccountModel::getAccountData($rows[0]['user_id'], $this->thanks, '感恩奖', 2, 1, $userId);
+            $list = AccountModel::getAccountData($rows[0]['user_id'], $this->$thanks, '感恩奖', 2, 1, $userId);
             AccountModel::create($list);
         }
         //判断第七名进入公排
         if (isset($rowlist) && count($rows) == 7) {
-            $this->reCast($rows);
+            $this->reCast($rows, $voucherId);
         }
         return true;
     }
 
-    //获取排位所在位置
-    public function getPosition_old($prentId, $num)
+
+    public function test()
     {
-        $result = [];
-        $parent = RowModel::get(function ($query) use ($prentId) {
-            $query->order('id', 'desc');
-            $query->where(['user_id' => $prentId]);
-        });
-        self::$times = $parent['time'];
-        $position = [1, 2, 3, 4, 5, 6, 7];
-        $rowPosition = db('row')->where(['time' => $parent['time']])->order('position')->column('position');
-        if ($parent['position'] == 1) {
-            $result = array_values(array_diff($position, $rowPosition));
-        } else if ($parent['position'] == 2) {
-            $result = array_values(array_diff([4, 5], $rowPosition));
-        } else if ($parent['position'] == 3) {
-            $result = array_values(array_diff([6, 7], $rowPosition));
-        }
-        if (empty($result)) {
-            if ($num != 0) {
-                $num--;
-                $result = $this->getPosition(db('users')->where('id', $prentId)->value('pid'), $num);   //若上级位置不是1 2 3 则查找上二代,三代位置
-            } else {
-                //上三代都找不到位置
-                $last = RowModel::all(function ($query) {
-                    $query->field('group_concat(time order by position asc) as time,group_concat(position order by position asc) as position ');
-                    $query->group('time');
-                });
-                foreach ($last as $key => $val) {
-                    if (substr_count($val['time'], ',') != 6) {
-                        return $val;
-                    }
-                }
-            }
-        }
-        return $result;
+
     }
 
 
@@ -313,99 +255,105 @@ class Rebate extends Controller
      * @return array
      * 获取用户排位所在位置
      */
-    public function getPosition($prentId)
+    public function getPosition($prentId, $row)
     {
-        $parent = RowModel::get(function ($query) use ($prentId) {
-            $query->order('id', 'desc');
-            $query->where(['user_id' => $prentId]);
-        });
-        if(empty($parent)){
+        $parent = Db::table($row)->where('user_id', $prentId)
+            ->order('id', 'desc')->find();
+        if (empty($parent)) {
             return false;
         }
         $position = [1, 2, 3, 4, 5, 6, 7];
-        $rowPosition = db('row')->where(['time' => $parent['time']])->order('position')->column('position');
-        $result = array_values(array_diff($position, $rowPosition));
+        $rowPosition = Db::table($row)->where(['time' => $parent['time']])->order('position')->column('position');
+        $result = array_values(array_diff($position, $rowPosition)) ?: 0;
 
         return ['time' => $parent['time'], 'position' => $result[0]];
     }
-
-
 
 
     /**
      * 7人小组满,第一名重新复投
      * 二三名重新公排
      */
-    public function reCast($row)
+    public function reCast($rows, $voucherId)
     {
+        $voucher = Db::table('sql_voucher')->where('id', $voucherId)->find();
+        if (empty($voucher)) {
+            return false;
+        }
+        $row = 'sql_row' . $voucher['type'];        //进入的公排
+        $thanks = 'thanks' . $voucher['type'];       //对应公排的感恩奖
+        $money = $voucher['money'];       //对应公排的金额
+        $direct = 'direct' . $voucher['type'];       //对应公排的直推奖
+
         Db::startTrans();
         try {
             /*====================第一名出局,复投,剩余2000转换余额================*/
-            $user = UserModel::get($row[0]['user_id']);
+            $user = UserModel::get($rows[0]['user_id']);
             //若有直推,则冻结金额转化为余额
             $i = 0;
-            if (db('users')->where(['pid' => $row[0]['user_id']])->count() > 0) {
-                $conversion = $this->thanks * 4 - $this->comp;
+            if (db('users')->where(['pid' => $rows[0]['user_id']])->count() > 0) {
+                $conversion = $this->$thanks * 4 - $money;
                 $user['balance'] += $conversion;
                 $user['total_price'] += $conversion;
                 $user['frozen_price'] -= $conversion;    //冻结金额转化余额
                 //感恩奖解冻,改变感恩奖记录状态
                 $fourId = [
-                    $row[3]['user_id'],
-                    $row[4]['user_id'],
-                    $row[5]['user_id'],
-                    $row[6]['user_id']
+                    $rows[3]['user_id'],
+                    $rows[4]['user_id'],
+                    $rows[5]['user_id'],
+                    $rows[6]['user_id']
                 ];
                 db('account')->where(['uid' => $user['id'], 'type' => 2, 'from_uid' => ['in', $fourId], 'status' => 1])->update(['status' => 2]);
                 //增加余额增加记录
-                $lists[$i] = AccountModel::getAccountData($user['id'], $conversion, '冻结金额转化', 10, 1, $row[6]['user_id']);
+                $lists[$i] = AccountModel::getAccountData($user['id'], $conversion, '冻结金额转化', 10, 1, $voucher['type'], $rows[6]['user_id']);
                 $i += 1;
             }
-            $lists[$i] = AccountModel::getAccountData($user['id'], $this->comp, '复投激活合伙人', 8, 2, $user['id']);
+            $lists[$i] = AccountModel::getAccountData($user['id'], $money, '复投激活合伙人', 8, 2, $voucher['type'], $user['id']);
             db('account')->insertAll($lists);
             //第一名复投 扣除10000
-            $user['frozen_price'] -= $this->comp;
+            $user['frozen_price'] -= $money;
             $user->save();
 
             //复投 判断自己是否有下级, 若有下级则直接返上级余额直推奖6000 ,否则返上级冻结金额6000
             if ($user['pid']) {
                 $data = [
-                    'id'=>$user['pid'],
-                    'frozen_price'=>['exp','frozen_price + '.$this->direct],
+                    'id' => $user['pid'],
+                    'frozen_price' => ['exp', 'frozen_price + ' . $this->$direct],
                 ];
                 $status = 1;
                 if ($user['recommend_num'] > 0) {
                     $data = [
-                        'id'=>$user['pid'],
-                        'balance'=>['exp','balance + '.$this->direct],
-                        'total_price'=>['exp','total_price + '.$this->direct]
+                        'id' => $user['pid'],
+                        'balance' => ['exp', 'balance + ' . $this->$direct],
+                        'total_price' => ['exp', 'total_price + ' . $this->$direct]
                     ];
                     $status = 2;
                 }
                 db('users')->update($data);
-                $list = AccountModel::getAccountData($user['pid'], $this->direct, '复投直推奖', 1, 1, $user['id'], '', $status);
+                $list = AccountModel::getAccountData($user['pid'], $this->$direct, '复投直推奖', 1, 1,$voucher['type'], $user['id'], '', $status);
                 AccountModel::create($list);
             }
 
             $last = db('row')->order('time', 'desc')->value('time');
-            /*====================第一名复投,从新公排================*/
-            $result = $this->goQualifying($row[0]['user_id'],$row[0]['user_phone']);          //出局找上级,
-            if(!$result){                                 //没有找到上级则从新公排
-                $row[0]['time'] = $last + 1;
-                $row[0]['created_at'] = date('YmdHis');
-                unset($row[0]['id']);
-                RowModel::insert(objToArray($row[0]));
-            }
+
             /*====================第二名带着下两级公排================*/
-            $twoData[0] = RowModel::getRowData($row[1]['user_id'], $row[1]['user_phone'], $last + 2, 1);
-            $twoData[1] = RowModel::getRowData($row[3]['user_id'], $row[3]['user_phone'], $last + 2, 2);
-            $twoData[2] = RowModel::getRowData($row[4]['user_id'], $row[4]['user_phone'], $last + 2, 3);
-            RowModel::insertAll($twoData);
+            $twoData[0] = RowModel::getRowData($rows[1]['user_id'], $rows[1]['user_phone'], $last + 1, 1);
+            $twoData[1] = RowModel::getRowData($rows[3]['user_id'], $rows[3]['user_phone'], $last + 1, 2);
+            $twoData[2] = RowModel::getRowData($rows[4]['user_id'], $rows[4]['user_phone'], $last + 1, 3);
+            Db::table($row)->insertAll($twoData);
             /*====================第三名带着下两级公排================*/
-            $threeData[0] = RowModel::getRowData($row[2]['user_id'], $row[2]['user_phone'], $last + 3, 1);
-            $threeData[1] = RowModel::getRowData($row[5]['user_id'], $row[5]['user_phone'], $last + 3, 2);
-            $threeData[2] = RowModel::getRowData($row[6]['user_id'], $row[6]['user_phone'], $last + 3, 3);
-            RowModel::insertAll($threeData);
+            $threeData[0] = RowModel::getRowData($rows[2]['user_id'], $rows[2]['user_phone'], $last + 2, 1);
+            $threeData[1] = RowModel::getRowData($rows[5]['user_id'], $rows[5]['user_phone'], $last + 2, 2);
+            $threeData[2] = RowModel::getRowData($rows[6]['user_id'], $rows[6]['user_phone'], $last + 2, 3);
+            Db::table($row)->insertAll($threeData);
+            /*====================第一名复投,从新公排================*/
+            $result = $this->goQualifying($rows[0]['user_id'], $rows[0]['user_phone'], $voucherId);          //出局找上级,
+            if (!$result) {                                 //没有找到上级则从新公排
+                $rows[0]['time'] = $last + 3;
+                $rows[0]['created_at'] = date('YmdHis');
+                unset($rows[0]['id']);
+                Db::table($row)->insert($rows[0]);
+            }
             Db::commit();
             return true;
         } catch (Exception $e) {

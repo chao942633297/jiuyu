@@ -15,7 +15,7 @@ use think\Exception;
 use think\Loader;
 use think\Request;
 
-class Partner extends Base
+class Partner extends Controller
 {
     protected $userId;
     protected $cost;
@@ -31,151 +31,100 @@ class Partner extends Base
     }
 
 
-
-
-
-    /**
-     * @return \think\Response
-     * 激活成为合伙人
-     * 页面
-     */
-    public function index()
-    {
-        $user = UserModel::get($this->userId);
-        //匹配报单中心id
-        $prentId = getAgentId($user['address']['province'],$user['address']['city'],$user['address']['area']);
-
-        $prent = UserModel::get($prentId);
-        //组装参数
-        $return = [];
-        $return['wqcode'] = $prent['qcode']['wqcode'];
-        $return['aqcode'] = $prent['qcode']['aqcode'];
-        $return['phone'] = $prent['phone'];
-        $return['cost'] = $this->cost;
-        return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
-    }
-
-
-
-
-
-    /**
-     * @return \think\Response
-     * 点击提交,提交申请合伙人
-     */
-    public function actLive(Request $request)
-    {
-        $count = db('voucher')->where(['uid'=>$this->userId,'status'=>1])->count();
-        if($count > 0){
-            return json(['msg'=>'您已提交申请,请耐心等待','code'=>1002]);
-        }
-        $user = UserModel::get($this->userId);
-        if($user['class'] >= 2){
-            return json(['msg'=>'您已经是报单中心无需重复申请','code'=>1002]);
-        }
-        $file = $request->file('voucher');
-        $data = [];
-        if(isset($file)){
-            $imgurl = File::upload($file);
-            $data['img'] = $imgurl->getData()['data'];
-        }
-        //获取报单中心id
-        $prentId = getAgentId($user['address']['province'],$user['address']['city'],$user['address']['area']);
-
-        $data['uid'] = $this->userId;
-        $data['actid'] = $prentId;         //激活id
-        $data['status'] = 1;         //申请中
-        $data['created_at'] = date('YmdHis');
-        $res = VoucherModel::create($data);
-        if(empty($res['img'])){
-            VoucherModel::get($res['id'])->delete();
-            return json(['msg'=>'提交失败','code'=>1001]);
-        }
-        return json(['msg'=>'提交成功','code'=>200]);
-    }
-
     /**
      * @return \think\response\Json
-     * 激活用户列表
+     * 订单激活列表
      */
     public function memberList(){
         $lists = VoucherModel::all(function($query){
-            $query->order('id','desc');
+            $query->field('id,uid,created_at');
             $query->where(['actid'=>$this->userId,'status'=>1]);
+            $query->order('id','desc');
         });
         $return = [];
         foreach($lists as $key=>$val){
-            $return[$key]['id'] = $val['uid'];
-            $return[$key]['headimgurl'] = $val['user']['headimgurl'];
-            $return[$key]['nickname'] = $val['user']['nickname'];
-            $return[$key]['phone'] = $val['user']['phone'];
-            $return[$key]['created_at'] = $val['created_at'];
+            $return[$key]['voucherId'] = $val['id'];
+            $return[$key]['user_name'] = $val['user']['nickname'];
+            $return[$key]['user_phone'] = $val['user']['phone'];
+            $return[$key]['user_headimgurl'] = $val['user']['headimgurl'];
         }
-        return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
+        $totalNum = count($return);
+        return json(['data'=>$return,'totalNum'=>$totalNum,'msg'=>'查询成功','code'=>200]);
     }
-
 
 
     /**
      * @param Request $request
-     * 确认激活
-     * 页面
+     * @return \think\response\Json
+     * 确认激活页面
      */
     public function sureActivate(Request $request){
-        $downId = $request->param('downId');
-        $downData = UserModel::get($downId);
-        if(!$downData){
+        $voucherId = $request->param('voucherId');
+        $voucherData = VoucherModel::get($voucherId);
+        if(empty($voucherData) && empty($voucherData['user'])){
             return json(['msg'=>'参数错误','code'=>1001]);
         }
         $return = [];
-
-        $return['down_phone'] = $downData['phone'];
-        $return['voucher'] = db('voucher')->where(['status'=>1,'uid'=>$downData['id']])->value('img');
-        $return['cost'] = $this->cost;
-        $return['balance'] = UserModel::get($this->userId)['balance'];
+        $return['voucherId'] = $voucherData['id'];
+        $return['user_phone'] = $voucherData['user']['phone'];
+        $return['voucher'] = $voucherData['img'];
+        $return['cost'] = $voucherData['money'];
+        $return['balance'] = $voucherData['activation']['balance'];
+        $return['created_at'] = $voucherData['created_at'];
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
     }
+
 
     /**
      * @param Request $request
      * 点击确认激活
      */
     public function actSureActivate(Request $request){
-        $input = $request->post();
-        $user = UserModel::get($this->userId);
-//        if(!isset($input['password']) || md5($input['password']) !== $user['two_password']){
-//            return json(['msg'=>'支付密码不正确','code'=>1001]);
-//        }
-        if($user['balance'] < $this->cost){
-            return json(['msg'=>'余额不足','code'=>1002]);
+        $voucherId = $request->param('voucherId');
+        if(empty($voucherId)){
+            return json(['msg'=>'参数错误','code'=>1001]);
         }
-        if(empty($input['downId'])){
-            return json(['msg'=>'参数错误','code'=>1002]);
-        }
-        $down = UserModel::get($input['downId']);
-        if($down['class'] > 1){
+        $voucherData = VoucherModel::get($voucherId);
+        if($voucherData['user']['class'] > 1){
             return json(['msg'=>'该用户已是合伙人,无需重复激活','code'=>1002]);
         }
+        if($voucherData['activation']['balance'] < $voucherData['money']){
+            return json(['msg'=>'余额不足,暂不能激活','code'=>1002]);
+        }
+
+//        if(!isset($input['password']) || md5($input['password']) !== $voucherData['activation']['two_password']){
+//            return json(['msg'=>'支付密码不正确','code'=>1002]);
+//        }
         Db::startTrans();
         try{
             //扣除自己余额
-            UserModel::get($this->userId)->setDec('balance',$this->cost);
-
-            //增加余额扣除记录
-            $list = AccountModel::getAccountData($this->userId,$this->cost,'激活合伙人',8,2,$down['id']);
-            AccountModel::create($list);
-            //返佣
-            $rebate = new Rebate();
-            $res = $rebate->partnerRebate($down['address'],$down['id']);
+            $updateUsers[0] = [
+                'balance' => ['exp', 'balance -'.$voucherData['money']],
+                'id' => $this->userId
+            ];
             //修改用户级别
-            UserModel::get($down['id'])->save(['class'=>2,'actid'=>$this->userId]);
+            $level = $voucherData['user']['level'].$voucherData['type'];
+            $updateUsers[1] = [
+                'class' => 2,
+                'level' => $level,
+                'actid' => $this->userId,
+                'id' => $voucherData['uid']
+            ];
+            $user = new UserModel();
+            $user->saveAll($updateUsers);
+            //增加余额扣除记录
+            $list = AccountModel::getAccountData($this->userId,$voucherData['money'],'激活合伙人',8,2,$voucherData['uid']);
+            AccountModel::create($list);
+            //报单中心获取 激活奖,业绩分红
+            $rebate = new Rebate();
+            $rebate->partnerRebate($this->userId,$voucherData['uid']);
+
             //修改用户申请状态
-            db('voucher')->where(['status'=>1,'uid'=>$down['id']])->update(['status'=>2]);
+            Db::table('sql_voucher')->where('id',$voucherData['id'])->update(['status'=>2]);
             //用户进入公排
             if(db('config')->where('id',1)->value('switch') == 1){
-                $rebate = new Rebate();
-                $rebate->superRebate($down['id'],$down['pid']);  //返佣- 直推奖
-                $rebate->goQualifying($down['id'],$down['phone']);
+                $rebate->superRebate($voucherData['user']['id'],$voucherData['user']['pid'],$voucherData['id']);  //返佣- 直推奖
+                $rebate->goQualifying($voucherData['user']['id'],$voucherData['user']['phone'],$voucherData['id']);
             }
             Db::commit();
             return json(['msg'=>'激活成功','code'=>200]);
@@ -184,6 +133,8 @@ class Partner extends Base
             return json(['msg'=>$e->getMessage(),'code'=>1003]);
         }
     }
+
+
 
 
     /**

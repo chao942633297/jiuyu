@@ -18,13 +18,14 @@ class AccountModel extends Model{
         return $this->belongsTo(WithdrawModel::class,'withdraw_id')->field('status');
     }
 
-    public static function getAccountData($userId,$money,$ramark,$type,$inc,$from_id='',$withdraw_id='',$status = 1,$once_direct = 0){
+    public static function getAccountData($userId,$money,$ramark,$type,$inc,$package_type,$from_id='',$withdraw_id='',$status = 1,$once_direct = 0){
         $data = [
             'uid'=>$userId,
             'balance'=>$money,
             'remark'=>$ramark,
             'type'=>$type,
             'inc'=>$inc,
+            'package_type'=>$package_type,
             'from_uid'=>$from_id,
             'withdraw_id'=>$withdraw_id,
             'status'=>$status,
