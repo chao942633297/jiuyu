@@ -3,13 +3,13 @@ return [
     // 数据库类型
     'type'           => 'mysql',
     // 服务器地址
-    'hostname'       => '127.0.0.1',
+    'hostname'       => '121.42.251.110',
     // 数据库名
-    'database'       => 'jiuyu',
+    'database'       => 'jiuyu_com',
     // 用户名
-    'username'       => 'root',
+    'username'       => 'jiuyu_com',
     // 密码
-    'password'       => '',
+    'password'       => 'jiuyu_com2017',
     // 端口
     'hostport'       => '3306',
     // 连接dsn
