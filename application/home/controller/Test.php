@@ -29,7 +29,15 @@ class Test extends Validate{
             return json(['code'=>0]);
         }
     }
-    
+
+    public function getConfig(){
+        $config = file_get_contents('config');
+        $config = unserialize($config);
+        dump($config);
+    }
+
+
+
     #app下载页面
     public function appx(){
         return view('html/firstye');
@@ -40,7 +48,6 @@ class Test extends Validate{
 
     public function test(){
         $file = File::
-        require_once('http://47.95.207.48:39996/application/backsyss/controller/Timedtask.php');
         $test = new Timedtask();
         $test->test();
 

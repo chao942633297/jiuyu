@@ -27,7 +27,7 @@ class Address extends Controller
     public function index()
     {
         $address = Db::table('sql_address')
-            ->field('id,consignee,phone,province,city,area,detail,is_default')
+            ->field('id,consignee,mobile,province,city,area,detail,is_default')
             ->where('uid', $this->userId)
             ->order('is_default', 'desc')->select();
         return json(['data' => $address, 'msg' => '查询成功', 'code' => 200]);
@@ -67,7 +67,7 @@ class Address extends Controller
             return json(['msg'=>'参数错误','code'=>1001]);
         }
         $address = Db::table('sql_address')
-            ->field('id,consignee,phone,province,city,area,detail')
+            ->field('id,consignee,mobile,province,city,area,detail')
             ->where('id',$addrId)->find();
         return json(['data'=>$address,'msg'=>'查询成功','code'=>200]);
     }

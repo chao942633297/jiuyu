@@ -6,7 +6,9 @@ namespace app\home\controller;
 use app\backsystem\model\AddressModel;
 use app\backsystem\model\RowModel;
 use app\backsystem\model\UserModel;
+use app\backsystem\model\UserRelationModel;
 use think\Controller;
+use think\Db;
 use think\Request;
 
 class Team extends Base{
@@ -22,41 +24,25 @@ class Team extends Base{
 
     //我的团队
     public function index(Request $request){
-       $type = $request->param('type');         //type = 1获取直推人员  type= 2 获取 间推人员
         $page = $request->param('page');
         $list = 10;
         $page = ($page-1) * $list;
-        if(!in_array($type,[1,2])){
-            return json(['msg'=>'参数错误','code'=>1001]);
-        }
-        if($type == 1){
-            $allId = [$this->userId];
-        }else{
-            $allId = db('users')->where(['pid'=>$this->userId])->column('id');
-        }
-        $user = [];
-        if($allId){
-            $user = UserModel::all(function($query)use($allId,$page,$list){
-                $query->order('id','desc');
-                $query->limit($page,$list);
-                $query->field('id,pid,nickname,phone,created_at,headimgurl');
-                $query->where('pid','in',$allId);
-            });
-        }
+
+        $allUser = UserRelationModel::all(function($query){
+            $query->where('pid',$this->userId);
+            $query->order('id','desc');
+        });
 
         $return = [];
-        $first = db('users')->where(['pid'=>$this->userId])->column('id');
-        $totalNum = count($first);
-        if($first){
-            $totalNum = db('users')->where('pid','in',$first)->count() + count($first);
+        $key = 0;
+        foreach($allUser as $key=>$val){
+            $return[$key]['nickname'] = $val['user']['nickname'];
+            $return[$key]['phone'] = $val['user']['phone'];
+            $return[$key]['headimgurl'] = $val['user']['headimgurl'];
+            $return[$key]['created_at'] = $val['user']['created_at'];
         }
-        foreach ($user as $key => $val) {
-            $return[$key]['nickname'] = $val['nickname'];
-            $return[$key]['phone'] = $val['phone'];
-            $return[$key]['created_at'] = $val['created_at'];
-            $return[$key]['headimgurl'] = $val['headimgurl'];
-        }
-        return json(['data'=>['return'=>$return,'id'=>$allId,'totalNum'=>$totalNum],'msg'=>'查询成功','code'=>200]);
+        $totalNum = $key + 1;
+        return json(['data'=>['return'=>$return,'totalNum'=>$totalNum],'msg'=>'查询成功','code'=>200]);
     }
 
 
@@ -66,20 +52,7 @@ class Team extends Base{
         if($user['class'] < 3){
             return json(['msg'=>'级别不够','code'=>200]);
         }
-        $where = [];
-//        $apply = db('apply')->where(['uid'=>$this->userId,'status'=>2])->find();
-//        if($user['class'] <= 5){
-//            $where['province'] = $apply['province'];
-//        }
-//        if($user['class'] <= 4){
-//            $where['city'] = $apply['city'];
-//        }
-//        if($user['class'] == 3){
-//            $where['area'] = $apply['area'];
-//        }
-//        $where['uid'] = ['neq',$this->userId];
-//        $newAddr = db('address')->where($where)->column('uid');          //获取地区内会员id
-//        $newAddr = objToArray($newAddr);
+
         $newData = UserModel::all(function($query){
             $query->order('id','desc');
             $query->where('class','>=',2);         //已激活会员
@@ -101,21 +74,28 @@ class Team extends Base{
 
 
     //我的小组
-    public function mygroup(){
-        $user = db('row')->where(['user_id'=>$this->userId])->order('id','desc')->find();
+    public function mygroup(Request $request){
+        $packageType = $request->param('type');        //传入需要查询的小组 ABC
+        if(!in_array($packageType,['A','B','C'])){
+            return json(['msg'=>'参数错误','code'=>1001]);
+        }
+        $row = 'sql_row'.$packageType;
+        $user = Db::table($row)->where(['user_id'=>$this->userId])->order('id','desc')->find();
         if(!$user){
             return json(['msg'=>'暂未进入排位','code'=>1001]);
         }
-        $row = RowModel::all(function($query)use($user){
-            $query->order('position','asc');
-            $query->where('time',$user['time']);
-        });
-        $theRound = db('row')->where(['user_id'=>$this->userId,'position'=>1])->count();
+        $rows = Db::table($row)->where('time',$user['time'])
+            ->order('position','asc')->select();
+
+        $theRound = Db::table($row)->where(['user_id'=>$this->userId,'position'=>1])->count();
         $return = [];
-        foreach($row as $key=>$val){
+        foreach($rows as $key=>$val){
+            $data = Db::table('sql_users')
+                ->field('headimgurl,nickname')
+                ->where('id',$val['user_id'])->find();
             $return[$key]['position'] = $val['position'];
-            $return[$key]['headimgurl'] = $val['user']['headimgurl'];
-            $return[$key]['user_nickname'] = $val['user']['nickname'];
+            $return[$key]['headimgurl'] = $data['headimgurl'];
+            $return[$key]['user_nickname'] = $data['nickname'];
             $return[$key]['created_at'] = $val['created_at'];
         }
         return json(['data'=>$return,'theRound'=>$theRound,'msg'=>'查询成功','code'=>200]);

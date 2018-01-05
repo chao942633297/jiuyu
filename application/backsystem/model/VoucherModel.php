@@ -45,4 +45,29 @@ class VoucherModel extends Model
     }
 
 
+    public static function getVoucherData($userId,$actId,$money,$type,$pay_type,$name,$price,$img,$consignee,$phone,$province,$city,$area,$detail){
+        $data = [
+            'uid'=>$userId,
+            'actid'=>$actId,
+            'money'=>$money,
+            'type' => $type,
+            'pay_type' => $pay_type,
+            'package_name' => $name,
+            'package_price' =>$price,
+            'package_img' =>$img,
+            'package_number' => 1,
+            'consignee' => $consignee,
+            'phone' => $phone,
+            'province' => $province,
+            'city' =>$city,
+            'area' =>$area,
+            'detail' => $detail,
+            'status' => 1,
+            'created_at' => date('YmdHis')
+        ];
+        return $data;
+    }
+
+
+
 }
