@@ -128,11 +128,17 @@ class Shoporder extends Base
 		$_POST['buyer_name'] = '王先生'; 
 		$_POST['buyer_phone'] = '18236952689'; 
 		$_POST['goodsinfo'] = array(
-			// array('goodsid'=>34,'goodsnum'=>'3'),
-			array('goodsid'=>35,'goodsnum'=>'1'),	
-			// array('goodsid'=>33,'goodsnum'=>'1'),
-			array('goodsid'=>32,'goodsnum'=>'16'),
+			//商城区
 			array('goodsid'=>31,'goodsnum'=>'1'),
+			array('goodsid'=>32,'goodsnum'=>'1'),
+			// array('goodsid'=>33,'goodsnum'=>'1'),
+			// array('goodsid'=>34,'goodsnum'=>'1'),
+			array('goodsid'=>35,'goodsnum'=>'3'),
+			array('goodsid'=>37,'goodsnum'=>'1'),	
+			//套餐区
+			// array('goodsid'=>24,'goodsnum'=>'1'),	
+			// array('goodsid'=>25,'goodsnum'=>'1'),	
+			// array('goodsid'=>26,'goodsnum'=>'1'),	
 		); 
 
 		$input = input('post.');
@@ -142,17 +148,24 @@ class Shoporder extends Base
 		}
 		$goodsInfo = $input['goodsinfo'];
 
+		$cid = ''; //不同区的商品不能合并结算 套餐和商品不能合并结算
 		foreach ($goodsInfo as $key => $value) {
-			//查询商品库存 和 是否下架 
-			$kucun = db('shop_goods')->where('id',$value['goodsid'])->field('name,num,is_under')->find();
+			//查询商品库存 和 是否下架  
+			$kucun = db('shop_goods')->where('id',$value['goodsid'])->field('name,num,is_under,cid')->find();
 			if ($kucun['is_under'] == '1' || empty($kucun)) {
 				return json(['code'=>0,'data'=>'','msg'=>$kucun['name'].'商品已经下架,请重新下单！']);
 				break;
 			}
-			if ($kucun['num'] < $value['goodsnum']) {
-				return json(['code'=>0,'data'=>'','msg'=>$kucun['name'].'商品库存不足，请重新下单！']);
-				break;
+
+			// if ($kucun['num'] < $value['goodsnum']) {
+			// 	return json(['code'=>0,'data'=>'','msg'=>$kucun['name'].'商品库存不足，请重新下单！']);
+			// 	break;
+			// }
+			if (!empty($cid) && $cid !== $kucun['cid']) {
+				return json(['code'=>0,'data'=>'','msg'=>'请将套餐和商品分开下单！']);
 			}
+			$cid = $kucun['cid'];
+			
 		}
 
 		$insertData['goodsinfo'] = $input['goodsinfo'];
@@ -173,7 +186,7 @@ class Shoporder extends Base
 
 
 	/**
-	 * 支付订单
+	 * 未支付订单 发起支付
 	 * 请求方式 
 	 * @param 
 	 */

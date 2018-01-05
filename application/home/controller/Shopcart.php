@@ -83,12 +83,12 @@ class Shopcart extends Base
 
 		//查询商品库存 和是否下架
 		$kucun = db('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under')->find();
-		if ($kucun['is_under'] == '1') {
+		if ($kucun['is_under'] == '1' || empty($kucun)) {
 			return json(['code'=>0,'data'=>'','msg'=>'商品已经下架']);
 		}
-		if ($kucun['num'] < input('param.goodsnum')) {
-			return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
-		}
+		// if ($kucun['num'] < input('param.goodsnum')) {
+		// 	return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
+		// }
 	
 		// 首先判断购物车中是否已经存在相同规格的商品
 		$num = db('shop_cart')->where($insertData)->count();
@@ -149,11 +149,11 @@ class Shopcart extends Base
 			$where['goodsid'] = $value['goodsid'];
 			$kucun = db('shop_goods')->where($where)->field('num,is_under')->find();
 			if ($kucun['is_under'] == '1' || empty($kucun)) {
-				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架']);
+				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架,请重新选择']);
 			}
-			if ($kucun['num'] < $value['goodsnum']) {
-				return json(['code'=>0,'data'=>'','msg'=>'部分商品库存不足']);	
-			}
+			// if ($kucun['num'] < $value['goodsnum']) {
+			// 	return json(['code'=>0,'data'=>'','msg'=>'部分商品库存不足']);	
+			// }
 			
 			$updateData[$key]['goodsnum'] = $value['goodsnum'];  
 			$updateData[$key]['cartid'] = $value['id'];  

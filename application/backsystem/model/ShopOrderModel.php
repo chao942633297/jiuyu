@@ -83,7 +83,7 @@ class ShopOrderModel extends Model
             $param['amount'] = $this->sumGoods($goodsinfo);
       
             // $result = $this->validate('Shoporder')->insert($param);
-            $result = Db::table('sql_shop_order')->insert($param);
+            $result = Db::table('sql_shop_order')->insertGetId($param);
             if(false === $result){
                 // 验证失败 输出错误信息
                 return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
@@ -91,15 +91,14 @@ class ShopOrderModel extends Model
                 //生成插入订单详情数据 数据为生成订单时 的信息 ，防止未付款时期商品删除时订单商品异常，订单付款时需重新更新商品信息
                 $detailData = array(); 
                 foreach ($goodsinfo as $key => $value) {
-                    $goodsdata = db('shop_goods')->field('name,price,cid,unit,imgurl,remark,description')->find($value['goodsid']);
+                    $goodsdata = db('shop_goods')->field('name,price,cid,imgurl,description')->find($value['goodsid']);
                     $detailData[$key]['goodsname'] = $goodsdata['name'];
                     $detailData[$key]['price'] = $goodsdata['price'];
                     $detailData[$key]['cid'] = $goodsdata['cid'];
-                    $detailData[$key]['unit'] = $goodsdata['unit'];
                     $detailData[$key]['imgurl'] = $goodsdata['imgurl'];
-                    $detailData[$key]['remark'] = $goodsdata['remark'];
                     $detailData[$key]['description'] = $goodsdata['description'];
                     
+                    $detailData[$key]['orderid'] = $result;
                     $detailData[$key]['order_sn'] = $param['order_sn'];
                     $detailData[$key]['goodsid'] = $value['goodsid'];
                     $detailData[$key]['goodsnum'] = $value['goodsnum'];
