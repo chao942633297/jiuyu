@@ -19,11 +19,11 @@ class Alipay extends Controller{
         if(empty($orderId)){
             return json(['msg'=>'参数错误','code'=>'1001']);
         }
-        $order = Db::table('order')->where('id',$orderId)->find();
-        $body = '购物';
-        $subject = '欧凸欧商城';
-        $out_trade_no = $order['pay_order_num'];
-        $total_amount = $order['price'];
+        $order = Db::table('sql_shop_order')->where('id',$orderId)->find();
+        $body = '商城购物';
+        $subject = '玖誉商城';
+        $out_trade_no = $order['order_sn'];
+        $total_amount = $order['amount'];
           #TODO 测试金额
         $total_amount = 0.01;
         $timeout_express = '1m';

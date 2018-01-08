@@ -23,6 +23,11 @@ class UserModel extends Model
         return $this->belongsTo(UserModel::class,'actid');
     }
 
+    public function alipay(){
+        return $this->hasOne(UserAlipayModel::class,'user_id');
+    }
+
+
 
     public function card(){
         return $this->hasOne(CardModel::class,'uid');

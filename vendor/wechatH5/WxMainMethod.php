@@ -402,6 +402,7 @@ class JsApi_pub extends UnifiedOrder_pub{
 
     /**
      * 	作用：生成可以获得code的url
+     * 静默授权
      */
     function createOauthUrlForCode($redirectUrl)
     {
@@ -409,6 +410,22 @@ class JsApi_pub extends UnifiedOrder_pub{
         $urlObj["redirect_uri"] = "$redirectUrl";
         $urlObj["response_type"] = "code";
         $urlObj["scope"] = "snsapi_base";
+        $urlObj["state"] = "STATE"."#wechat_redirect";
+        $bizString = $this->formatBizQueryParaMap($urlObj, false);
+        return "https://open.weixin.qq.com/connect/oauth2/authorize?".$bizString;
+    }
+
+
+    /**
+     * 	作用：生成可以获得code的url
+     * 手动授权
+     */
+    function createOauthUrlForUserInfo($redirectUrl)
+    {
+        $urlObj["appid"] = WxPayConf_pub::APPID;
+        $urlObj["redirect_uri"] = "$redirectUrl";
+        $urlObj["response_type"] = "code";
+        $urlObj["scope"] = "snsapi_userinfo";
         $urlObj["state"] = "STATE"."#wechat_redirect";
         $bizString = $this->formatBizQueryParaMap($urlObj, false);
         return "https://open.weixin.qq.com/connect/oauth2/authorize?".$bizString;

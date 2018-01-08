@@ -3,7 +3,7 @@
 namespace app\home\controller;
 
 
-use app\admin\model\Order;
+use app\backsystem\model\OrderModel;
 use think\Controller;
 use think\Request;
 use wechatH5\JsApi_pub;
@@ -23,7 +23,7 @@ class Wxpay extends Controller
         if (empty($orderId)) {
             exit("<script> alert('缺少主键');history.back(); </script>");
         }
-        $orderData = Order::get($orderId);
+        $orderData = OrderModel::get($orderId);
         if (!$orderData) {
             exit("<script> alert('该订单不存在!');history.back(); </script>");
         }
@@ -42,15 +42,15 @@ class Wxpay extends Controller
                 $openid = $jsApi->getOpenId();
             }
         }
-        $orderData = Order::get($orderId);
-        $out_trade_no = $orderData['pay_order_num'];
-        $total_fee = (int)$orderData['price'] * 100;
+        $orderData = OrderModel::get($orderId);
+        $out_trade_no = $orderData['order_sn'];
+     //   $total_fee = (int)$orderData['amount'] * 100;
         #TODO 测试金额
-        $total_fee = 1;
+        $total_fee = 100;
 
         $unifiedOrder = new UnifiedOrder_pub();
         $unifiedOrder->setParameter("openid", "$openid");//商品描述
-        $unifiedOrder->setParameter("body", "欧凸欧");//商品描述
+        $unifiedOrder->setParameter("body", "玖誉商城");//商品描述
         $unifiedOrder->setParameter("out_trade_no", "$out_trade_no");//商户订单号
         $unifiedOrder->setParameter("total_fee", $total_fee);//总金额
         $unifiedOrder->setParameter("notify_url", WxPayConf_pub::NOTIFY_URL);//通知地址
@@ -59,10 +59,8 @@ class Wxpay extends Controller
         //=========步骤3：使用jsapi调起支付============
         $jsApi->setPrepayId($prepay_id);
 
-
-
         $jsApiParameters = $jsApi->getParameters();
-        // dump($jsApiParameters);
+//         dump($jsApiParameters);
         // return;
         $this->assign('jsApiParameters', $jsApiParameters);
 

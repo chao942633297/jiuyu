@@ -160,6 +160,9 @@ function http($url, $data='', $method='GET'){
 
 //用户名、邮箱、手机账号中间字符串以*隐藏
 function hideStar($str) {
+    if(empty($str)){
+        return '';
+    }
     if (strpos($str, '@')) {
         $email_array = explode("@", $str);
         $prevfix = (strlen($email_array[0]) < 4) ? "" : substr($str, 0, 3); //邮箱前缀
