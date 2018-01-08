@@ -46,7 +46,12 @@ class Shopgoods extends Base
                 $re = model('ShopGoodsClassModel')->getOneShopGoodsClassField($vo['cid'],'classname');
                 $selectResult[$key]['classname'] = $re['classname'];
                 $selectResult[$key]['imgurl'] = '<img src="' . $vo['imgurl'] . '" width="40px" height="40px">';
-                $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
+                //窥探商品操作按钮
+                if ($vo['cid'] == 3) {
+                    $selectResult[$key]['operate'] = $this->showOperate($this->makeSpyButton($vo['id']));
+                }else{
+                    $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
+                }
                 $selectResult[$key]['is_under'] = empty($vo['is_under']) ? '销售中' : '<font color="red">已下架</font>';
                 $selectResult[$key]['num'] = empty($vo['num']) ? '<font color="red">'.$vo['num'].'</font>' : $vo['num'];
 
@@ -70,6 +75,7 @@ class Shopgoods extends Base
             $param = input('post.');
 
             unset($param['file']);
+            // unset($param['is_inttime']);
             $param['created_at'] = date('Y-m-d H:i:s',time());
 
             $shopgoods = new ShopGoodsModel();
@@ -136,6 +142,57 @@ class Shopgoods extends Base
         }
     }
 
+
+    //窥探商品添加
+    public function shopspygoodsadd()
+    {
+        if(request()->isPost()){
+            $param = input('post.');
+
+            unset($param['file']);
+            unset($param['is_inttime']);
+            $param['created_at'] = date('Y-m-d H:i:s',time());
+
+            $shopgoods = new ShopGoodsModel();
+            $flag = $shopgoods->addshopgoods($param);
+
+            return json(msg($flag['code'], $flag['data'], $flag['msg']));
+        }
+        //获取商品分类信息
+        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
+        
+        $this->assign('shopgoodsclass',$shopgoodsclass);
+        return $this->fetch();
+    }
+
+    //窥探商品编辑
+    public function shopspygoodsedit()
+    {
+        $shopgoods = new ShopGoodsModel();
+        if(request()->isPost()){
+
+            $param = input('post.');
+     
+            unset($param['file']);
+            unset($param['is_inttime']);
+            $flag = $shopgoods->editshopgoods($param);
+
+            return json(msg($flag['code'], $flag['data'], $flag['msg']));
+        }
+
+        $id = input('param.id');
+        $this->assign([
+            'shopgoods' => $shopgoods->getOneshopgoods($id)
+        ]);
+        //获取商品分类信息
+        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
+        $this->assign('shopgoodsclass',$shopgoodsclass);
+        return $this->fetch();
+    }
+
+
+
+
     /**
      * 拼装操作按钮
      * @param $id
@@ -144,9 +201,33 @@ class Shopgoods extends Base
     private function makeButton($id)
     {
         return [
-            '编辑' => [
+             '编辑' => [
                 'auth' => 'shopgoods/shopgoodsedit',
                 'href' => url('shopgoods/shopgoodsedit', ['id' => $id]),
+                'btnStyle' => 'primary',
+                'icon' => 'fa fa-paste'
+            ],
+            '删除' => [
+                'auth' => 'shopgoods/shopgoodsdel',
+                'href' => "javascript:shopgoodsDel(" . $id . ")",
+                'btnStyle' => 'danger',
+                'icon' => 'fa fa-trash-o'
+            ]
+        ];
+    }
+
+
+       /**
+     * 拼装操作按钮
+     * @param $id
+     * @return array
+     */
+    private function makeSpyButton($id)
+    {
+        return [
+             '编辑' => [
+                'auth' => 'shopgoods/shopspygoodsedit',
+                'href' => url('shopgoods/shopspygoodsedit', ['id' => $id]),
                 'btnStyle' => 'primary',
                 'icon' => 'fa fa-paste'
             ],

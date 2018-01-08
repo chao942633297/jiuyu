@@ -70,10 +70,12 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">商品分类：</label>
                             <div class="input-group col-sm-2">
-                                <select name="cid" id="cid" class="form-control">
-                                    {foreach $shopgoodsclass as $v}
+                                <select name="cid" id="cid" class="form-control" lay-filter="cid">
+                                    <!-- {foreach $shopgoodsclass as $v}
                                     <option value="{$v.id}">{$v.classname}</option>
-                                    {/foreach}
+                                    {/foreach} -->
+                                    <option value="1">套餐区</option>
+                                    <option value="2">商城区</option>
                                 </select>
                             </div>
                         </div>
@@ -122,6 +124,7 @@
                                 <textarea id="myEditor" type="text" class="form-control myEditor" name="description" style="height:500px;"></textarea>
                             </div>
                         </div>
+
                         <div class="form-group">
                             <div class="col-sm-4 col-sm-offset-3">
                                 <!--<input type="button" value="提交" class="btn btn-primary" id="postform"/>-->
@@ -183,6 +186,9 @@
         });
         return false;
     }
+
+
+
 </script>
 </body>
 </html>
