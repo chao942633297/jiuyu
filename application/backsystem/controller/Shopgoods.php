@@ -48,6 +48,7 @@ class Shopgoods extends Base
                 $selectResult[$key]['imgurl'] = '<img src="' . $vo['imgurl'] . '" width="40px" height="40px">';
                 $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
                 $selectResult[$key]['is_under'] = empty($vo['is_under']) ? '销售中' : '<font color="red">已下架</font>';
+                $selectResult[$key]['num'] = empty($vo['num']) ? '<font color="red">'.$vo['num'].'</font>' : $vo['num'];
 
             }
 
