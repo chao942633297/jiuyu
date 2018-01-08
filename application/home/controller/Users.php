@@ -9,6 +9,7 @@ namespace app\home\controller;
  use Service\QRcode;
  use Service\QRimage;
  use think\Controller;
+ use think\Db;
  use think\Image;
  use think\Request;
  use think\Validate;
@@ -154,6 +155,73 @@ namespace app\home\controller;
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
     }
 
+     /**
+      * @return \think\response\Json
+      * 用户设置
+      */
+     public function userSetting(){
+         $user = UserModel::get($this->userId);
+         $return = [];
+         $return['alipay'] = hideStar($user['alipay']['alipay_account']);
+         $return['openid'] = $user['openid'];
+         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
+     }
+
+     /**
+      * @return \think\response\Json
+      * 绑定支付宝页面
+      */
+     public function webBindAlipay(){
+         $phone = Db::table('sql_users')->where('id',$this->userId)->value('phone');
+         return json(['data'=>$phone,'msg'=>'查询成功','code'=>200]);
+     }
+
+
+     /**
+      * @param Request $request
+      * 执行绑定支付宝
+      */
+     public function actBindAlipay(Request $request){
+        $input = $request->post();
+        if(empty($input['account'])){
+            return json(['msg'=>'支付宝账号不能为空','code'=>1001]);
+        }else if(empty($input['name'])){
+            return json(['msg'=>'真实姓名不能为空','code'=>1001]);
+        }else if(empty($input['password'])){
+            return json(['msg'=>'登陆密码不能为空','code'=>1001]);
+        }else if(empty($input['code'])){
+            return json(['msg'=>'验证码不能为空','code'=>1001]);
+        }
+         $user = Db::table('sql_users')->where('id',$this->userId)->find();
+         if(md5($input['password']) !== $user['password']){
+             return json(['msg'=>'登陆密码错误','code'=>1002]);
+         }
+         $time = time() - 600;
+         $codeData = db('code')->where(['phone'=>$user['phone'],'type'=>5,'status'=>1])->order('id','desc')->find();
+         //TODO:获取验证码
+         if($user['phone'] != $codeData['phone'] || $input['code'] != $codeData['code']){
+             return json(['msg'=>'验证码不正确','code'=>1002]);
+         }
+         if(strtotime($codeData['created_at']) < $time ){
+             return json(['msg'=>'验证码已失效,请重新获取','code'=>1010]);
+         }
+         $alipayData = [];
+         $alipayData['user_id'] = $this->userId;
+         $alipayData['alipay_account'] = $input['account'];
+         $alipayData['alipay_name'] = $input['name'];
+         $alipayData['created_at'] = date('YmdHis');
+        $res = Db::table('sql_user_alipay')->insert($alipayData);
+         if($res){
+             return json(['msg'=>'绑定成功','code'=>200]);
+         }
+         return json(['msg'=>'绑定失败','code'=>1004]);
+     }
+
+
+
+
+
+
 
      //获取用户手机号 --修改密码使用
      public function getMyPhone(){
@@ -191,12 +259,12 @@ namespace app\home\controller;
          $code = $input['code'];
          $time = time() - 600;
          $codeData = db('code')->where(['phone'=>$phone,'type'=>2,'status'=>1])->order('id','desc')->find();
-         if(strtotime($codeData['created_at']) < $time ){
-             return json(['msg'=>'验证码已失效,请重新获取','code'=>1010]);
-         }
          //TODO:获取验证码
          if($phone != $codeData['phone'] || $code != $codeData['code']){
              return json(['msg'=>'验证码不正确','code'=>1002]);
+         }
+         if(strtotime($codeData['created_at']) < $time ){
+             return json(['msg'=>'验证码已失效,请重新获取','code'=>1010]);
          }
          $type = 'password';
          if(isset($input['type']) && $input['type'] == 1){
