@@ -9,7 +9,7 @@ exit;*/
 
 $allow_origin = array(
     'http://jiuyu.app',
-    'http://api.cciev.cn',
+    'http://admin.jiuyushangmao.com',
     'http://localhost:8080'
 );
 $origin = isset($_SERVER['HTTP_ORIGIN'])? $_SERVER['HTTP_ORIGIN'] : '';

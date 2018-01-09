@@ -17,7 +17,6 @@ class Gconfig extends Base
     public function saveConfig(){
         $param = input('param.');
         $param = parseParams($param['data']);
-//         var_dump($param);die;
          $param = serialize($param);
          file_put_contents('./config',$param);
         return json(['code'=>1,'msg'=>'修改成功']);

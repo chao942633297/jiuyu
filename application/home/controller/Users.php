@@ -85,13 +85,15 @@ namespace app\home\controller;
     public function actEditUser(Request $request)
     {
         $nickname = $request->param('nickname');
+        $input = $request->post();
         $file =$request->file('headImg');
         $data = [];
         if(isset($file)){
             $imgurl = File::upload($file);
             $data['headimgurl'] = $imgurl->getData()['data'];
         }
-        $data['nickname'] = $nickname;
+        $data['nickname'] = $input['nickname'];
+        $data['truename'] = $input['truename'];
         $data['updated_at'] = date('YmdHis');
         $res = db('users')->where('id',$this->userId)->update($data);
         if($res){

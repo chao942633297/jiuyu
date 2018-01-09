@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶管理</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/plugins/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <link href="__CSS__/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link rel="stylesheet" href="__JS__/plugins/layui/css/layui.css">
+    <script src="__JS__/jquery.min.js?v=2.1.4"></script>
+    <style>
+        .big-box {
+            overflow: hidden;
+            width: 100%;
+        }
+        .show-box {
+            float: left;
+            width: 30%;
+            height: 0;
+            padding-bottom: 10%;
+            margin-left: 3%;
+            margin-top: 1%;
+            margin-bottom: 1%;
+            position: relative;
+            background-image: url(__IMG__/111.png);
+            background-size: 100% 100%;
+            min-width: 240px;
+            min-height: 80px;
+        }
+        .show-box_phone {
+            position: absolute;
+            width: 21%;
+            height: 19%;
+            font-size: 12px;
+            text-align: center;
+            overflow: auto;
+            border: 0;
+        }
+        .phone1 {
+            top: 1%;
+            left: 39.5%;
+        }
+        .phone2 {
+            top: 41%;
+            left: 13.5%;
+        }
+        .phone3 {
+            top: 41%;
+            left: 66%;
+        }
+        .phone4 {
+            top: 80%;
+            left: 1%;
+        }
+        .phone5 {
+            top: 80%;
+            left: 26%;
+        }
+        .phone6 {
+            top: 80%;
+            left: 53%;
+        }
+        .phone7 {
+            top: 80%;
+            left: 78%;
+        }
+        #addBox{
+            margin-left: 10px;
+        }
+        .add-hr {
+            background-color: #1ab394;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+    <br>
+    <span id="addBox"><button class="btn btn-outline btn-primary" type="button">添加排位</button></span>
+    <div class="big-box">
+    {foreach $info as $v}
+        <div class="show-box">
+            <input class="show-box_phone phone1" type="text" value="{$v[1]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone2" type="text" value="{$v[2]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone3" type="text" value="{$v[3]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone4" type="text" value="{$v[4]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone5" type="text" value="{$v[5]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone6" type="text" value="{$v[6]['phone'] | default=''}" disabled="true">
+            <input class="show-box_phone phone7" type="text" value="{$v[7]['phone'] | default=''}" disabled="true">
+        </div>
+    {/foreach}
+    </div>
+
+    <script src="__JS__/plugins/layer/layer.min.js"></script>
+    <script>
+        //默认输入框内容
+        var initValue = '';
+        var inputFlag = true;
+        $('.big-box').on('dblclick',function (e) {
+            if ($(e.target).is('.show-box_phone') && $(e.target).val().length == 0) {
+                $(e.target).attr('disabled',false);
+                initValue = $(e.target).val();
+                inputFlag = true;
+                $(e.target).on('blur', function () {
+                    if (inputFlag) {
+                        inputFlag = false;
+                        var time = $(e.target).parent().index('.show-box') + 1;
+                        var phone = $(this).val();
+
+                        if ($(e.target).index() >= 3) {
+                            var thisParentNum = parseInt(($(e.target).index() - 1) / 2);
+                            var phoneParent = $(this).siblings().eq(thisParentNum).val();
+                        } else {
+                            var thisParentNum = 0;
+                            var phoneParent = $(this).siblings().eq(thisParentNum).val();
+                        }
+                        var thisNum = $(e.target).index() + 1;
+
+                        if(confirm('是否确认更改数据?')) {
+                            $.ajax({
+                                url:'/backsystem/Row/edit_position',
+                                data:{
+                                    phone:phone,
+                                    time:time,
+                                    phoneParent:phoneParent,
+                                    position:thisNum
+                                },
+                                type:'post',
+                                success:function(res){
+                                    if(res.code == 200){
+                                        delBlur($(e.target).val(), $(e.target).data('id'), $(e.target));
+                                        $(e.target).attr('disabled',true);
+                                    }else{
+//                                        delBlur($(e.target).val(), $(e.target).data('id'), $(e.target));
+                                        $(e.target).val(initValue);
+                                        $(e.target).attr('disabled',true);
+                                    }
+                                    layer.msg(res.msg);
+                                }
+                            });
+
+                        } else {
+                            $(e.target).val(initValue);
+                        }
+                    }
+                });
+            }
+        });
+
+        //添加新块
+        $('#addBox').on('click', function () {
+            addAjax();
+            var bigBox = $('<div class="show-box"></div>');
+            var str = '';
+            for (var i = 1; i <= 7; i++) {
+                str += '<input class="show-box_phone phone' + i + '" type="text" disabled="true">';
+            }
+            bigBox.html(str);
+
+            $('.big-box').append(bigBox);
+
+            addHr(winNum);
+        });
+
+        //修改input值
+        function delBlur(num, id, it) {
+            //输入框内容,当前输入框id,当前输入框
+            it.off('blur');
+            // 事件
+            console.log(num);
+        }
+
+        //添加新块,ajax改成同步
+        function addAjax() {
+
+        }
+
+        showWhat();
+        window.onresize = showWhat;
+        var winNum = 3;
+        // 获取屏幕内可以放几块内容
+        function showWhat() {
+            var bigWidth = parseFloat($('.gray-bg').css('width'));
+            var smallWidth = parseFloat($('.show-box').css('width')) + parseFloat($('.show-box').css('margin-left'));
+            var num = Math.floor(bigWidth / smallWidth) ? Math.floor(bigWidth / smallWidth) : 1;
+            if (num !== winNum) {
+                winNum = num;
+                addHr(num);
+            }
+        }
+
+        // 生成br标签
+        function addHr(index) {
+            $('.show-box').before()
+            var arr = $('.show-box');
+            $('.add-hr').remove();
+            console.log(index);
+            for (var i = 0; i < arr.length; i++) {
+                if (i % index === 0 && i !== 0) {
+                    arr.eq(i).before('<hr class="add-hr" />');
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
