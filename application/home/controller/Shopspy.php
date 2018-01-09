@@ -1,10 +1,11 @@
 <?php 
 namespace app\home\controller;
 
-use think\Controller;
-use think\Validate;
+use app\backsystem\model\UserModel;
 use app\backsystem\model\ShopGoodsModel;
 use app\backsystem\model\ShopSpyRecordModel;
+use think\Controller;
+use think\Validate;
 /**
 * 窥探商品
 */
@@ -17,10 +18,6 @@ class Shopspy extends Controller
 	    parent::_initialize(); // 判断用户是否登陆
 	    session('home_user_id','90');
 	    $this->userId = session('home_user_id');
-	    // $this->userId = input('param.userId');
-	    if ($this->userId < 0 || empty($this->userId)) {
-	    	return json(['code'=>0,'data'=>'','msg'=>'获取用户信息失败']);
-	    }
 	}
 
 
@@ -31,15 +28,11 @@ class Shopspy extends Controller
 		//根据sort 获取销售中（is_under=0）的窥探商品
 		$page = !empty(input('param.page')) ? input('param.page') : '1';
 		$limit = !empty(input('param.limit')) ? input('param.limit') : '10';
-		$cid = !empty(input('param.cid')) ? input('param.cid') : '';  //分类ID
 		$offset = ($page-1)*$limit;
 		$where = array();
 		$where['is_under'] = '0';
-		$where['cid'] = '3'; //只获取窥探商品
-		// $where['cid'] = '3'; //只获取窥探商品  还没有过获奖间隔期的商品
-		if (!empty($cid)) {
-			$where['cid'] = $cid;
-		}
+		$where['cid'] = '2'; //只获取窥探商品 还没有过获奖间隔期的商品
+
 		$shopGoodsList  = $shopgoods->getShopGoodsByWhere($where, $offset, $limit,'sort desc,id desc','id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot');
 		
 		return json(['code'=>1,'data'=>$shopGoodsList,'msg'=>'success']);
@@ -60,7 +53,7 @@ class Shopspy extends Controller
 	}
 
 
-	/** 窥探支付
+	/** 窥探支付 
 	 *
 	 *
 	 *
@@ -71,15 +64,18 @@ class Shopspy extends Controller
 		    'goodsid'=>'require',
 		    'spy_num'=>'require',
 		    'payment'=>'require',
+		    'two_password'=>'require',
 		];
 		$msg = [
 		    'goodsid.require'=>'商品id不能空',
 		    'spy_num'=>'窥探次数不能空',
 		    'payment'=>'支付方式不能空',
+		    'two_password'=>'支付密码不能空',
 		];
 
-		$_POST['goodsid'] = '43'; 
-		$_POST['spy_num'] = '5'; 
+		$_POST['two_password'] = '123456'; 
+		$_POST['goodsid'] = '45'; 
+		$_POST['spy_num'] = '3'; 
 		$_POST['payment'] = '3'; 
 		
 		$input = input('post.');
@@ -89,6 +85,12 @@ class Shopspy extends Controller
 		}
 		if ($input['spy_num'] < 1 || $input['spy_num'] > 10) {
 			return json(['code'=>0,'data'=>'','msg'=>'窥探次数必须是1-10次']);
+		}
+
+		// 验证支付密码
+		$user = UserModel::get($this->userId);
+		if($user['two_password'] !== md5($input['two_password'])){
+		    return json(['msg'=>'支付密码不正确','code'=>0,'data'=>'']);
 		}
 		
 
@@ -105,20 +107,119 @@ class Shopspy extends Controller
 		}
 
 		$insertData['userid'] = $this->userId;
+		$insertData['username'] = $user['nickname'];
 		$insertData['once_price'] = $goodsInfo['once_price'];
 		$insertData['spy_num'] = $input['spy_num'];
 		$insertData['amount'] = $insertData['once_price']*$insertData['spy_num'];
 		$insertData['goodsid'] = $goodsInfo['id'];
 		$insertData['goodsname'] = $goodsInfo['name'];
 		$insertData['goodsimgurl'] = $goodsInfo['imgurl'];
+		$insertData['payment'] = $input['payment'];
 
 		//余额支付 
+		$ShopSpy = new ShopSpyRecordModel();
+		$lastRecord =  $ShopSpy->getLastSpyRecords($this->userId,$goodsInfo['id']);
+		$lastRecord = objToArray($lastRecord);
+
+		if (!empty($lastRecord) && time()-strtotime($lastRecord[0]['created_at']) < $goodsInfo['int_time']) {
+			return json(['code'=>0, 'data'=>'', 'msg'=>"窥探间隔时间".$goodsInfo['int_time']."秒，请稍后重试"]);
+		}
+		// dump($lastRecord);
+		// dump($lastRecord[0]['created_at']);
+		// exit;
 		if ($input['payment'] == 3) {
-			$ShopSpy = new ShopSpyRecordModel();
 			$flag = $ShopSpy->addShopSpyRecord($insertData);		
 		}
 
-		return json([$flag['code'], $flag['data'], $flag['msg']]);
+		return json(['code'=>$flag['code'], 'data'=>$flag['data'], 'msg'=>$flag['msg']]);
+
+		// dump($insertData);
+        // $ShopOrder = new ShopOrderModel();
+        // $flag = $ShopOrder->addShopOrder($insertData);
+        // return json([$flag['code'], $flag['data'], $flag['msg']]);
+	}
+
+
+
+	/** 抢购支付 并未产生订单
+	 *
+	 *
+	 *
+	 */
+	public function panicPay()
+	{
+		$rule = [
+		    'goodsid'=>'require',
+		    'spy_num'=>'require',
+		    'payment'=>'require',
+		    'two_password'=>'require',
+		];
+		$msg = [
+		    'goodsid.require'=>'商品id不能空',
+		    'spy_num'=>'窥探次数不能空',
+		    'payment'=>'支付方式不能空',
+		    'two_password'=>'支付密码不能空',
+		];
+
+		$_POST['two_password'] = '123456'; 
+		$_POST['goodsid'] = '45'; 
+		$_POST['spy_num'] = '3'; 
+		$_POST['payment'] = '3'; 
+		
+		$input = input('post.');
+		$validate = new Validate($rule,$msg);
+		if(!$validate->check($input)){
+		    return json(['msg'=>$validate->getError(),'code'=>0]);
+		}
+		if ($input['spy_num'] < 1 || $input['spy_num'] > 10) {
+			return json(['code'=>0,'data'=>'','msg'=>'窥探次数必须是1-10次']);
+		}
+
+		// 验证支付密码
+		$user = UserModel::get($this->userId);
+		if($user['two_password'] !== md5($input['two_password'])){
+		    return json(['msg'=>'支付密码不正确','code'=>0,'data'=>'']);
+		}
+		
+
+		$goodsInfo = db('shop_goods')->where('id',$input['goodsid'])->field('*')->find();
+		
+		if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
+			return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经下架,请选择其他商品窥探！']);
+		}
+		if ($goodsInfo['sur_price'] == '0') {
+			return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经被别人窥探走了,请选择其他商品窥探！']);
+		}
+		if (!in_array($input['payment'],array('1','2','3'))) {
+			return json(['code'=>0,'data'=>'','msg'=>'支付方式错误']);
+		}
+
+		$insertData['userid'] = $this->userId;
+		$insertData['username'] = $user['nickname'];
+		$insertData['once_price'] = $goodsInfo['once_price'];
+		$insertData['spy_num'] = $input['spy_num'];
+		$insertData['amount'] = $insertData['once_price']*$insertData['spy_num'];
+		$insertData['goodsid'] = $goodsInfo['id'];
+		$insertData['goodsname'] = $goodsInfo['name'];
+		$insertData['goodsimgurl'] = $goodsInfo['imgurl'];
+		$insertData['payment'] = $input['payment'];
+
+		//余额支付 
+		$ShopSpy = new ShopSpyRecordModel();
+		$lastRecord =  $ShopSpy->getLastSpyRecords($this->userId,$goodsInfo['id']);
+		$lastRecord = objToArray($lastRecord);
+
+		if (!empty($lastRecord) && time()-strtotime($lastRecord[0]['created_at']) < $goodsInfo['int_time']) {
+			return json(['code'=>0, 'data'=>'', 'msg'=>"窥探间隔时间".$goodsInfo['int_time']."秒，请稍后重试"]);
+		}
+		// dump($lastRecord);
+		// dump($lastRecord[0]['created_at']);
+		// exit;
+		if ($input['payment'] == 3) {
+			$flag = $ShopSpy->addShopSpyRecord($insertData);		
+		}
+
+		return json(['code'=>$flag['code'], 'data'=>$flag['data'], 'msg'=>$flag['msg']]);
 
 		// dump($insertData);
         // $ShopOrder = new ShopOrderModel();

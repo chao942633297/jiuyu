@@ -215,7 +215,7 @@ class Shoporder extends Base
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		$_POST['order_sn'] = '201801031514943144912'; 
+		$_POST['order_sn'] = '201801091515483968621'; 
 		$_POST['two_password'] = '123456'; 
 		$_POST['payment'] = '3'; 
 		$_POST['province'] = '河南省'; 
@@ -273,9 +273,9 @@ class Shoporder extends Base
 			    $user = UserModel::get($this->userId);
 			    $accountData = [];
 			    $accountData['uid'] = $this->userId;
-			    $accountData['balance'] = $user->balance; //账户扣除后的余额
+			    $accountData['balance'] = $sum; //账户扣除后的余额
 			    $accountData['remark'] = '商城订单支付';
-			    $accountData['money'] = $sum;
+			    // $accountData['money'] = $sum;
 			    $accountData['inc'] = 2;
 			    $accountData['type'] = 12;  // 扣币类型 12：商城订单支付
 			    $accountData['create_at'] = date('YmdHis');
@@ -289,7 +289,7 @@ class Shoporder extends Base
         		$where = [];
         		$where['order_sn'] = input('post.order_sn');
         		foreach ($goodsinfo as $key => $value) {
-        		    $newData = db('ShopGoods')->where('id',$value['goodsid'])->field('name as goodsname,price,unit,imgurl')->find();
+        		    $newData = db('ShopGoods')->where('id',$value['goodsid'])->field('name as goodsname,price,imgurl')->find();
         		    $where['goodsid'] = $value['goodsid'];
         		    db('shop_order_detail')->where($where)->update($newData);
         		}
