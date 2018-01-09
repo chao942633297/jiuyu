@@ -31,6 +31,10 @@ class Login extends Controller
         if ($userinfo['status'] == 2) {
             return json(['code' => 102, 'msg' => '账号已被禁止登陆']);
         }
+        if(empty($userinfo['openid']) && session('replay_openid') ){
+            $userinfo['openid'] = session('replay_openid');
+            Db::table('sql_users')->update($userinfo);
+        }
         #存储session
         session('home_user_id', $userinfo['id']);
         $_SESSION['home_user_id'] = $userinfo['id'];
@@ -78,6 +82,9 @@ class Login extends Controller
 //            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
             $falg = ['password' => 123456, 'two_password' => 123456];      //获取登陆密码支付密码
             $userData['pid'] = $prentId;
+            if(session('replay_openid')){
+                $userData['openid'] = session('replay_openid');
+            }
             $userData['phone'] = $input['phone'];
             $userData['unique'] = md5($input['phone']);
             $userData['headimgurl'] = config('back_domain') . '/uploads/default.png';
@@ -95,6 +102,8 @@ class Login extends Controller
             if ($result) {
                 //修改验证码使用状态
                 Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);
+                session('home_user_id', $res['id']);
+                $_SESSION['home_user_id'] = $res['id'];
                 Db::commit();
                 return json(['msg' => '注册成功', 'code' => 200]);
             }

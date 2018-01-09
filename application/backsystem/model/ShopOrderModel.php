@@ -11,6 +11,12 @@ class ShopOrderModel extends Model
 {
     protected $table = 'sql_shop_order';
 
+
+    public function user(){
+        return $this->belongsTo(UserModel::class,'uid');
+    }
+
+
     /**
      * 根据搜索条件获取商城订单列表信息
      * @param $where

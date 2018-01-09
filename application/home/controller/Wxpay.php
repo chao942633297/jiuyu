@@ -3,7 +3,7 @@
 namespace app\home\controller;
 
 
-use app\backsystem\model\OrderModel;
+use app\backsystem\model\ShopOrderModel;
 use think\Controller;
 use think\Request;
 use wechatH5\JsApi_pub;
@@ -23,7 +23,7 @@ class Wxpay extends Controller
         if (empty($orderId)) {
             exit("<script> alert('缺少主键');history.back(); </script>");
         }
-        $orderData = OrderModel::get($orderId);
+        $orderData = ShopOrderModel::get($orderId);
         if (!$orderData) {
             exit("<script> alert('该订单不存在!');history.back(); </script>");
         }
@@ -42,11 +42,11 @@ class Wxpay extends Controller
                 $openid = $jsApi->getOpenId();
             }
         }
-        $orderData = OrderModel::get($orderId);
+        $orderData = ShopOrderModel::get($orderId);
         $out_trade_no = $orderData['order_sn'];
      //   $total_fee = (int)$orderData['amount'] * 100;
         #TODO 测试金额
-        $total_fee = 100;
+        $total_fee = 1;
 
         $unifiedOrder = new UnifiedOrder_pub();
         $unifiedOrder->setParameter("openid", "$openid");//商品描述

@@ -417,7 +417,7 @@ class JsApi_pub extends UnifiedOrder_pub{
 
 
     /**
-     * 	作用：生成可以获得code的url
+     * 	生成可获取用户信息的url
      * 手动授权
      */
     function createOauthUrlForUserInfo($redirectUrl)

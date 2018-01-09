@@ -3,6 +3,7 @@
 namespace app\backsystem\controller;
 
 use app\backsystem\model\GoodsModel;
+use think\Db;
 
 class Goods extends Base
 {
@@ -132,6 +133,13 @@ class Goods extends Base
         if(request()->isPost()){
             $param = input('param.');
             $param = parseParams($param['data']);
+            if($param['id'] == 1){
+                Db::table('sql_voucher')->where('id',1)->update(['money'=>$param['price']]);
+            }else if($param['id'] == 2){
+                Db::table('sql_voucher')->where('id',2)->update(['money'=>$param['price']]);
+            }else if($param['id'] == 3){
+                Db::table('sql_voucher')->where('id',3)->update(['money'=>$param['price']]);
+            }
             $param['updated_at'] = time();
             $flag = $good->editGoods($param);
             return json(['code' => $flag['code'], 'data' => $flag['data'], 'msg' => $flag['msg']]);

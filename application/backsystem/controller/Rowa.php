@@ -1,6 +1,7 @@
 <?php
 namespace app\backsystem\controller;
 
+use app\backsystem\model\AccountModel;
 use app\backsystem\model\RowModel;
 use app\backsystem\model\UserModel;
 use app\home\controller\Rebate;
@@ -9,9 +10,9 @@ use think\Exception;
 use think\Log;
 use think\Request;
 
-class Row extends Base{
+class Rowa extends Base{
 
-    static $thanks;
+    static $thanksA;
 
     public function _initialize()
     {
@@ -19,7 +20,7 @@ class Row extends Base{
         //参数设置,从配置读取
         $config = file_get_contents('config');
         $conf = unserialize($config);
-        self::$thanks = $conf['thanks'];    //管理奖
+        self::$thanksA = $conf['thanksA'];    //管理奖
     }
 
     /***
@@ -27,10 +28,13 @@ class Row extends Base{
 		***/
         public function rowlist()
         {
-            $info = RowModel::all(function($query){
+        /*    $info = RowModel::all(function($query){
                 $query->field('group_concat(user_phone order by position asc) as combination,group_concat(position order by position asc) as position ');
                 $query->group('time');
-            });
+            });*/
+            $info = Db::table('sql_rowA')
+                ->field('group_concat(user_phone order by position asc) as combination,group_concat(position order by position asc) as position ')
+                ->group('time')->select();
             $lists = [];
             foreach($info as $key=>$val){
                 $data = explode(',',$val['combination']);
@@ -46,9 +50,8 @@ class Row extends Base{
                     $lists[$key][$item]['phone'] = $data[$k];
                 }
             }
-
             $this->assign('info',$lists);
-            return $this->fetch();
+            return $this->fetch('row/rowlista');
         }
 
 
@@ -72,18 +75,26 @@ class Row extends Base{
         Db::startTrans();
         try{
             $list = RowModel::getRowData($user['id'],$user['phone'],$input['time'],$input['position']);
-            $res = RowModel::create($list);
+            Db::table('sql_rowA')->update($list);
             //用户进入公排,第一名获得3000感恩奖,奖励
-            $row = RowModel::all(function($query)use($input){
+         /*   $row = RowModel::all(function($query)use($input){
                 $query->order('id','asc');
                 $query->field('id,user_id,user_phone,time,position');
                 $query->where('time',$input['time']);
-            });
-                UserModel::get($row[0]['user_id'])->setInc('frozen_price',self::$thanks);
+            });*/
+            $row = Db::table('sql_rowA')
+                ->field('id,user_id,user_phone,time,position')
+                ->where('time',$input['time'])
+                ->order('id','asc')->select();
+            if(in_array($input['position'],[4,5,6,7])){
+                UserModel::get($row[0]['user_id'])->setInc('frozen_price',self::$thanksA);
+                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksA, '感恩奖', 2, 1,'A', 1);
+                AccountModel::create($list);
+            }
             //若添加的是第七名
             if(isset($res) && $res['position'] == 7){
                 $rebate = new Rebate();
-                $result = $rebate->reCast($row);
+                $result = $rebate->reCast($row,1);
                 Log::info($result);
             }
             Db::commit();

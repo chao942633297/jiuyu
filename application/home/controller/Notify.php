@@ -2,13 +2,15 @@
 
 namespace app\home\controller;
 
-
-use app\backsystem\model\OrderModel;
 use think\Controller;
 use think\Db;
 use think\Request;
+use Vendor\AliPay\AlipayTradeService;
 use wechatH5\Notify_pub;
 
+vendor('wechatH5.WxMainMethod');
+vendor('AliPay.Config');
+vendor('AliPay.AlipayTradeService');
 class Notify extends Controller
 {
 
@@ -43,13 +45,17 @@ class Notify extends Controller
     }
 
 
-    public function aliPayNotify(Request $request)
+    /**
+     * @return string
+     * @throws \think\Exception
+     * 支付宝支付回调
+     */
+    public function aliPayNotify()
     {
-        $arr = $request->post();
-        $file = 'ali_notify.log';
-        $this->log_result($file, $arr);
+        $arr = $_POST;
+//        $this->log_result('ali_notify.log', json_encode($arr));
         $config = \vendor\AliPay\Config::config();
-        $alipayService = new \vendor\AliPay\AlipayTradeService($config);
+        $alipayService = new AlipayTradeService($config);
         $result = $alipayService->check($arr);
         if ($result) {
             $orderCode = htmlspecialchars($arr['out_trade_no']);
@@ -70,10 +76,17 @@ class Notify extends Controller
     {
         $fp = fopen($file, "a");
         flock($fp, LOCK_EX);
-        fwrite($fp, "执行日期：" . strftime("%Y-%m-%d-%H：%M：%S", time()) . "\n" . $word . "\n\n");
+        fwrite($fp, "执行日期：" . strftime("%Y-%m-%d-%H：%M：%S", time()) . "\n" . json_encode($word) . "\n\n");
         flock($fp, LOCK_UN);
         fclose($fp);
     }
+
+
+
+
+
+
+
 
 }
 
