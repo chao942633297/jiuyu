@@ -148,7 +148,7 @@ class Shopgoods extends Base
     {
         if(request()->isPost()){
             $param = input('post.');
-
+            $param['sur_price'] = $param['price'];
             unset($param['file']);
             unset($param['is_inttime']);
             $param['created_at'] = date('Y-m-d H:i:s',time());

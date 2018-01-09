@@ -71,11 +71,7 @@
                             <label class="col-sm-3 control-label">商品分类：</label>
                             <div class="input-group col-sm-2">
                                 <select name="cid" id="cid" class="form-control" lay-filter="cid">
-                                    <!-- {foreach $shopgoodsclass as $v}
-                                    <option value="{$v.id}">{$v.classname}</option>
-                                    {/foreach} -->
-                                    <option value="1">套餐区</option>
-                                    <option value="2">商城区</option>
+                                    <option value="1">商城区</option>
                                 </select>
                             </div>
                         </div>
@@ -93,6 +89,12 @@
                                 <input type="hidden" value="" id="canshu" name="canshu"/>
                                 <img style="width: 200px;height: 200px;" class="form-control canshuurl"
                                      src="__IMG__/default.png" onclick="javascript:$('#canshuurl').click();"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">销量：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="" id="hot" name="hot" class="form-control" />
                             </div>
                         </div>
                         <div class="form-group">
