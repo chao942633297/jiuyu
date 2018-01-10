@@ -34,4 +34,14 @@ class Base extends Controller
         ]);
 
     }
+
+    public function isLogin(){
+        return json(['data'=>session('username'),'msg'=>'登陆状态','code'=>200]);
+    }
+
+    public function outLogin(){
+        session_destroy();
+        return json(['msg'=>'推出成功','code'=>200]);
+    }
+
 }
