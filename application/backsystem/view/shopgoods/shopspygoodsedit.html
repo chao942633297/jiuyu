@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑窥探商品</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__CSS__/plugins/iCheck/custom.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <!-- Sweet Alert -->
+    <link href="__CSS__/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="__JS__/plugins/layui/css/layui.css" rel="stylesheet">
+    <link href="__JS__/umeditor/themes/default/css/umeditor.css" type="text/css" rel="stylesheet">
+    <style>
+        .layui-upload-button{
+            display: none;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+<!-- 图片上传 -->
+<form id="fmform" action="" method="POST" enctype="multipart/form-data">
+    <input type="hidden" value="fmimg" name="imgtype"/>
+    <input id="fmimg" style="display: none;" name="files" type="file" onchange="upload('fmform','goodsimg')"/>
+</form>
+<input type="file" name="files" id="canshuurl" class="layui-upload-file" style="display: none;">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>编辑窥探商品</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="form_basic.html#">
+                            <i class="fa fa-wrench"></i>
+                        </a>
+                        <a class="close-link">
+                            <i class="fa fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form class="form-horizontal m-t layui-form" id="commentForm" method="post" onsubmit="return toVaild()">
+                        <input type="hidden" name="id" value="{$shopgoods.id}">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品名称：</label>
+                            <div class="input-group col-sm-4">
+                                <input id="name" type="text" class="form-control" name="name" required=""
+                                       aria-required="true" lay-verify="required" value="{$shopgoods.name}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品价格：</label>
+                            <div class="input-group col-sm-3">
+                                <input id="price" type="text" class="form-control" name="price" required=""
+                                       aria-required="true" lay-verify="price" value="{$shopgoods.price}">单位（元）
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品单位：</label>
+                            <div class="input-group col-sm-1">
+                                <input id="unit" type="text" class="form-control" name="unit" lay-verify="required" value="{$shopgoods.unit}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品分类：</label>
+                            <div class="input-group col-sm-2">
+                                <select name="cid" id="cid" class=" layui-form-item" lay-filter="cid">
+                                    <option value="2">窥探区</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- <div class="spy layui-hide"> -->
+                        <div class="spy ">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">单次窥探价格：</label>
+                                <div class="input-group col-sm-4">
+                                    <input id="once_price" type="text" class="form-control" name="once_price" lay-verify="once_price" value="{$shopgoods.once_price}">
+                                    单位（元）商品价格是必须是窥探价的整数倍
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">抢购倒计时时间：</label>
+                                <div class="input-group col-sm-3">
+                                    <input id="countdown" type="text" class="form-control" name="countdown" lay-verify="required" value="{$shopgoods.countdown}">
+                                    单位（小时）
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">是否设置窥探时间间隔：</label>
+                                <div class="input-group col-sm-3">
+                                    <input type="radio" name="is_inttime" title="是" checked="" value="1"  lay-filter="is_inttime">
+                                    <input type="radio" name="is_inttime" title="否" value="0" lay-filter="is_inttime">
+                                </div>
+                            </div>
+                            <div class="form-group is_inttime">
+                                <label class="col-sm-3 control-label"><!-- 窥探时间间隔： --></label>
+                                <div class="input-group col-sm-1">
+                                    <select name="int_time" id="int_time" class=" layui-form-item" lay-filter="int_time">
+                                        <option value="0" {if $shopgoods.int_time==0}selected{/if} >0</option>
+                                        <option value="5" {if $shopgoods.int_time==5}selected{/if} >5</option>
+                                        <option value="10" {if $shopgoods.int_time==10}selected{/if} >10</option>
+                                        <option value="30" {if $shopgoods.int_time==30}selected{/if} >30</option>
+                                    </select>
+                                    单位（秒）
+                                </div>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label class="col-sm-3 control-label">窥探成功时间间隔：</label>
+                                <div class="input-group col-sm-1">
+                                    <input id="spy_timeint" type="text" class="form-control" name="spy_timeint" lay-verify="required">
+                                </div>
+                            </div> -->
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">窥探成功重新上架间隔：</label>
+                                <div class="input-group col-sm-3">
+                                    <input id="she_timeint" type="text" class="form-control" name="she_timeint" lay-verify="required" value="{$shopgoods.she_timeint}">
+                                    单位（小时）
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品缩略图：</label>
+                            <div class="col-sm-3">
+                                <input type="hidden" value="{$shopgoods.imgurl}" name="imgurl" id="imgurl"/>
+                                <img id="goodsimg" style="width: 200px;height: 200px;" class="form-control"
+                                     src="{$shopgoods.imgurl}" onclick="javascript:$('#fmimg').click();"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品参数：</label>
+                            <div class="col-sm-3">
+                                <input type="hidden" value="{$shopgoods.canshu}" id="canshu" name="canshu" />
+                                <img style="width: 200px;height: 200px;" class="form-control canshuurl"
+                                     src="{$shopgoods.canshu}" onclick="javascript:$('#canshuurl').click();"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">销量：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="{$shopgoods.hot}" id="hot" name="hot" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">商品简介：</label>
+                            <div class="input-group col-sm-4">
+                                <textarea id="remark" type="text" class="form-control" name="remark"
+                                          required="" aria-required="true" lay-verify="required">{$shopgoods.remark}</textarea>
+                            </div>
+                        </div>
+                       <!--  <div class="form-group">
+                            <label class="col-sm-3 control-label">排序（数值越大越靠前）：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="0" id="sort" name="sort" class="form-control" />
+                            </div>
+                        </div> -->
+                        <!-- <div class="form-group">
+                            <label class="col-sm-3 control-label">库存：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="" id="num" name="num" class="form-control" />
+                            </div>
+                        </div> -->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">是否上架：</label>
+                            <div class="layui-input-block">
+                                <input type="radio" value="0" name="is_under" style="margin-top:11px;margin-right:20px;" 
+                                {if $shopgoods.is_under==0 } checked="checked" {/if} title="上架">
+                                <input type="radio" value="1" name="is_under" {if $shopgoods.is_under==1 } checked="checked" {/if} title="暂不上架">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <textarea id="myEditor" type="text" class="form-control myEditor" name="description" style="height:500px;">{$shopgoods.description}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-3">
+                                <!--<input type="button" value="提交" class="btn btn-primary" id="postform"/>-->
+                                <button class="btn btn-primary" type="submit" lay-filter="*" lay-submit>提交</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="__JS__/jquery.min.js?v=2.1.4"></script>
+<script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+<script src="__JS__/content.min.js?v=1.0.0"></script>
+<script src="__JS__/plugins/validate/jquery.validate.min.js"></script>
+<script src="__JS__/plugins/validate/messages_zh.min.js"></script>
+<script src="__JS__/plugins/iCheck/icheck.min.js"></script>
+<script src="__JS__/plugins/sweetalert/sweetalert.min.js"></script>
+<script src="__JS__/plugins/layer/laydate/laydate.js"></script>
+<script src="__JS__/plugins/suggest/bootstrap-suggest.min.js"></script>
+<script src="__JS__/plugins/layer/layer.min.js"></script>
+<script src="__JS__/plugins/layui/layui.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/third-party/jquery.min.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/third-party/template.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="__JS__/umeditor/umeditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="__JS__/umeditor/umeditor.min.js"></script>
+<script type="text/javascript" src="__JS__/umeditor/lang/zh-cn/zh-cn.js"></script>
+<script type="text/javascript">
+    var um = UM.getEditor('myEditor');
+    //表单提交
+//     function toVaild() {
+//         var jz;
+//         var url = "./shopgoodsadd";
+// //        console.log($('#commentForm').serialize());
+
+//         $.ajax({
+//             type: "POST",
+//             url: url,
+//             data: $('#commentForm').serialize(),// 你的formid
+//             async: false,
+//             beforeSend: function () {
+//                 jz = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+//             },
+//             error: function (request) {
+//                 layer.close(jz);
+//                 swal("网络错误!", "", "error");
+//             },
+//             success: function (data) {
+//                 //关闭加载层
+//                 layer.close(jz);
+//                 if (data.code == 1) {
+//                     swal(data.msg, "", "success");
+//                 } else {
+//                     swal(data.msg, "", "error");
+//                 }
+//             }
+//         });
+//         return false;
+//     }
+
+
+
+</script>
+</body>
+</html>
+<!-- <script src="__JS__/jquery-2.0.3.min.js"></script> -->
+<script src="__JS__/jquery.form.js"></script>
+<script type="text/javascript">
+    function upload(fromID, imgid) {
+        var vars = $("#" + fromID);
+        var options = {
+            url: "{:url('/backsystem/File/upload')}",// 你的formid
+            dataType: 'json',
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                // console.log(data);
+                if (data['code'] == 1) {
+                    $("#" + imgid).attr('src', data['data']);
+                    $("#imgurl").val(data['data']);
+                }
+            }
+        };
+        vars.ajaxSubmit(options);
+        // return false;
+    }
+
+    layui.use(['form', 'upload','laydate'], function(){
+        var form = layui.form() //获取form模块
+        ,laydate = layui.laydate //获取upload模块
+        ,upload = layui.upload; //获取upload模块
+
+        //监听分类
+        // form.on('select(cid)', function(data){
+        //     if (data.value == 3) {
+        //         $(".spy").removeClass("layui-hide").addClass("layui-show");
+        //     }else{
+        //         $(".spy").removeClass("layui-show").addClass("layui-hide");
+        //     }
+        // });
+
+        //是否设置窥探时间间隔
+        form.on('radio(is_inttime)', function(data){
+            if (data.value == 1) {
+                $(".is_inttime").removeClass("layui-hide").addClass("layui-show");
+                form.render('select'); 
+                // layer.msg($("#int_time").val());
+            }else{
+                $(".is_inttime").removeClass("layui-show").addClass("layui-hide");
+                $("#int_time").val(0);
+                form.render('select'); 
+                // layer.msg($("#int_time").val());
+            }
+        });
+
+        //表单数据验证
+        form.verify({
+            once_price: function(value, item){ //value：表单的值、item：表单的DOM对象
+                var price = $("#price").val();    
+                var once_price = value;
+                if ((price*100) % (once_price*100) != 0) {
+                     return '商品价格必须是单次窥探价格的整倍数的正数';
+                }    
+            }
+            ,price: [
+                /^(([1-9][0-9]*)|(([0]\.\d{1,2}|[1-9][0-9]*\.\d{1,2})))$/
+                ,'价格格式不对，最多保留两位小数，价格不能为0'
+            ] 
+        }); 
+
+
+        // 表单提交
+        form.on('submit(*)', function(data){
+            var jz;
+            var url = "./shopspygoodsedit";
+    //        console.log($('#commentForm').serialize());
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: $('#commentForm').serialize(),// 你的formid
+                async: false,
+                beforeSend: function () {
+                    jz = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+                },
+                error: function (request) {
+                    layer.close(jz);
+                    swal("网络错误!", "", "error");
+                },
+                success: function (data) {
+                    //关闭加载层
+                    layer.close(jz);
+                    if (data.code == 1) {
+                        swal(data.msg, "", "success");
+                    } else {
+                        swal(data.msg, "", "error");
+                    }
+                }
+            });
+            return false;                                                                           
+            // console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+            // console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+            // console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+            // alert('222');
+            // return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+        upload({
+            url: "{:url('backsystem/File/upload')}",
+            success: function(res){
+                console.log(res); //上传成功返回值，必须为json格式
+                $('.canshuurl').attr('src',res.data);
+                $('#canshu').val(res.data);
+            }
+        });
+    });
+
+</script>

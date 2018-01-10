@@ -74,9 +74,7 @@
                             <label class="col-sm-3 control-label">商品分类：</label>
                             <div class="input-group col-sm-2">
                                 <select name="cid" id="cid" class="form-control">
-                                    {foreach $shopgoodsclass as $v}
-                                    <option value="{$v.id}" {if $v.id == $shopgoods.cid}selected{/if}>{$v.classname}</option>
-                                    {/foreach}
+                                    <option value="1">商城区</option>
                                 </select>
                             </div>
                         </div>
@@ -97,24 +95,20 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">销量：</label>
+                            <div class="input-group col-sm-4">
+                                <input type="text" value="{$shopgoods.hot}" id="hot" name="hot" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">商品简介：</label>
                             <div class="input-group col-sm-4">
                                 <textarea id="remark" type="text" class="form-control" name="remark"
                                           required="" aria-required="true">{$shopgoods.remark}</textarea>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">排序（数值越大越靠前）：</label>
-                            <div class="input-group col-sm-4">
-                                <input type="text" value="{$shopgoods.sort}" id="sort" name="sort" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">库存：</label>
-                            <div class="input-group col-sm-4">
-                                <input type="text" value="{$shopgoods.num}" id="num" name="num" class="form-control" />
-                            </div>
-                        </div>
+            
+                
                         <div class="form-group">
                             <label class="col-sm-3 control-label">是否上架：</label>
                             是: <input type="radio" value="0" name="is_under" style="margin-top:11px;margin-right:20px;" {if $shopgoods.is_under==0}checked{/if} />

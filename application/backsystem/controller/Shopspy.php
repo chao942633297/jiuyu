@@ -6,16 +6,17 @@
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: NickBai <1902822973@qq.com>
+// | Author:
 // +----------------------------------------------------------------------
 namespace app\backsystem\controller;
 
 
-use app\backsystem\model\ShopGoodsModel;
+use app\backsystem\model\ShopSpyRecordModel;
+use app\backsystem\model\ShopSpySuccessModel;
 
-class Shopgoods extends Base
+class Shopspy extends Base
 {
-    // 商城商品列表
+    // 商城窥探记录列表
     public function index()
     {
         if(request()->isAjax()){
@@ -30,45 +31,35 @@ class Shopgoods extends Base
                 $where['name'] = ['like', '%' . $param['name'] . '%'];
             }
 
-            if (!empty($param['cid'])) {
-                $where['cid'] = $param['cid'];
-            }
+   
 
-            if ($param['is_under'] !== '') {
-                $where['is_under'] = $param['is_under'];
-            }
+            // if ($param['is_spy'] !== '') {
+            //     $where['is_spy'] = $param['is_spy'];
+            // }
 
-            $shopgoods = new ShopGoodsModel();
-            // $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit,'is_under , sort desc ,id desc');
-            $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit);
+            $shopgoods = new ShopSpySuccessModel();
+            // $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit,'is_spy , sort desc ,id desc');
+            $selectResult = $shopgoods->getShopSuccessByWhere($where, $offset, $limit);
 
             foreach($selectResult as $key=>$vo){
-                $re = model('ShopGoodsClassModel')->getOneShopGoodsClassField($vo['cid'],'classname');
-                $selectResult[$key]['classname'] = $re['classname'];
-                $selectResult[$key]['imgurl'] = '<img src="' . $vo['imgurl'] . '" width="40px" height="40px">';
-                //窥探商品操作按钮
-                if ($vo['cid'] == 2) {
-                    $selectResult[$key]['operate'] = $this->showOperate($this->makeSpyButton($vo['id']));
-                }else{
-                    $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
-                }
-                $selectResult[$key]['is_under'] = empty($vo['is_under']) ? '销售中' : '<font color="red">已下架</font>';
-                $selectResult[$key]['num'] = empty($vo['num']) ? '<font color="red">'.$vo['num'].'</font>' : $vo['num'];
+                //窥探窥探记录操作按钮
+                $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
+                $selectResult[$key]['goodsimgurl'] = "<img src=".$vo['goodsimgurl']." width='120' />";
+                $selectResult[$key]['is_spy'] = empty($vo['is_spy']) ? '抢购中奖' : '窥探中奖';
 
             }
 
-            $return['total'] = $shopgoods->getAllshopgoods($where);  // 总数据
+            $return['total'] = $shopgoods->getAllshopSuccess($where);  // 总数据
             $return['rows'] = $selectResult;
 
             return json($return);
         }
 
-        $classList = model('ShopGoodsClassModel')->getShopGoodsClassList();
-        $this->assign('classList',$classList);
+        
         return $this->fetch();
     }
 
-    // 添加商城商品
+    // 添加商城窥探记录
     public function shopgoodsAdd()
     {
         if(request()->isPost()){
@@ -78,22 +69,22 @@ class Shopgoods extends Base
             // unset($param['is_inttime']);
             $param['created_at'] = date('Y-m-d H:i:s',time());
 
-            $shopgoods = new ShopGoodsModel();
+            $shopgoods = new ShopSpyRecordModel();
             $flag = $shopgoods->addshopgoods($param);
 
             return json(msg($flag['code'], $flag['data'], $flag['msg']));
         }
-        //获取商品分类信息
+        //获取窥探记录分类信息
         $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
         
         $this->assign('shopgoodsclass',$shopgoodsclass);
         return $this->fetch();
     }
 
-    //商品编辑
+    //窥探记录编辑
     public function shopgoodsEdit()
     {
-        $shopgoods = new ShopGoodsModel();
+        $shopgoods = new ShopSpyRecordModel();
         if(request()->isPost()){
 
             $param = input('post.');
@@ -107,19 +98,19 @@ class Shopgoods extends Base
         $this->assign([
             'shopgoods' => $shopgoods->getOneshopgoods($id)
         ]);
-        //获取商品分类信息
+        //获取窥探记录分类信息
         $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
         
         $this->assign('shopgoodsclass',$shopgoodsclass);
         return $this->fetch();
     }
 
-    //商品删除
+    //窥探记录删除
     public function shopgoodsDel()
     {
         $id = input('param.id');
 
-        $shopgoods = new ShopGoodsModel();
+        $shopgoods = new ShopSpyRecordModel();
         $flag = $shopgoods->delshopgoods($id);
         return json(msg($flag['code'], $flag['data'], $flag['msg']));
     }
@@ -143,7 +134,7 @@ class Shopgoods extends Base
     }
 
 
-    //窥探商品添加
+    //窥探窥探记录添加
     public function shopspygoodsadd()
     {
         if(request()->isPost()){
@@ -153,22 +144,22 @@ class Shopgoods extends Base
             unset($param['is_inttime']);
             $param['created_at'] = date('Y-m-d H:i:s',time());
 
-            $shopgoods = new ShopGoodsModel();
+            $shopgoods = new ShopSpyRecordModel();
             $flag = $shopgoods->addshopgoods($param);
 
             return json(msg($flag['code'], $flag['data'], $flag['msg']));
         }
-        //获取商品分类信息
+        //获取窥探记录分类信息
         $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
         
         $this->assign('shopgoodsclass',$shopgoodsclass);
         return $this->fetch();
     }
 
-    //窥探商品编辑
+    //窥探窥探记录编辑
     public function shopspygoodsedit()
     {
-        $shopgoods = new ShopGoodsModel();
+        $shopgoods = new ShopSpyRecordModel();
         if(request()->isPost()){
 
             $param = input('post.');
@@ -184,7 +175,7 @@ class Shopgoods extends Base
         $this->assign([
             'shopgoods' => $shopgoods->getOneshopgoods($id)
         ]);
-        //获取商品分类信息
+        //获取窥探记录分类信息
         $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
         $this->assign('shopgoodsclass',$shopgoodsclass);
         return $this->fetch();
@@ -201,45 +192,29 @@ class Shopgoods extends Base
     private function makeButton($id)
     {
         return [
-             '编辑' => [
-                'auth' => 'shopgoods/shopgoodsedit',
-                'href' => url('shopgoods/shopgoodsedit', ['id' => $id]),
+            '详情' => [
+                'auth' => 'shopspy/spydetail',
+                'href' => url('shopspy/spydetail', ['id' => $id]),
                 'btnStyle' => 'primary',
                 'icon' => 'fa fa-paste'
             ],
-            '删除' => [
-                'auth' => 'shopgoods/shopgoodsdel',
-                'href' => "javascript:shopgoodsDel(" . $id . ")",
-                'btnStyle' => 'danger',
-                'icon' => 'fa fa-trash-o'
-            ]
+            '处理' => [
+                'auth' => 'shopspy/shopspyedit',
+                'href' => url('shopspy/shopspyedit', ['id' => $id]),
+                'btnStyle' => 'primary',
+                'icon' => 'fa fa-paste'
+            ],
+            // '删除' => [
+            //     'auth' => 'shopspy/shopspydel',
+            //     'href' => "javascript:shopspyDel(" . $id . ")",
+            //     'btnStyle' => 'danger',
+            //     'icon' => 'fa fa-trash-o'
+            // ]
         ];
     }
 
 
-       /**
-     * 拼装操作按钮
-     * @param $id
-     * @return array
-     */
-    private function makeSpyButton($id)
-    {
-        return [
-             '编辑' => [
-                'auth' => 'shopgoods/shopspygoodsedit',
-                'href' => url('shopgoods/shopspygoodsedit', ['id' => $id]),
-                'btnStyle' => 'primary',
-                'icon' => 'fa fa-paste'
-            ],
-            '删除' => [
-                'auth' => 'shopgoods/shopgoodsdel',
-                'href' => "javascript:shopgoodsDel(" . $id . ")",
-                'btnStyle' => 'danger',
-                'icon' => 'fa fa-trash-o'
-            ]
-        ];
-    }
-
+  
 
 
 
