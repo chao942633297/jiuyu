@@ -47,15 +47,9 @@ class Test extends Validate{
 
 
     public function test(){
-        $file = File::
-        $test = new Timedtask();
-        $test->test();
-
-
-        $res = UserModel::get(1079);
-        $apply = $res->voucher()->where(['status'=>2])->value('img');
-        dump($apply);
-
+        $pwd = '123456';
+        $res = substr(md5($pwd), 5, 20);
+        dump($res);
 //        $user = UserModel::get(1);
 
     }
