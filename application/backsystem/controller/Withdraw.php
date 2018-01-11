@@ -10,8 +10,7 @@ namespace app\backsystem\controller;
 use app\backsystem\model\AccountModel;
 use app\backsystem\model\WithdrawModel;
 use app\backsystem\model\UserModel;
-use Service\Wechat;
-use Service\Alipay;
+use app\home\controller\Alipay;
 use think\Db;
 use think\Exception;
 use think\Request;
@@ -65,7 +64,11 @@ class Withdraw extends Base{
                 $selectResult[$key]['nickname'] = $user['nickname'];
                 $selectResult[$key]['status'] = $status[$vo['status']];
                 if($param['excel'] != 'to_excel') {
-                    $selectResult[$key]['type'] = '<a href="javascript:getOrder(' . $vo['id'] . ')">' . $type[$vo['type']] . '</a>';
+                    if($vo['type'] != 1){
+                        $selectResult[$key]['type'] = '<a href="javascript:getOrder(' . $vo['id'] . ')">' . $type[$vo['type']] . '</a>';
+                    }else{
+                        $selectResult[$key]['type'] = $type[$vo['type']];
+                    }
                 }
                 if($vo['status'] == '申请中'){
                     $operate = [
@@ -118,7 +121,7 @@ class Withdraw extends Base{
             //返回用户余额
             db('users')->where(['id'=>$data['uid']])->setInc('balance',$data['money']);
             //增加余额记录
-            $list = AccountModel::getAccountData($data['uid'],$data['money'],'提现驳回',5,1,'',$data['id']);
+            $list = AccountModel::getAccountData($data['uid'],$data['money'],'提现驳回',5,1,'','',$data['id']);
             AccountModel::create($list);
             //改变提现订单状态
             $withdraw->editWithdraw(['id'=>$id,'status'=>3]);
@@ -133,58 +136,34 @@ class Withdraw extends Base{
     public function grant(){
         $id = input('param.id');
         $withdraw = new WithdrawModel();
-        $data = $withdraw->getOneWithdraw($id);
-        if($withdraw->where(['id'=>$id])->value('status')==1){
-//            $result = self::cash($id,$data['type']);
-//            if($result['status']==1){
+        $withdrawData = $withdraw->getOneWithdraw($id);
+        if($withdrawData['status']==1){
+            if($withdrawData['type'] == 1){
+                return json(['code'=>10,'data'=>'','msg'=>'微信暂不支持提现']);
+            }else if($withdrawData['type'] == 2){
+                //组装数组
+                $charge = 1 - $withdrawData['charge'] * 0.01;
+                $data['money'] = bcmul($withdrawData['money'],$charge);
+                $data['withdraw_sn'] = $withdrawData['withdraw_sn'];
+                $data['alipay_account'] = $withdrawData['users']['alipay']['alipay_account'];
+                $data['alipay_name'] = $withdrawData['users']['alipay']['alipay_name'];
+                $alipay = new Alipay();
+                $result = $alipay->withDraw($data);
+                $result = objToArray($result);
+                if($result['code'] == 10000 && $result['msg'] == 'SUCCESS'){
+                    $flag = $withdraw->editWithdraw(['id'=>$id,'status'=>2]);
+                    return json($flag);
+                }else{
+                    return json(['code'=>0,'data'=>'','msg'=>'提现失败']);
+                }
+            }else if($withdrawData['type'] == 3){
                 $flag = $withdraw->editWithdraw(['id'=>$id,'status'=>2]);
                 return json($flag);
-//            }else{
-//                return json(['code'=>0,'data'=>'','msg'=>$result['data']]);
-//            }
+            }
         }else{
             return json(['code' => 10, 'data' => '', 'msg' => '操作失败']);
         } 
     }
-    #执行返现
-   private function cash($id,$type){
-        $withdraw = new WithdrawModel();
-        $data = $withdraw->getOneWithdraw($id); 
-        if($type==0){
-            #微信返现(待定)
-
-            return ['status'=>0,'data'=>'系统暂不满足微信提现条件，请换种方式提现'];
-
-
-        }else if($type == 1){
-            #支付宝返现
-            $account = db('users')->where(['id'=>$data['uid']])->find();
-            $osn = orderNum();
-            $payee_account = $account['zhifubao'];
-            $conf = unserialize(file_get_contents('./config'));
-            $amount = $data['money']*(100-$conf['fee'])*0.01;
-            // $amount = 0.01; 
-            $content = [
-                #单号
-                'trans_no' => $osn,    
-                'payee_type' => 'ALIPAY_LOGONID',
-                #提现账号    
-                'payee_account' => $payee_account,
-                #提现金额    
-                'amount' => $amount,
-                #留言    
-                'remark' => "金帮手的提现",
-                #真实姓名    
-                'payee_real_name' => $account['alname'],
-                ];
-            $msg = Alipay::querys($content);
-            if (is_object($msg) && $msg->msg == 'Success') {
-                return ['status'=>1,'data'=>"提现成功"];
-            }else{
-                return ['status'=>0,'data'=>$msg->msg];
-            }
-        }
-   }
 
 
     public function getdetail(Request $request){
@@ -192,12 +171,19 @@ class Withdraw extends Base{
         $data = WithdrawModel::get($id);
         $return = [];
         $return['nickname'] = $data['users']['nickname'];
+        $return['pay_type'] = $data['type'];
         $return['type'] =config('Withdraw_type')[$data['type']];
-        $return['bank_name'] = $data['bank_name'];
-        $return['bank_account'] = $data['bank_account'];
-        $return['user_name'] = $data['user_name'];
-        $return['user_phone'] = $data['user_phone'];
-        $return['voucher'] = $data['voucher'];
+        if($data['type'] == 3){
+            $return['bank_name'] = $data['bank_name'];
+            $return['bank_account'] = $data['bank_account'];
+            $return['user_name'] = $data['user_name'];
+            $return['user_phone'] = $data['user_phone'];
+            $return['voucher'] = $data['voucher'];
+        }else if($data['type'] == 2){
+            $return['alipay_account'] = $data['users']['alipay']['alipay_account'];
+            $return['alipay_name'] = $data['users']['alipay']['alipay_name'];
+        }
+
         return json($return);
     }
 

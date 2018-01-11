@@ -112,6 +112,7 @@ class Buycar extends Base
             //增加用户余额消费记录
             $list = AccountModel::getAccountData($this->userId,$good['price'],'购买车辆',7,2,$order['id']);
             AccountModel::create($list);
+            session('home_car_id',null);
             Db::commit();
             return json(['msg'=>'提交购车成功','code'=>200]);
         }catch(Exception $e){
@@ -189,6 +190,7 @@ class Buycar extends Base
         $orderData = Db::table('sql_order')
             ->field('id,price,status')
             ->where('id',$input['orderId'])->find();
+
         $user = Db::table('sql_users')->where('id',$this->userId)->find();
         if(!isset($input['password']) || md5($input['password']) !== $user['two_password']){
             return json(['msg'=>'支付密码错误','code'=>1002]);

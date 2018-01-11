@@ -121,6 +121,7 @@ class Account extends Base{
             //增加提现记录
             $data['uid'] = $this->userId;
             $data['money'] = $money;
+            $data['withdraw_sn'] = withdrawNum();
             $data['charge'] = $this->charge;        //提现手续费为5%
             $data['realmoney'] = $money * (100 - $this->charge) * 0.01;
             $data['status'] = 1;
@@ -194,14 +195,14 @@ class Account extends Base{
             //扣除用户余额
             UserModel::get($this->userId)->setDec('balance', $money);
             //增加用户转账记录
-            $data[0] = AccountModel::getAccountData($this->userId, $money, '好友转账', 4, 2, $friendData['id']);
+            $data[0] = AccountModel::getAccountData($this->userId, $money, '好友转账', 4, 2,'', $friendData['id']);
             //增加好友余额
             $friendData->balance += $money;
             $friendData->total_price += $money;
             $friendData->save();
             //UserModel::get($friendData['id'])->setInc('balance',$money);
             //增加好友余额增加记录
-            $data[1] = AccountModel::getAccountData($friendData['id'], $money, '好友转账', 4, 1, $this->userId);
+            $data[1] = AccountModel::getAccountData($friendData['id'], $money, '好友转账', 4, 1,'', $this->userId);
             $res = AccountModel::insertAll($data);
             if ($res) {
                 if (db('users')->where('id', $this->userId)->value('balance') < 0) {

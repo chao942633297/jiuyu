@@ -48,7 +48,7 @@ class Wechat
 
 
     #获取AccessToken
-    public function makeAccessToken()
+    protected function makeAccessToken()
     {
         $url = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $this->APPID . '&secret=' . $this->SERCRET;
         $AccessToken = $this->https_request($url);
@@ -73,11 +73,19 @@ class Wechat
         return $output;
     }
 
+    public function getQrcode($data){
+        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token='.self::makeAccessToken();
+        $data = json_encode($data);
+        return $this->https_request($url,$data);
+    }
+
+
+
     #创建菜单方法
-    public function createMenu($access_token)
+    public function createMenu()
     {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=" . $access_token);
+        curl_setopt($ch, CURLOPT_URL, "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=" . self::makeAccessToken());
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
@@ -95,9 +103,9 @@ class Wechat
     }
 
     #删除菜单
-    public function deleteMenu($access_token)
+    public function deleteMenu()
     {
-        return file_get_contents("https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=" . $access_token);
+        return file_get_contents("https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=" . self::makeAccessToken());
     }
 
     /*
@@ -118,9 +126,6 @@ class Wechat
         if (self::checkSignature()) {
             echo $echoStr;
             exit;
-        } else {
-            $log = new CallbackController();
-            $log->log('验证失败', '消息');
         }
     }
 

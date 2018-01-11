@@ -5,6 +5,7 @@ namespace app\home\controller;
 use app\backsystem\model\ClassModel;
 use app\backsystem\model\GoodsModel;
 use think\Controller;
+use think\Db;
 use think\Request;
 use Service\Check;
 
@@ -15,9 +16,10 @@ class Index extends Controller
      */
     public function index()
     {
-        $goods = new GoodsModel();
         #只查询三条
-        $goods   = $goods->where(['is_jing'=>1])->limit(3)->select();
+        $goods   = Db::table('sql_goods')
+            ->where(['is_jing'=>1,'id'=>['in',[1,2,3],'is_delete'=>1]])
+            ->limit(3)->select();
         $goodInfo = [];
         foreach ($goods as $key => $value) {
             $goodInfo[$key]['id']   = $value['id'];
@@ -28,9 +30,13 @@ class Index extends Controller
         $lunbo = db('lunbo')->where('sort',1)->select();
         //购车播报
         $broadcast = db('order')->where('status',2)->order('id','desc')->select();
+        //商城区
+        $shopGoods = Db::table('sql_shop_goods')
+            ->where('is_under',0)
+            ->order('sort','asc')->select();
         #车辆品牌
-        $class = db('class')->limit(10)->select();
-        return json(['code'=>200,'goods'=>$goodInfo,'lunbo'=>$lunbo,'broadcast'=>$broadcast,'class'=>$class,'msg'=>'success']);
+//        $class = db('class')->limit(10)->select();
+        return json(['code'=>200,'goods'=>$goodInfo,'lunbo'=>$lunbo,'broadcast'=>$broadcast,'shopGoods'=>$shopGoods,'msg'=>'查询成功']);
 
     }
 
@@ -105,6 +111,7 @@ class Index extends Controller
      */
     public function  carType()
     {
+        $class = '';
         if (input('type') == 1) {
             $class = db('class')->select();
             #按字母分组
@@ -121,7 +128,8 @@ class Index extends Controller
             }
             $class_name = db('goods_type')->column('name','id');
             foreach ($info as $key => $value) {
-                $class[$class_name[$value['type_id']]] = objToarray(db('goods')->whereIn('id',$value['groups'])->field('id,name')->select()) ;
+                $class[$class_name[$value['type_id']]] = objToarray(Db::table('sql_goods')
+                    ->whereIn('id',$value['groups'])->field('id,name')->select()) ;
             }
         }
         return json(['code'=>200,'info'=>$class,'msg'=>'success']);
