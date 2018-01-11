@@ -13,11 +13,12 @@ namespace app\backsystem\controller;
 
 use app\backsystem\model\ShopSpyRecordModel;
 use app\backsystem\model\ShopSpySuccessModel;
+use app\backsystem\controller\Excel;
 
 class Shopspy extends Base
 {
     // 商城窥探记录列表
-    public function index()
+    public function list()
     {
         if(request()->isAjax()){
 
@@ -27,15 +28,22 @@ class Shopspy extends Base
             $offset = ($param['pageNumber'] - 1) * $limit;
 
             $where = [];
-            if (!empty($param['name'])) {
-                $where['name'] = ['like', '%' . $param['name'] . '%'];
+            if (!empty($param['starttime'])) {
+                $where['created_at'] = ['>=',  $param['starttime'] ];
             }
 
-   
+            if (!empty($param['endtime'])) {
+                $where['created_at'] = ['<=',  $param['endtime'] ];
+            }
 
-            // if ($param['is_spy'] !== '') {
-            //     $where['is_spy'] = $param['is_spy'];
-            // }
+            if (!empty($param['username'])) {
+                $where['username'] = ['like', '%' . $param['username'] . '%'];
+            }
+
+            if ($param['status'] != NULL) {
+                $where['status'] = $param['status'];
+            }
+
 
             $shopgoods = new ShopSpySuccessModel();
             // $selectResult = $shopgoods->getshopgoodsByWhere($where, $offset, $limit,'is_spy , sort desc ,id desc');
@@ -59,129 +67,94 @@ class Shopspy extends Base
         return $this->fetch();
     }
 
-    // 添加商城窥探记录
-    public function shopgoodsAdd()
+    /*导出订单到excel
+     *
+     * @param   筛选条件
+     */
+    public function orderToExcel()
     {
-        if(request()->isPost()){
-            $param = input('post.');
-
-            unset($param['file']);
-            // unset($param['is_inttime']);
-            $param['created_at'] = date('Y-m-d H:i:s',time());
-
-            $shopgoods = new ShopSpyRecordModel();
-            $flag = $shopgoods->addshopgoods($param);
-
-            return json(msg($flag['code'], $flag['data'], $flag['msg']));
-        }
-        //获取窥探记录分类信息
-        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
-        
-        $this->assign('shopgoodsclass',$shopgoodsclass);
-        return $this->fetch();
-    }
-
-    //窥探记录编辑
-    public function shopgoodsEdit()
-    {
-        $shopgoods = new ShopSpyRecordModel();
-        if(request()->isPost()){
-
-            $param = input('post.');
-            unset($param['file']);
-            $flag = $shopgoods->editshopgoods($param);
-
-            return json(msg($flag['code'], $flag['data'], $flag['msg']));
+        $param = input('param.');
+        $where = [];
+        if (!empty($param['starttime'])) {
+            $where['created_at'] = ['>=',  $param['starttime'] ];
         }
 
-        $id = input('param.id');
-        $this->assign([
-            'shopgoods' => $shopgoods->getOneshopgoods($id)
-        ]);
-        //获取窥探记录分类信息
-        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
+        if (!empty($param['endtime'])) {
+            $where['created_at'] = ['<=',  $param['endtime'] ];
+        }
+
+        if (!empty($param['username'])) {
+            $where['username'] = ['like', '%' . $param['username'] . '%'];
+        }
+
+        if ($param['status'] != NULL) {
+            $where['status'] = $param['status'];
+        }
+
+
+        $selectResult = db('shop_spy_success')->where($where)->field('id,userid,username,goodsid,goodsname,last_amount,times,payment,remark,created_at')->select();
+        $selectResult = objToArray($selectResult);
         
-        $this->assign('shopgoodsclass',$shopgoodsclass);
-        return $this->fetch();
+        $payment = ['','微信','支付宝','余额'];
+
+        foreach($selectResult as $key=>$vo){
+            $selectResult[$key]['payment'] = $payment[$vo['payment']];
+        }
+
+        // 导出类型错误，修改后缀名xlsx
+        $excel = new Excel();
+        $first = ['A1'=>'订单号','B1'=>'收货人','C1'=>'手机号','D1'=>'总价','E1'=>'支付价格','F1'=>'省','G1'=>'市'];
+        $excel->toExcel('获奖名单',$selectResult,$first);
+        header('Location:/uploads/file.xlsx');
     }
 
-    //窥探记录删除
-    public function shopgoodsDel()
+
+
+
+    /** 中奖详情
+     * @param  $id spy_success 主键
+     *
+     */
+    public function spydetail()
     {
         $id = input('param.id');
-
-        $shopgoods = new ShopSpyRecordModel();
-        $flag = $shopgoods->delshopgoods($id);
-        return json(msg($flag['code'], $flag['data'], $flag['msg']));
-    }
-
-    // 上传缩略图
-    public function uploadImg()
-    {
-        if(request()->isAjax()){
-
-            $file = request()->file('file');
-            // 移动到框架应用根目录/public/uploads/ 目录下
-            $info = $file->move(ROOT_PATH . 'public' . DS . 'upload');
-            if($info){
-                $src =  '/upload' . '/' . date('Ymd') . '/' . $info->getFilename();
-                return json(msg(0, ['src' => $src], ''));
-            }else{
-                // 上传失败获取错误信息
-                return json(msg(-1, '', $file->getError()));
+        $successdata = db('shop_spy_success')->find($id);
+        if (request()->isPost()) {
+            $remark = input('post.remark');
+            if (empty(trim($remark))) {
+                return json(['code'=>0, 'data'=>'', 'msg'=>'请填写处理意见！']);
             }
+            $re = db('shop_spy_success')->where('id',$id)->setfield(['remark'=>$remark,'status'=>1]);
+            if ($re || ($successdata['remark'] == $remark)) {
+                return json(['code'=>1, 'data'=>'', 'msg'=>'提交成功！']);
+            }
+            return json(['code'=>0, 'data'=>'', 'msg'=>'提交失败']);
         }
-    }
 
-
-    //窥探窥探记录添加
-    public function shopspygoodsadd()
-    {
-        if(request()->isPost()){
-            $param = input('post.');
-            $param['sur_price'] = $param['price'];
-            unset($param['file']);
-            unset($param['is_inttime']);
-            $param['created_at'] = date('Y-m-d H:i:s',time());
-
-            $shopgoods = new ShopSpyRecordModel();
-            $flag = $shopgoods->addshopgoods($param);
-
-            return json(msg($flag['code'], $flag['data'], $flag['msg']));
-        }
-        //获取窥探记录分类信息
-        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
+        $recorddata = db('shop_spy_record')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
+        $spyingdata = db('shop_spying_goods')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
         
-        $this->assign('shopgoodsclass',$shopgoodsclass);
+        $this->assign('successdata',$successdata);
+        $this->assign('spyingdata',$spyingdata);
+        $this->assign('recorddata',$recorddata);
         return $this->fetch();
     }
 
-    //窥探窥探记录编辑
-    public function shopspygoodsedit()
+    
+
+    
+    /** 处理中奖记录
+     *
+     * 
+     * 
+     */
+    public function shopspyedit()
     {
-        $shopgoods = new ShopSpyRecordModel();
-        if(request()->isPost()){
-
-            $param = input('post.');
-     
-            unset($param['file']);
-            unset($param['is_inttime']);
-            $flag = $shopgoods->editshopgoods($param);
-
-            return json(msg($flag['code'], $flag['data'], $flag['msg']));
-        }
-
-        $id = input('param.id');
-        $this->assign([
-            'shopgoods' => $shopgoods->getOneshopgoods($id)
-        ]);
-        //获取窥探记录分类信息
-        $shopgoodsclass  =  model('ShopGoodsClassModel')->select();
-        $this->assign('shopgoodsclass',$shopgoodsclass);
+        
         return $this->fetch();
     }
 
-
+    
 
 
     /**
@@ -192,18 +165,18 @@ class Shopspy extends Base
     private function makeButton($id)
     {
         return [
-            '详情' => [
+            '审核并处理' => [
                 'auth' => 'shopspy/spydetail',
                 'href' => url('shopspy/spydetail', ['id' => $id]),
                 'btnStyle' => 'primary',
                 'icon' => 'fa fa-paste'
             ],
-            '处理' => [
-                'auth' => 'shopspy/shopspyedit',
-                'href' => url('shopspy/shopspyedit', ['id' => $id]),
-                'btnStyle' => 'primary',
-                'icon' => 'fa fa-paste'
-            ],
+            // '处理' => [
+            //     'auth' => 'shopspy/shopspyedit',
+            //     'href' => url('shopspy/shopspyedit', ['id' => $id]),
+            //     'btnStyle' => 'primary',
+            //     'icon' => 'fa fa-paste'
+            // ],
             // '删除' => [
             //     'auth' => 'shopspy/shopspydel',
             //     'href' => "javascript:shopspyDel(" . $id . ")",

@@ -15,7 +15,7 @@ class Shopgoods extends Controller
 		//根据sort 获取销售中（is_under=0）的商品
 		$page = !empty(input('param.page')) ? input('param.page') : '1';
 		$limit = !empty(input('param.limit')) ? input('param.limit') : '10';
-		$cid = !empty(input('param.cid')) ? input('param.cid') : '';  //分类ID
+		$cid = !empty(input('param.cid')) ? input('param.cid') : '1';  //分类ID
 		$offset = ($page-1)*$limit;
 		$where = array();
 		$where['is_under'] = '0';

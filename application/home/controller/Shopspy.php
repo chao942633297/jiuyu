@@ -6,6 +6,7 @@ use app\backsystem\model\ShopGoodsModel;
 use app\backsystem\model\ShopSpyRecordModel;
 use think\Controller;
 use think\Validate;
+use think\Db;
 /**
 * 窥探商品
 */
@@ -34,6 +35,7 @@ class Shopspy extends Controller
 		$where['cid'] = '2'; //只获取窥探商品 还没有过获奖间隔期的商品
 
 		// 返回列表之前先更新需要重新上架的窥探商品
+		
 		if (db('shop_spy_goods')->where(['sur_price'=>'0'])->count()) {
 			# code...
 		}
@@ -78,10 +80,10 @@ class Shopspy extends Controller
 		    'two_password'=>'支付密码不能空',
 		];
 
-		$_POST['two_password'] = '123456'; 
-		$_POST['goodsid'] = '45'; 
-		$_POST['spy_num'] = '3'; 
-		$_POST['payment'] = '3'; 
+		// $_POST['two_password'] = '123456'; 
+		// $_POST['goodsid'] = '45'; 
+		// $_POST['spy_num'] = '3'; 
+		// $_POST['payment'] = '3'; 
 		
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -112,17 +114,35 @@ class Shopspy extends Controller
 		}
 
 
-		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖 不能再窥探
-		// if (db('shop_spying_goods')->where('goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
-		// 	$exdata = db('shop_spying_goods')->where('goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
-		// 	if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
-		// 		// 将本订单更新为status=3  
+		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
+		if (db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+			$exdata = db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+			if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
+				// 将本订单更新为status=3  向spy_success插入一条数据 
+				db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+				$successData = [];
+				$successData['goodsid'] = $input['goodsid'];
+				$successData['goodsname'] = $goodsInfo['name'];
+				$successData['goodsprice'] = $goodsInfo['price'];
+				$successData['goodsimgurl'] = $goodsInfo['imgurl'];
+				$successData['goodscanshu'] = $goodsInfo['canshu'];
+				$successData['sur_price'] = $exdata['sur_price'];
+				$successData['once_price'] = $goodsInfo['once_price'];
+				$successData['is_spy'] = '0'; // 是否是窥探中奖 0:不是（抢购中奖）1：窥探中奖
+				$successData['userid'] = $this->userId;
+				$successData['payment'] = $input['payment'];
+				$successData['times'] = $goodsInfo['times'];
+				$successData['last_amount'] = $exdata['sur_price'];
+				$successData['created_at'] = date("Y-m-d H:i:s");
+				db('shop_spying_goods')->insert($successData);
+
+				// 重置商品 信息  last_wintime  sur_price
+				db('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
+				db('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
 				
-		// 		// 重置商品 信息  last_wintime  sur_price 等信息
-				
-		// 		return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
-		// 	}
-		// }
+				return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
+			}
+		}
 
 		$insertData['userid'] = $this->userId;
 		$insertData['username'] = $user['nickname'];
@@ -242,20 +262,39 @@ class Shopspy extends Controller
 		$insertData['city'] = $input['city'];
 		$insertData['area'] = $input['area'];
 
-		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
-		if (db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
-			$exdata = db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
-			if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
-				// 将本订单更新为status=3  
-				db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
 
-				// 重置商品 信息  last_wintime  sur_price
-				db('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
-				db('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>time(),]);				
+		$r = $this->checkSpy($input['goodsid']);
+		dump($r);
+		exit;
+		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
+		// if (db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		// 	$exdata = db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+		// 	if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
+		// 		// 将本订单更新为status=3  向spy_success插入一条数据 
+		// 		db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+		// 		$successData = [];
+		// 		$successData['goodsid'] = $input['goodsid'];
+		// 		$successData['goodsname'] = $goodsInfo['name'];
+		// 		$successData['goodsprice'] = $goodsInfo['price'];
+		// 		$successData['goodsimgurl'] = $goodsInfo['imgurl'];
+		// 		$successData['goodscanshu'] = $goodsInfo['canshu'];
+		// 		$successData['sur_price'] = $exdata['sur_price'];
+		// 		$successData['once_price'] = $goodsInfo['once_price'];
+		// 		$successData['is_spy'] = '0'; // 是否是窥探中奖 0:不是（抢购中奖）1：窥探中奖
+		// 		$successData['userid'] = $this->userId;
+		// 		$successData['payment'] = $input['payment'];
+		// 		$successData['times'] = $goodsInfo['times'];
+		// 		$successData['last_amount'] = $exdata['sur_price'];
+		// 		$successData['created_at'] = date("Y-m-d H:i:s");
+		// 		db('shop_spying_goods')->insert($successData);
+
+		// 		// 重置商品 信息  last_wintime  sur_price
+		// 		db('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
+		// 		db('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
 				
-				return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
-			}
-		}
+		// 		return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
+		// 	}
+		// }
 
 		//检查自己本轮次是否在抢购中 防止重复生成抢购订单
 		if (db('shop_spying_goods')->where(['userid'=>$this->userId,'goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
@@ -280,18 +319,69 @@ class Shopspy extends Controller
 	}
 
 
+	/*检测 抢购表中 是否有倒计时走完的订单
+	 *
+	 * @param goodsid 商品id
+	 * return 0 没有  1 存在并生成成功纪录存在success表中
+	 */
+	public function checkSpy($goodsid)
+	{
+		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
+		// dump(db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->count());
+		// exit;
+		Db::startTrans();
+		try{
+			$goodsInfo = db('shop_goods')->find($goodsid);
+		    if (db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		    	$exdata = db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+		    	if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
+		    		// 将本订单更新为status=3  向spy_success插入一条数据 
+		    		db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+		    		$successData = [];
+		    		$successData['goodsid'] = $goodsid;
+		    		$successData['goodsname'] = $goodsInfo['name'];
+		    		$successData['goodsprice'] = $goodsInfo['price'];
+		    		$successData['goodsimgurl'] = $goodsInfo['imgurl'];
+		    		$successData['goodscanshu'] = $goodsInfo['canshu'];
+		    		$successData['sur_price'] = $exdata['sur_price'];
+		    		$successData['once_price'] = $goodsInfo['once_price'];
+		    		$successData['is_spy'] = '0'; // 是否是窥探中奖 0:不是（抢购中奖）1：窥探中奖
+		    		$successData['userid'] = $exdata['userid'];
+		    		$successData['payment'] = $exdata['payment'];
+		    		$successData['times'] = $goodsInfo['times'];
+		    		$successData['last_amount'] = $exdata['sur_price'];
+		    		$successData['created_at'] = date("Y-m-d H:i:s");
+		    		db('shop_spy_success')->insert($successData);
 
-
-
-		/**
-		 * 随机生成 抢购号
-		 */
-	 	public function getSpySn(){
-		    do{
-		        $num = date('Y').date('m').date('d').time().rand(1000,9999);
-		    }while(db('shop_spying_goods')->where(['spy_sn'=>$num])->find());
-		    return $num;
+		    		// 重置商品 信息  last_wintime  sur_price
+		    		db('shop_goods')->where(['id'=>$goodsid])->setInc('spy_amount',$exdata['sur_price']);				
+		    		db('shop_goods')->where(['id'=>$goodsid])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
+		    		
+		    		return '1';	
+		    	}
+		    }else{
+			    // 提交事务
+			    Db::commit();    
+		    	return '0';
+		    }
+		} catch (\Exception $e) {
+		    // 回滚事务
+		    Db::rollback();
+		    return -1;
 		}
+		
+	}
+
+
+	/**
+	 * 随机生成 抢购号
+	 */
+ 	public function getSpySn(){
+	    do{
+	        $num = date('Y').date('m').date('d').time().rand(1000,9999);
+	    }while(db('shop_spying_goods')->where(['spy_sn'=>$num])->find());
+	    return $num;
+	}
 
 
 }
