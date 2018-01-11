@@ -45,6 +45,24 @@ class Login extends Controller
     /**
      * @param Request $request
      * @return \think\response\Json
+     * 用户注册页面
+     */
+    public function webRegister(Request $request){
+        $phone = '';
+        if($request->has('prentId')){
+            $phone = Db::table('sql_users')
+                ->where('unique',$request->param('prentId'))
+                ->value('phone');
+        }
+        return json(['data'=>$phone,'msg'=>'查询成功','code'=>200]);
+    }
+
+
+
+
+    /**
+     * @param Request $request
+     * @return \think\response\Json
      * 用户注册
      * 手机号 phone
      * 上级id
@@ -52,13 +70,10 @@ class Login extends Controller
     public function actRegister(Request $request)
     {
         $input = $request->post();
-        $unique = isset($input['prentId']) ? $input['prentId'] : 0;
         $prentPhone = isset($input['prentPhone'])? $input['prentPhone'] : 0;
         $where = [];
         if($prentPhone != 0){
             $where['phone'] = $prentPhone;
-        }else if($unique != 0){
-            $where['unique'] = $unique;
         }
         $prentId = Db::table('sql_users')->where($where)->value('id');
         $validate = Loader::validate('Users');

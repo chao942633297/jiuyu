@@ -7,7 +7,6 @@ namespace app\home\controller;
  use app\backsystem\model\CardModel;
  use app\backsystem\model\UserModel;
  use Service\QRcode;
- use Service\QRimage;
  use think\Controller;
  use think\Db;
  use think\Image;
@@ -57,6 +56,8 @@ namespace app\home\controller;
             $return['voucher'] = 1;
             db('voucher')->where('id',$voucher['id'])->update(['status'=>4]);
         }
+        session('home_package_id',null);
+        session('home_car_id',null);
     	return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
     }
 
@@ -68,13 +69,15 @@ namespace app\home\controller;
     public function editUser(){
         $user = UserModel::get($this->userId);
         $return = [];
-        $return['headimgurl'] = $user->headimgurl;
-        $return['nickname'] = $user->nickname;
-        $return['address'] = '';
-        if($user->address){
-            $return['address'] =$user->address->province . $user->address->city . $user->address->area;
-        }
-        $return['phone'] = $user->phone;
+        $return['headimgurl'] = $user['headimgurl'];
+        $return['nickname'] = $user['nickname'];
+/*        $return['address'] = '';
+        if($user['address']){
+            $return['address'] =$user['address']['province']. $user['address']['city']. $user['address']['area'];
+        }*/
+        $return['phone'] = $user['phone'];
+        $return['truename'] = $user['truename'];
+        $return['id_number'] = $user['id_number'];
         return json(['status'=>1,'message'=>'查询成功','data'=>$return]);
     }
 
@@ -84,7 +87,6 @@ namespace app\home\controller;
       */
     public function actEditUser(Request $request)
     {
-        $nickname = $request->param('nickname');
         $input = $request->post();
         $file =$request->file('headImg');
         $data = [];
@@ -92,8 +94,19 @@ namespace app\home\controller;
             $imgurl = File::upload($file);
             $data['headimgurl'] = $imgurl->getData()['data'];
         }
-        $data['nickname'] = $input['nickname'];
-        $data['truename'] = $input['truename'];
+        if(!empty($input['nickname'])){
+            $data['nickname'] = $input['nickname'];
+        }
+        if(!empty($input['truename'])){
+            $data['truename'] = $input['truename'];
+        }
+        $math = '/(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/';
+        if(!empty($input['id_number'])){
+            if(!preg_match($math,$input['id_number'])){
+                return json(['msg'=>'身份证输入不合法','code'=>200]);
+            }
+            $data['id_number'] = $input['id_number'];
+        }
         $data['updated_at'] = date('YmdHis');
         $res = db('users')->where('id',$this->userId)->update($data);
         if($res){
@@ -165,17 +178,8 @@ namespace app\home\controller;
          $user = UserModel::get($this->userId);
          $return = [];
          $return['alipay'] = hideStar($user['alipay']['alipay_account']);
-         $return['openid'] = $user['openid'];
+         $return['wechat'] = empty($user['openid']) ? 0 : 1;
          return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
-     }
-
-     /**
-      * @return \think\response\Json
-      * 绑定支付宝页面
-      */
-     public function webBindAlipay(){
-         $phone = Db::table('sql_users')->where('id',$this->userId)->value('phone');
-         return json(['data'=>$phone,'msg'=>'查询成功','code'=>200]);
      }
 
 
@@ -185,8 +189,10 @@ namespace app\home\controller;
       */
      public function actBindAlipay(Request $request){
         $input = $request->post();
-        if(empty($input['account'])){
-            return json(['msg'=>'支付宝账号不能为空','code'=>1001]);
+        if(empty($input['account'])) {
+            return json(['msg' => '支付宝账号不能为空', 'code' => 1001]);
+        }else if(!preg_match(' /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/',$input['account']) && !preg_match('/^1[34578]\d{9}$/',$input['account'])){
+            return json(['msg'=>'支付宝账号不合法','code'=>1001]);
         }else if(empty($input['name'])){
             return json(['msg'=>'真实姓名不能为空','code'=>1001]);
         }else if(empty($input['password'])){
@@ -194,6 +200,7 @@ namespace app\home\controller;
         }else if(empty($input['code'])){
             return json(['msg'=>'验证码不能为空','code'=>1001]);
         }
+
          $user = Db::table('sql_users')->where('id',$this->userId)->find();
          if(md5($input['password']) !== $user['password']){
              return json(['msg'=>'登陆密码错误','code'=>1002]);

@@ -47,10 +47,8 @@ class Test extends Validate{
 
 
     public function test(){
-        $pwd = '123456';
-        $res = substr(md5($pwd), 5, 20);
-        dump($res);
-//        $user = UserModel::get(1);
+        session('home_user_id',1);
+
 
     }
 

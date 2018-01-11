@@ -39,7 +39,8 @@ class Address extends Validate{
             'mobile./^1[34578]\d{9}$/',
             'province.max:50',
             'city.max:100',
-            'area.max:100'
+            'area.max:100',
+            'detail.max:100'
         ],
         'register_address' => [
             'consignee',

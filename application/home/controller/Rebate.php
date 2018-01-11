@@ -253,12 +253,6 @@ class Rebate extends Controller
     }
 
 
-    public function test()
-    {
-
-    }
-
-
     /**
      * @param $prentId
      * @return array

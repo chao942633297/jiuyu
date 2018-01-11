@@ -24,12 +24,13 @@ class Team extends Base{
 
     //我的团队
     public function index(Request $request){
-        $page = $request->param('page');
+        $page = $request->param('page',1);
         $list = 10;
         $page = ($page-1) * $list;
 
-        $allUser = UserRelationModel::all(function($query){
+        $allUser = UserRelationModel::all(function($query)use($page,$list){
             $query->where('pid',$this->userId);
+            $query->limit($page,$list);
             $query->order('id','desc');
         });
 

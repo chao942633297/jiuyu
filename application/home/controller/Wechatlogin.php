@@ -17,7 +17,6 @@ class Wechatlogin extends Base{
     public function _initialize()
     {
         $this->userId = session('home_user_id');
-        $this->userId = 1;
     }
 
 
@@ -26,7 +25,7 @@ class Wechatlogin extends Base{
      * @throws \think\Exception
      * 用户授权,获取用户openid
      */
-    public function index(){
+    /*public function index(){
         $user = Db::table('sql_users')
             ->where('id',$this->userId)->find();
         if(empty($user['openid'])){
@@ -51,11 +50,28 @@ class Wechatlogin extends Base{
             return json(['msg'=>'用户已绑定微信','code'=>2001]);
         }
 
+    }*/
+
+
+
+
+    public function wechatQrcode(){
+        $dat['scene_str'] = '56fef2e82981a3d85a48de729850215d';
+        $data['action_name'] = 'QR_LIMIT_STR_SCENE';
+        $data['action_info'] = "{'scene':".json_encode($dat)."}";
+        $config = new WxPayConf_pub();
+        $wechat = new Wechat($config);
+        dump($wechat->getQrcode($data));
     }
+
+
+
+
 
 
     /**
      * 关注公众号
+     * 用户绑定微信
      */
     public function follow(){
       //  Wechat::valid();
@@ -71,6 +87,13 @@ class Wechatlogin extends Base{
                 case "event":
                     //用户关注事件
                     if ($postObj->Event == 'subscribe') {
+                        /*===========用户绑定微信=============*/
+                        $user = Db::table('sql_users')
+                            ->where('id',$this->userId)->find();
+                        if(empty($user['openid'])){
+                            $user['openid'] = $postObj->FromUserName;
+                            Db::table('sql_users')->update($user);
+                        }
                         //存储openid
                         session('replay_openid',$postObj->FromUserName);
                         $result = $wechat->receiveReply($postObj);
@@ -110,8 +133,7 @@ class Wechatlogin extends Base{
     public function createMenu(){
         $wechat_config = new WxPayConf_pub();
         $wechat = new Wechat($wechat_config);
-        $access_token = $wechat->makeAccessToken();
-        $result = $wechat->createMenu($access_token);
+        $result = $wechat->createMenu();
         dump($result);
     }
 
