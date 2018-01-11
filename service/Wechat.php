@@ -74,9 +74,7 @@ class Wechat
     }
 
     public function getQrcode($data){
-//        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token='.self::makeAccessToken();
-        $access_token = '';
-        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token='.$access_token;
+        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token='.self::makeAccessToken();
         $data = json_encode($data);
         return $this->https_request($url,$data);
     }

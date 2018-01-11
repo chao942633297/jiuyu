@@ -8,8 +8,10 @@ class WithdrawModel extends Model
     protected $table = 'sql_withdraw';
 
     public function users(){
-        return $this->belongsTo('UserModel','uid','id');
+        return $this->belongsTo(UserModel::class,'uid','id');
     }
+
+
 
     /**
      * 根据搜索条件获取提现列表信息

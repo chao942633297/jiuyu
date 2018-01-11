@@ -2,6 +2,8 @@
 namespace Vendor\AliPay;
 //require_once 'AopEncrypt.php';
 use AopEncrypt;
+use think\Exception;
+
 class AopClient {
 	//应用ID
 	public $appId;
@@ -428,8 +430,7 @@ class AopClient {
 	}
 
 
-	public function execute($request, $authToken = null, $appInfoAuthtoken = null) {
-
+	public function execute($request,$authToken = null, $appInfoAuthtoken = null) {
 		$this->setupCharsets($request);
 
 		//		//  如果两者编码不一致，会出现签名验签或者乱码
@@ -467,7 +468,6 @@ class AopClient {
 
 		//获取业务参数
 		$apiParams = $request->getApiParas();
-
 			if (method_exists($request,"getNeedEncrypt") &&$request->getNeedEncrypt()){
 
 			$sysParams["encrypt_type"] = $this->encryptType;
@@ -751,7 +751,7 @@ class AopClient {
 				"\n-----END PUBLIC KEY-----";
 		}else {
 			//读取公钥文件
-			$pubKey = file_get_contents($rsaPublicKeyFilePath);
+			$pubKey = file_get_contents($rsaPublicKeyPem);
 			//转换为openssl格式密钥
 			$res = openssl_get_publickey($pubKey);
 		}

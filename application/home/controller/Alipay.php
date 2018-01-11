@@ -2,16 +2,21 @@
 
 namespace app\home\controller;
 
+use app\backsystem\model\WithdrawModel;
 use think\Controller;
 use think\Db;
 use think\Request;
+use Vendor\AliPay\AlipayFundTransToaccountTransferRequest;
 use Vendor\AliPay\AlipayTradeService;
 use Vendor\AliPay\AlipayTradeWapPayContentBuilder;
+use Vendor\AliPay\AopClient;
 use Vendor\AliPay\Config;
 
 vendor('AliPay.Config');
+vendor('AliPay.AopClient');
 vendor('AliPay.AlipayTradeService');
 vendor('AliPay.AlipayTradeWapPayContentBuilder');
+vendor('AliPay.AlipayFundTransToaccountTransferRequest');
 class Alipay extends Controller{
 
     public function webPay(Request $request){             //支付宝支付
@@ -38,6 +43,43 @@ class Alipay extends Controller{
         $payResponse->wapPay($payRequestBuilder,$config['return_url'],$config['notify_url']);
     }
 
+
+
+    public function withDraw($data){            //支付宝转账
+
+        $config = Config::config();
+        $aop = new AopClient($config);
+        $aop->gatewayUrl = 'https://openapi.alipay.com/gateway.do';
+        $aop->appId = '2017122201066532';
+        $aop->rsaPrivateKey = $config['merchant_private_key'];
+        $aop->alipayrsaPublicKey=$config['alipay_public_key'];
+        $aop->apiVersion = '1.0';
+        $aop->signType = 'RSA2';
+        $aop->postCharset='UTF-8';
+        $aop->format='json';
+
+        $txmoney = $data['money'];
+        $out_biz_no = $data['withdraw_sn'];
+        $payee_account = $data['alipay_account'];
+        $payee_man = $data['alipay_name'];
+
+        $request = new AlipayFundTransToaccountTransferRequest();
+        $request->setBizContent("{" .
+            "\"out_biz_no\":\"".$out_biz_no."\"," .
+            "\"payee_type\":\"ALIPAY_LOGONID\"," .
+            "\"payee_account\":\"".$payee_account."\"," .
+            "\"amount\":\"".$txmoney."\"," .
+            "\"payer_show_name\":\"玖誉商城提现\"," .
+            "\"payee_real_name\":\"".$payee_man."\"," .
+            "\"remark\":\"余额提现\"" .
+            "  }");
+        $result = $aop->execute ($request);
+        $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
+        return $result->$responseNode;
+//        $resultCode = $result->$responseNode->code;
+//         dump($result->$responseNode);
+//         dump($resultCode);
+    }
 
 
 }

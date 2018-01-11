@@ -51,6 +51,17 @@ function orderNum(){
 }
 
 
+/**
+ * 随机生成订单号
+ */
+function withdrawNum(){
+    do{
+        $num = date('Y').date('m').time().rand(1,100);
+    }while(db('withdraw')->where(['withdraw_sn'=>$num])->find());
+    return $num;
+}
+
+
 function getAgentId($province,$city,$area){
     $prentId = 1;
     if($areaId = \app\backsystem\model\ApplyModel::get(['province'=>$province,'city'=>$city,'area'=>$area,'status'=>2,'level'=>3])['uid']){

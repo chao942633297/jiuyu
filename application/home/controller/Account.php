@@ -121,6 +121,7 @@ class Account extends Base{
             //增加提现记录
             $data['uid'] = $this->userId;
             $data['money'] = $money;
+            $data['withdraw_sn'] = withdrawNum();
             $data['charge'] = $this->charge;        //提现手续费为5%
             $data['realmoney'] = $money * (100 - $this->charge) * 0.01;
             $data['status'] = 1;
