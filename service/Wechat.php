@@ -16,25 +16,25 @@ class Wechat
 		      {
 		           "type":"view",
 	               "name":"商城首页",
-	               "url":"www.baidu.com"
+	               "url":"http://www.baidu.com"
 		      },
 		      {
 		           "type":"view",
 		           "name":"平台简介",
-	               "url":"www.baidu.com"
+	               "url":"http://www.baidu.com"
 		      },
 		      {
 		           "name":"联系我们",
 		           "sub_button":[
 		            {
-		               "type":"view",
-		               "name":"注册流程",
-	               		"url":"www.baidu.com"
+		                "type":"view",
+		                "name":"注册流程",
+                        "url":"http://www.baidu.com"
 		            },
 		            {
-		               "type":"view",
-		               "name":"客服电话",
-	               		"url":"www.baidu.com"
+		                "type":"view",
+		                "name":"客服电话",
+                        "url":"http://www.baidu.com"
 		            }]
 		       }]
 		}';
@@ -46,7 +46,6 @@ class Wechat
     }
 
 
-
     #获取AccessToken
     protected function makeAccessToken()
     {
@@ -56,27 +55,41 @@ class Wechat
         return $postAccountData['access_token'];
     }
 
-    #获取token
-    protected function https_request($url, $data = null)
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-        if (!empty($data)) {
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+
+    protected function create_qrcode ($scene_id, $expire_seconds = 0) {
+        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=' . self::makeAccessToken();
+        $expire = $expire_seconds == 0 ? '' : '"expire_seconds": ' . $expire_seconds . ',';
+        $action_name = $expire_seconds == 0 ? 'QR_LIMIT_STR_SCENE' : 'QR_SCENE';
+        $xml = sprintf('{%s"action_name": "%s", "action_info": {"scene": {"scene_str": "%s"}}}',
+            $expire,
+            $action_name,
+            $scene_id);
+        $res = $this->https_post($url, $xml,'json');
+        // 异常处理: 获取时网络错误
+        // 判断是否调用成功
+        if (isset($res->ticket)) {
+            return $res->ticket;
         }
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($curl);
-        curl_close($curl);
-        return $output;
+        return $res;
     }
 
-    public function getQrcode($data){
-        $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token='.self::makeAccessToken();
-        $data = json_encode($data);
-        return $this->https_request($url,$data);
+    public function get_qrcode($scene_id,$expire_seconds = 0){
+        $ticket = $this->create_qrcode($scene_id,$expire_seconds);
+        if(!is_string($ticket)){
+            return $ticket;
+        }
+        $ticket = urlencode($ticket);
+        $get_qrcode_url = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket='.$ticket;
+        $result = $this->https_get($get_qrcode_url);
+        return $result;
+    }
+
+
+    public function getUserInfo($openid){
+        $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token='.self::makeAccessToken().'&openid='.$openid.'&lang=zh_CN';
+        $userInfo = $this->https_get($url);
+        return $userInfo;
     }
 
 
@@ -230,6 +243,73 @@ class Wechat
             </xml>";
         $result = sprintf($textTpl, $object->FromUserName, $object->ToUserName, time(), $content);
         return $result;
+    }
+/*========================================post请求/get请求===================================================*/
+
+    protected function https_get($url, $data_type='text') {
+        $cl = curl_init();
+        if(stripos($url, 'https://') !== FALSE) {
+            curl_setopt($cl, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($cl, CURLOPT_SSL_VERIFYHOST, FALSE);
+            curl_setopt($cl, CURLOPT_SSLVERSION, 1);
+        }
+        curl_setopt($cl, CURLOPT_URL, $url);
+        curl_setopt($cl, CURLOPT_RETURNTRANSFER, 1 );
+        $content = curl_exec($cl);
+        $status = curl_getinfo($cl);
+        curl_close($cl);
+        if (isset($status['http_code']) && $status['http_code'] == 200) {
+            if ($data_type == 'json') {
+                $content = json_decode($content);
+            }
+            return $content;
+        } else {
+            return FALSE;
+        }
+    }
+
+
+    protected function https_post($url, $fields, $data_type='text') {
+        $cl = curl_init();
+        if(stripos($url, 'https://') !== FALSE) {
+            curl_setopt($cl, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($cl, CURLOPT_SSL_VERIFYHOST, FALSE);
+            curl_setopt($cl, CURLOPT_SSLVERSION, 1);
+        }
+        curl_setopt($cl, CURLOPT_URL, $url);
+        curl_setopt($cl, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($cl, CURLOPT_POST, true);
+        curl_setopt($cl, CURLOPT_POSTFIELDS, $fields);
+        $content = curl_exec($cl);
+        $status = curl_getinfo($cl);
+        curl_close($cl);
+        if (isset($status['http_code']) && $status['http_code'] == 200) {
+            if ($data_type == 'json') {
+                $content = json_decode($content);
+            }
+            return $content;
+        } else {
+            return FALSE;
+        }
+    }
+
+
+
+    #获取token
+    protected function https_request($url, $data = null)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+        if (!empty($data)) {
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        }
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($curl);
+        curl_close($curl);
+        return $output;
     }
 
 }

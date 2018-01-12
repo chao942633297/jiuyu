@@ -54,6 +54,11 @@ class Login extends Controller
                 ->where('unique',$request->param('prentId'))
                 ->value('phone');
         }
+        if(session('replay_openid')){
+            $phone = Db::table('sql_users')
+                ->where('openid',session('replay_openid'))
+                ->value('phone');
+        }
         return json(['data'=>$phone,'msg'=>'查询成功','code'=>200]);
     }
 
@@ -97,9 +102,6 @@ class Login extends Controller
 //            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
             $falg = ['password' => 123456, 'two_password' => 123456];      //获取登陆密码支付密码
             $userData['pid'] = $prentId;
-            if(session('replay_openid')){
-                $userData['openid'] = session('replay_openid');
-            }
             $userData['phone'] = $input['phone'];
             $userData['unique'] = md5($input['phone']);
             $userData['headimgurl'] = config('back_domain') . '/uploads/default.png';
@@ -108,17 +110,30 @@ class Login extends Controller
             $userData['two_password'] = md5($falg['two_password']);
             $userData['class'] = 1;
             $userData['created_at'] = date('YmdHis');
-            $res = UserModel::create($userData);
-            //保存用户关系
-            $this->saveUserRelation($res['id'], $res['pid']);
+            /*==============微信内绑定手机号===================*/
+            if(session('replay_openid')){
+                unset($userData['pid']);
+                unset($userData['nickname']);
+                unset($userData['headimgurl']);
+                Db::table('sql_users')
+                    ->where('openid',session('replay_openid'))
+                    ->update($userData);
+            }else{
+                /*==================浏览器端注册账号============================*/
+                $res = UserModel::create($userData);
+                //保存用户关系
+                $this->saveUserRelation($res['id'], $res['pid']);
+                session('home_user_id', $res['id']);
+                $_SESSION['home_user_id'] = $res['id'];
+            }
             //TODO:发送短信,告知用户账号密码
             $msg = new MsgCode();
-            $result = $msg->sendMsg($res['phone'],4,$falg);
+            $result = $msg->sendMsg($userData['phone'],4,$falg);
             if ($result) {
                 //修改验证码使用状态
                 Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);
-                session('home_user_id', $res['id']);
-                $_SESSION['home_user_id'] = $res['id'];
+                session('replay_unique',null);
+                session('replay_openid',null);
                 Db::commit();
                 return json(['msg' => '注册成功', 'code' => 200]);
             }

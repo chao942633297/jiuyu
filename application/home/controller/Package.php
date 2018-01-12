@@ -129,8 +129,8 @@ class Package extends Controller
 			return json(['msg'=>'您已提交申请,请耐心等待','code'=>1002]);
 		}
 		$user = UserModel::get($this->userId);
-		if($user['class'] >= 2){
-			return json(['msg'=>'您已经是报单中心无需重复申请','code'=>1002]);
+		if(strpos($user['level'],$package['unit']) !== false){
+			return json(['msg'=>'您已经购买过次套餐,暂不能购买','code'=>1002]);
 		}
 		$file = $request->file('voucher');
 		$data = [];

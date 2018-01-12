@@ -47,8 +47,10 @@ class Test extends Validate{
 
 
     public function test(){
-        session('home_user_id',1);
 
+        dump(session('home_user_id'));
+        dump(session('replay_openid'));
+        dump(session('replay_openid1'));
 
     }
 

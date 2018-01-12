@@ -2,7 +2,6 @@
 
 namespace app\home\controller;
 
-use app\backsystem\model\WithdrawModel;
 use think\Controller;
 use think\Db;
 use think\Request;

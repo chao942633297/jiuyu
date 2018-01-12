@@ -314,6 +314,23 @@ namespace app\home\controller;
          return json(['data'=>$return,'msg'=>'生成成功','code'=>200]);
      }
 
+
+     /**
+      * 判断扫描二维码环境
+      */
+     public function puckUrl(){
+         $user = Db::table('sql_users')
+             ->where('id',$this->userId)->find();
+         $result = [];
+         $result['wechat'] = 0;
+         if(is_weixin()){
+             $wechatlogin = new Wechatlogin();
+             $result['path'] = $wechatlogin->wechatQrcode($user['unique']);
+             $result['wechat'] = 1;
+         }
+         return json(['data'=>$result,'msg'=>'查询成功','code'=>200]);
+     }
+
      //我的二维码
  /*    public function myQcode(){
          $user = UserModel::get($this->userId);
