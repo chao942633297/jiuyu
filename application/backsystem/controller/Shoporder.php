@@ -17,7 +17,7 @@ use app\backsystem\controller\Excel;
 
 class Shoporder extends Base
 {
-    // protected $status = ['用户取消','待付款','已付款(待发货)','已发货','确认收货(完成)'];
+    // protected $status = ['用户取消','待付款','待发货','已发货','完成'];
     // 商城订单列表
     public function orderlist()
     {
@@ -60,7 +60,7 @@ class Shoporder extends Base
             $shopOrder = new ShopOrderModel();
             // $selectResult = $shopOrder->getsOrderByWhere($where, $offset, $limit,'is_under , sort desc ,id desc');
             $selectResult = $shopOrder->getShopOrderByWhere($where, $offset, $limit);
-            $status = ['用户取消','待付款','已付款(待发货)','已发货','确认收货(完成)'];
+            $status = ['用户取消','待付款','待发货','已发货','完成'];
 
             foreach($selectResult as $key=>$vo){
                 $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
@@ -116,7 +116,7 @@ class Shoporder extends Base
         $selectResult = $shopOrder->getShopOrder($where,$order='id desc','order_sn,buyer_name,buyer_phone,amount,money,province,city,area,status,payment,waybill_name,waybill_no,created_at,remark,admin_remark');
         $selectResult = objToArray($selectResult);
         
-        $status = ['用户取消','待付款','已付款(待发货)','已发货','确认收货(完成)'];
+        $status = ['用户取消','待付款','待发货','已发货','完成'];
         $payment = ['','微信','支付宝','余额'];
 
         foreach($selectResult as $key=>$vo){
@@ -126,7 +126,8 @@ class Shoporder extends Base
             // $detail = db('shop_order_detail')->where('order_sn',$vo['order_sn'])->field('id,goodsid,goodsname,goodsnum,price,unit,imgurl')->select();
             $detail = db('shop_order_detail')->where('order_sn',$vo['order_sn'])->field('goodsname,goodsnum,price')->select();
             $detail = objToArray($detail);
-                        
+            
+            // 合并订单商品信息
             $result = [];
             array_walk_recursive($detail, function($value) use (&$result) {
                 array_push($result, $value);
@@ -137,13 +138,11 @@ class Shoporder extends Base
 
 
 
-        // dump($selectResult);
-        // exit;
 
-
+        // 商品太多 会超出26列
         $excel = new Excel();
         $first = ['A1'=>'订单号','B1'=>'收货人','C1'=>'手机号','D1'=>'总价','E1'=>'支付价格','F1'=>'省','G1'=>'市','H1'=>'街道','I1'=>'订单状态','J1'=>'支付方式','K1'=>'物流公司','L1'=>'运单号','M1'=>'下单时间','N1'=>'用户留言','O1'=>'管理员留言'];
-        $excel->toExcel('物流比订单多的',$selectResult,$first);
+        $excel->toExcel('1',$selectResult,$first);
         header('Location:/uploads/file.xlsx');
     }
 
@@ -161,7 +160,7 @@ class Shoporder extends Base
         $id = input('param.id');
         $orderInfo = model('ShopOrderModel')->getOneShopOrder($id);
 
-        $status = ['用户取消','待付款','已付款(待发货)','已发货','确认收货(完成)'];
+        $status = ['用户取消','待付款','待发货','已发货','完成'];
         $orderInfo['status'] = $status[$orderInfo['status']];
         $this->assign('orderInfo',$orderInfo);
         return $this->fetch();
@@ -177,6 +176,13 @@ class Shoporder extends Base
         if(request()->isPost()){
 
             $param = input('post.');
+            if (empty(trim($param['waybill_no']))) {
+                return json(['code'=>0, 'data'=>'', 'msg'=>'运单号不能空']);
+            }
+            $orderData = db('shop_order')->find($param['id']);
+            if ($orderData['status'] < 2) {
+                return json(['code'=>0, 'data'=>'', 'msg'=>'订单未付款不能发货']);
+            }
             $param['status'] = '3'; // 订单发货 订单状态修改为“已发货”
             $flag = model('ShopOrderModel')->editShopOrder($param);
 
@@ -186,7 +192,7 @@ class Shoporder extends Base
         $id = input('param.id');
         $orderInfo = model('ShopOrderModel')->getOneShopOrder($id);
 
-        $status = ['用户取消','待付款','已付款(待发货)','已发货','确认收货(完成)'];
+        $status = ['用户取消','待付款','待发货','已发货','完成'];
         $orderInfo['status'] = $status[$orderInfo['status']];
         $this->assign('orderInfo',$orderInfo);
         return $this->fetch();
@@ -194,7 +200,7 @@ class Shoporder extends Base
         // $shopOrderclass  =  model('ShopOrderClassModel')->select();
         
         // $this->assign('shopOrderclass',$shopOrderclass);
-        return $this->fetch();
+        // return $this->fetch();
     }
 
     

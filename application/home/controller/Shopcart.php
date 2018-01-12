@@ -13,7 +13,6 @@ class Shopcart extends Base
 	public function _initialize()
 	{
 	    parent::_initialize(); // 判断用户是否登陆
-	    session('home_user_id','13');
 	    $this->userId = session('home_user_id');
 	    // $this->userId = input('param.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
@@ -82,11 +81,14 @@ class Shopcart extends Base
 		$insertData['userid'] = $this->userId;
 
 		//查询商品库存 和是否下架
-		$kucun = db('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under')->find();
-		if ($kucun['is_under'] == '1' || empty($kucun)) {
+		$goodsInfo = db('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under,cid')->find();
+		if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
 			return json(['code'=>0,'data'=>'','msg'=>'商品已经下架']);
 		}
-		// if ($kucun['num'] < input('param.goodsnum')) {
+		if ($goodsInfo['cid'] == 2) {
+			return json(['code'=>0,'data'=>'','msg'=>'窥探商品不能添加到购物车']);	
+		}
+		// if ($goodsInfo['num'] < input('param.goodsnum')) {
 		// 	return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
 		// }
 	
@@ -122,22 +124,6 @@ class Shopcart extends Base
 	 */
 	public function cartGoodsUpdate()
 	{
-		//数据格式验证
-		// $rule = [
-		//     'goodsid'=>'require',
-		//     'goodsnum'=>'require',
-		// ];
-		// $msg = [
-		//     'goodsid.require'=>'商品ID不能为空',
-		//     'goodsnum.require'=>'商品数量不能为空',
-		// ];
-
-		// $input = Request::instance()->get();
-		// $validate = new Validate($rule,$msg);
-		// if(!$validate->check($input)){
-		//     return json(['msg'=>$validate->getError(),'code'=>0]);
-		// }
-
 		// 整理更新数据
 		$data = input('param.data');
 		$updateData = array();
@@ -166,36 +152,7 @@ class Shopcart extends Base
 		}
 
 		return json(['code'=>0,'data'=>'','msg'=>'商品没有变化']);
-		// $insertData['userid'] = $this->userId;
-
-		// //查询商品库存
-		// $kucun = db('shop_goods')->where('id',$insertData['goodsid'])->field('num')->find();
-		// if ($kucun['num'] < input('param.goodsnum')) {
-		// 	return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
-		// }
 	
-		// // 首先判断购物车中是否已经存在相同规格的商品
-		// $num = db('shop_cart')->where($insertData)->count();
-		// if ($num > 0) {
-		// 	$goodsnum = input('param.goodsnum');	
-		// 	//修改购物车中对应商品的数量
-		// 	$r = db('shop_cart')->where($insertData)->setInc('goodsnum', $goodsnum);
-		// 	if ($r) {
-		// 		return json(['code'=>1,'data'=>'','msg'=>'添加购物车成功！']);
-		// 	}else{
-		// 		return json(['code'=>0,'data'=>'','msg'=>'添加购物车失败！']);
-		// 	}
-		// }else{
-		// 	$insertData['goodsnum'] = input('param.goodsnum');
-		// 	$insertData['created_at'] = date("Y-m-d H:i:s");
-
-		// 	$re = db('shop_cart')->insertGetid($insertData);
-		// 	if ($re) {
-		// 		return json(['code'=>1,'data'=>'','msg'=>'添加购物车成功！']);
-		// 	}
-		// 	return json(['code'=>0,'data'=>'','msg'=>'添加购物车失败！']);
-			
-		// }
 	}
 
 	//删除购物车商品  批量删除 

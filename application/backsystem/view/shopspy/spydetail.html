@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>窥探中奖记录</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/plugins/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
+    <link href="__JS__/plugins/layui/css/layui2.2.5.css" rel="stylesheet" media="all">
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <link href="__CSS__/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+</head>
+<body class="gray-bg">
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <!-- Panel Other -->
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>中奖信息</h5>
+        </div>
+        <div class="ibox-content">
+            <div class="example-wrap">
+                <div class="example">
+                    <!-- // 中奖信息 -->
+                    <table class="layui-table">
+                      <colgroup>
+                        <col width="150">
+                        <col width="200">
+                        <col>
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>用户名</th>
+                          <th>商品名</th>
+                          <th>原价</th>
+                          <th>商品图</th>
+                          <th>参数</th>
+                          <th>窥探还是抢购</th>
+                          <th>中奖轮次</th>
+                          <th>中奖时间</th>
+                          <th>处理意见</th>
+                        </tr> 
+                      </thead>
+                      <tbody>
+                        <tr>
+                            <td>{$successdata['id']}</td>
+                            <td>{$successdata['username']}</td>
+                            <td>{$successdata['goodsname']}</td>
+                            <td>{$successdata['goodsprice']}</td>
+                            <td><img src="{$successdata['goodsimgurl']}" width="120"></td>
+                            <td><img src="{$successdata['goodscanshu']}" width="120"></td>
+                            <td>{$successdata['is_spy'] ? "窥探中奖" : "抢购中奖"}</td>
+                            <td>{$successdata['times']}</td>
+                            <td>{$successdata['created_at']}</td>
+                            <td>{$successdata['remark']}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- End Example Pagination -->
+        </div>
+    </div>
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>窥探记录</h5>
+        </div>
+        <div class="ibox-content">
+            <div class="example-wrap">
+                <div class="example">
+                    <table class="layui-table" lay-even>
+                    <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>用户名</th>
+                          <th>窥探价格</th>
+                          <th>窥探次数</th>
+                          <th>总费用</th>
+                          <th>窥探后价格</th>
+                          <th>商品名称</th>
+                          <th>支付方式</th>
+                          <th>窥探轮次</th>
+                          <th>窥探时间</th>
+                        </tr> 
+                      </thead>
+                      <tbody>
+                        {if empty($recorddata)}
+                        <tr><td >没有窥探记录>>></td></tr>
+                        {/if}
+                        {volist name="recorddata" id="vo"}
+                        <tr>
+                            <td>{$vo['id']}</td>
+                            <td>{$vo['username']}</td>
+                            <td>{$vo['once_price']}</td>
+                            <td>{$vo['spy_num']}</td>
+                            <td>{$vo['amount']}</td>
+                            <td>{$vo['sur_price']}</td>
+                            <td>{$vo['goodsname']}</td>
+                            <td>{$vo['payment']}</td>
+                            <td>{$vo['times']}</td>
+                            <td>{$vo['created_at']}</td>
+                        </tr>
+                        {/volist}
+                      </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- End Example Pagination -->
+        </div>
+    </div>
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>抢购记录</h5>
+        </div>
+        <div class="ibox-content">
+            <div class="example-wrap">
+                <div class="example">
+                    <table class="layui-table" lay-even>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>抢购订单号</th>
+                          <th>用户名</th>
+                          <th>商品名</th>
+                          <th>抢购价格</th>
+                          <th>收货人</th>
+                          <th>联系电话</th>
+                          <th>地址</th>
+                          <th>是否成功</th>
+                          <th>抢购轮次</th>
+                          <th>支付方式</th>
+                          <th>抢购时间</th>
+                        </tr> 
+                      </thead>
+                      <tbody>
+                        {if empty($spyingdata)}
+                        <tr><td colspan="12" align="center">没有抢购记录>>></td></tr>
+                        {/if}
+                        {volist name="spyingdata" id="vo"}
+                        <tr>
+                            <td>{$vo['id']}</td>
+                            <td>{$vo['spy_sn']}</td>
+                            <td>{$vo['username']}</td>
+                            <td>{$vo['goodsname']}</td>
+                            <td>{$vo['sur_price']}</td>
+                            <td>{$vo['buyer_name']}</td>
+                            <td>{$vo['buyer_phone']}</td>
+                            <td>{$vo['province']}/{$vo['city']}/{$vo['area']}</td>
+                            <td>{$vo['payment']}</td>
+                            <td>{$vo['times']}</td>
+                            <td>{$vo['created_at']}</td>
+                        </tr>
+                        {/volist}
+                      </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- End Example Pagination -->
+        </div>
+    </div>
+
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>审核意见</h5>
+        </div>
+        <div class="ibox-content">
+            <div class="example-wrap">
+                <div class="example">
+                    <form class="layui-form" action="{:URL('shopspy/spydetail')}"  method="post" id="commentForm"> 
+                        <input type="hidden" value="{$successdata['id']}" name="id">
+                      <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">意见：</label>
+                        <div class="layui-input-block">
+                          <textarea placeholder="请输入审核意见" name="remark" class="layui-textarea">{$successdata['remark']}</textarea>
+                        </div>
+                      </div>
+                      <div class="layui-form-item">
+                        <div class="layui-input-block">
+                          <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+                        </div>
+                      </div>
+                      <!-- 更多表单结构排版请移步文档左侧【页面元素-表单】一项阅览 -->
+                    </form>
+                </div>
+            </div>
+            <!-- End Example Pagination -->
+        </div>
+    </div>
+</div>
+<!-- End Panel Other -->
+</div>
+
+<script src="__JS__/jquery.min.js?v=2.1.4"></script>
+<script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+<script src="__JS__/content.min.js?v=1.0.0"></script>
+<script src="__JS__/plugins/bootstrap-table/bootstrap-table.min.js"></script>
+<script src="__JS__/plugins/bootstrap-table/bootstrap-table-mobile.min.js"></script>
+<script src="__JS__/plugins/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+<script src="__JS__/plugins/suggest/bootstrap-suggest.min.js"></script>
+<script src="__JS__/plugins/layer/laydate/laydate.js"></script>
+<script src="__JS__/plugins/sweetalert/sweetalert.min.js"></script>
+<script src="__JS__/plugins/layer/layer.min.js"></script>
+<script src="__JS__/jquery1.12.3.min.js"></script>
+<script src="__JS__/layui/layui2.2.5.js"></script>
+<script src="__JS__/jquery.form.js"></script>
+
+<script>
+    layui.use('form', function(){
+        var form = layui.form();
+        form.on('submit(*)', function(data){
+            var jz;
+            var url = "{:URL('shopspy/spydetail')}";
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: $('#commentForm').serialize(),// 你的formid
+                async: false,
+                beforeSend: function () {
+                    jz = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+                },
+                error: function (request) {
+                    layer.close(jz);
+                    swal("网络错误!", "", "error");
+                },
+                success: function (data) {
+                    //关闭加载层
+                    layer.close(jz);
+                    if (data.code == 1) {
+                        swal(data.msg, "", "success");
+                    } else {
+                        swal(data.msg, "", "error");
+                    }
+                }
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

@@ -20,11 +20,11 @@ class Shoporder extends Base
 	public function _initialize()
 	{
 	    parent::_initialize(); // 判断用户是否登陆
-	    session('home_user_id','90');
 	    $this->userId = session('home_user_id');
 	    // $this->userId = input('param.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
 	    	return json(['code'=>0,'data'=>'','msg'=>'获取用户信息失败']);
+	    	exit;
 	    }
 	}
 
@@ -122,24 +122,17 @@ class Shoporder extends Base
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		$_POST['province'] = '河南省'; 
-		$_POST['city'] = '郑州市'; 
-		$_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
-		$_POST['buyer_name'] = '王先生'; 
-		$_POST['buyer_phone'] = '18236952689'; 
-		$_POST['goodsinfo'] = array(
-			//商城区
-			array('goodsid'=>31,'goodsnum'=>'1'),
-			array('goodsid'=>32,'goodsnum'=>'1'),
-			// array('goodsid'=>33,'goodsnum'=>'1'),
-			// array('goodsid'=>34,'goodsnum'=>'1'),
-			array('goodsid'=>35,'goodsnum'=>'3'),
-			array('goodsid'=>37,'goodsnum'=>'1'),	
-			//套餐区
-			// array('goodsid'=>24,'goodsnum'=>'1'),	
-			// array('goodsid'=>25,'goodsnum'=>'1'),	
-			// array('goodsid'=>26,'goodsnum'=>'1'),	
-		); 
+		// $_POST['province'] = '河南省'; 
+		// $_POST['city'] = '郑州市'; 
+		// $_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
+		// $_POST['buyer_name'] = '王先生'; 
+		// $_POST['buyer_phone'] = '18236952689'; 
+		// $_POST['goodsinfo'] = array(
+		// 	//商城区
+		// 	array('goodsid'=>31,'goodsnum'=>'1'),
+		// 	// array('goodsid'=>35,'goodsnum'=>'3'),
+		// 	array('goodsid'=>37,'goodsnum'=>'1'),	
+		// ); 
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -215,21 +208,21 @@ class Shoporder extends Base
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		$_POST['order_sn'] = '201801091515483968621'; 
-		$_POST['two_password'] = '123456'; 
-		$_POST['payment'] = '3'; 
-		$_POST['province'] = '河南省'; 
-		$_POST['city'] = '郑州市'; 
-		$_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
-		$_POST['buyer_name'] = '王先生'; 
-		$_POST['buyer_phone'] = '18236952689'; 
-		$_POST['goodsinfo'] = array(
-			// array('goodsid'=>34,'goodsnum'=>'3'),
-			array('goodsid'=>35,'goodsnum'=>'1'),	
-			// array('goodsid'=>33,'goodsnum'=>'1'),
-			array('goodsid'=>32,'goodsnum'=>'1'),
-			array('goodsid'=>31,'goodsnum'=>'1'),
-		); 
+		// $_POST['order_sn'] = '201801091515483968621'; 
+		// $_POST['two_password'] = '123456'; 
+		// $_POST['payment'] = '3'; 
+		// $_POST['province'] = '河南省'; 
+		// $_POST['city'] = '郑州市'; 
+		// $_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
+		// $_POST['buyer_name'] = '王先生'; 
+		// $_POST['buyer_phone'] = '18236952689'; 
+		// $_POST['goodsinfo'] = array(
+		// 	// array('goodsid'=>34,'goodsnum'=>'3'),
+		// 	array('goodsid'=>35,'goodsnum'=>'1'),	
+		// 	// array('goodsid'=>33,'goodsnum'=>'1'),
+		// 	array('goodsid'=>32,'goodsnum'=>'1'),
+		// 	array('goodsid'=>31,'goodsnum'=>'1'),
+		// ); 
 
 
 		$input = input('post.');

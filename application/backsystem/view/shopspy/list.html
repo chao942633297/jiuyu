@@ -23,10 +23,11 @@
         </div>
         <div class="ibox-content">
             <!--搜索框开始-->
-            <form id='commentForm' role="form" method="post" class="form-inline" action="./orderToExcel">
+            <form id='commentForm' role="form" method="post" class="form-inline" action="{:URL('shopspy/orderToExcel')}">
+            <!-- <form id='commentForm' role="form" method="post" class="form-inline"> -->
                 <div class="content clearfix m-b">
                     <div class="form-group">
-                        <label class="font-noraml">中奖时间:</label>
+                        <label>中奖时间:</label>
                         <div class="input-daterange input-group">
                             <input type="date" class="form-control" id="starttime" name="starttime" value="">
                             <span class="input-group-addon">到</span>
@@ -34,30 +35,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>窥探中奖号：</label>
-                        <input type="text" class="form-control" id="order_sn" name="order_sn">
+                        <label>中奖用户名：</label>
+                        <input type="text" class="form-control" id="username" name="username">
                     </div>
                     <div class="form-group">
-                        <label>收货人：</label>
-                        <input type="text" class="form-control" id="buyer_name" name="buyer_name">
-                    </div>
-                    <div class="form-group">
-                        <label>联系电话：</label>
-                        <input type="text" class="form-control" id="buyer_phone" name="buyer_phone">
-                    </div>
-                    <!-- <div class="form-group">
-                        <label>是否下架：</label>
-                        <input type="text" class="form-control" id="classid" name="classid">
-                    </div> -->
-                    <div class="form-group">
-                        <label>状态：</label>
-                        <select class="form-control" name="status" id="status">
+                        <label>处理状态：</label>
+                        <select name="status" id="status" class="form-control" >
                             <option value="">全部</option>
-                            <option value="0">用户取消</option>
-                            <option value="1">待付款</option>
-                            <option value="2">待发货</option>
-                            <option value="3">已发货</option>
-                            <option value="4">已完成</option>
+                            <option value="0">未处理</option>
+                            <option value="1">已处理</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -81,6 +67,8 @@
                         <!-- <th data-field="is_spy">窥探还是抢购</th> -->
                         <th data-field="times">中奖轮次</th>
                         <th data-field="created_at">中奖时间</th>
+                        <th data-field="remark">处理意见</th>
+                        <!-- <th data-field="status">处理状态</th> -->
                         <th data-field="operate">操作</th>
                         </thead>
                     </table>
@@ -114,7 +102,7 @@
         //初始化表格,动态从服务器加载数据
         $("#cusTable").bootstrapTable({
             method: "get",  //使用get请求到服务器获取数据
-            url: "./index", //获取数据的地址
+            url: "./list", //获取数据的地址
             striped: true,  //表格显示条纹
             pagination: true, //启动分页
             pageSize: 10,  //每页显示的记录数
@@ -130,11 +118,8 @@
                     pageSize: params.pageSize,
                     starttime:$('#starttime').val(),
                     endtime:$('#endtime').val(),
-                    order_sn:$('#order_sn').val(),
-                    // brank:$('#brank').val(),
-                    buyer_name:$('#buyer_name').val(),
-                    buyer_phone:$('#buyer_phone').val(),
-                    status:$('#status').val()
+                    username:$('#username').val(),
+                    status:$('#status').val(),
                 };
                 return param;
             },
