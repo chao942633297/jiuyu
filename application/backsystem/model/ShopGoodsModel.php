@@ -99,7 +99,7 @@ class ShopGoodsModel extends Model
     public function delShopGoods($id)
     {
         try{
-            $this->where('id', $id)->delete();
+            $this->where('id', $id)->setField(['is_delete'=>'1','is_under'=>'1']);
             return ['code' => 1, 'data' => '', 'msg' => '删除商城商品成功'];
 
         }catch( PDOException $e){

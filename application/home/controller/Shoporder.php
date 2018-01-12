@@ -21,7 +21,7 @@ class Shoporder extends Base
 	{
 	    parent::_initialize(); // 判断用户是否登陆
 	    $this->userId = session('home_user_id');
-	    // $this->userId = input('param.userId');
+	    // $this->userId = input('post.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
 	    	return json(['code'=>0,'data'=>'','msg'=>'获取用户信息失败']);
 	    	exit;
@@ -45,9 +45,9 @@ class Shoporder extends Base
 		//已经支付的订单 商品信息从order_detail 中获取  防止购买后商品价格变动造成总价对不上或者商品被删除
 
 		//加分页
-		$page = !empty(input('param.page')) && input('param.page') > 0 ? input('param.page') : '1' ;
-		$limit = !empty(input('param.limit')) && input('param.limit') > 0 ? input('param.limit') : '10' ;
-		$status = input('param.status');
+		$page = !empty(input('post.page')) && input('post.page') > 0 ? input('post.page') : '1' ;
+		$limit = !empty(input('post.limit')) && input('post.limit') > 0 ? input('post.limit') : '10' ;
+		$status = input('post.status');
 
 		if (empty($status)  || $status < 0 ) {
 			return json(['code'=>1,'data'=>'','msg'=>'获取失败，参数异常']);
@@ -110,6 +110,7 @@ class Shoporder extends Base
 		    'province'=>'require',
 		    'city'=>'require',
 		    'area'=>'require',
+		    'detail'=>'require',
 		    'buyer_name'=>'require|max:25',
 		    'buyer_phone'=>'require|/^1[3456789]\d{9}$/',
 		];
@@ -118,13 +119,16 @@ class Shoporder extends Base
 		    'province'=>'省不能为空',
 		    'city'=>'市不能为空',
 		    'area'=>'地区不能为空',
+		    'detail'=>'详细地址不能为空',
 		    'buyer_name'=>'用户名不能为空|名称最多不能超过25个字符',
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
+		// $_POST['cartid'] = ['21','22']; 
 		// $_POST['province'] = '河南省'; 
 		// $_POST['city'] = '郑州市'; 
-		// $_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
+		// $_POST['area'] = '金水区'; 
+		// $_POST['detail'] = '北三环中州大道963号康杰大酒店'; 
 		// $_POST['buyer_name'] = '王先生'; 
 		// $_POST['buyer_phone'] = '18236952689'; 
 		// $_POST['goodsinfo'] = array(
@@ -139,6 +143,19 @@ class Shoporder extends Base
 		if(!$validate->check($input)){
 		    return json(['msg'=>$validate->getError(),'code'=>0]);
 		}
+
+		// 购物车下单 读取购物车商品
+		if (!empty($input['cartid'])) {
+			$input['goodsinfo'] = [];
+			$d = db('shop_cart')->where('id','in',$input['cartid'])->field('*')->select();
+			foreach ($d as $key => $value) {
+				$input['goodsinfo'][$key]['goodsid'] = $value['goodsid'];
+				$input['goodsinfo'][$key]['goodsnum'] = $value['goodsnum'];
+			}
+		}
+
+
+
 		$goodsInfo = $input['goodsinfo'];
 
 		$cid = ''; //不同区的商品不能合并结算 套餐和商品不能合并结算
@@ -155,16 +172,18 @@ class Shoporder extends Base
 			// 	break;
 			// }
 			if (!empty($cid) && $cid !== $kucun['cid']) {
-				return json(['code'=>0,'data'=>'','msg'=>'请将套餐和商品分开下单！']);
+				return json(['code'=>0,'data'=>'','msg'=>'请将窥探和商城分开下单！']);
 			}
 			$cid = $kucun['cid'];
 			
 		}
 
+		$insertData['cartid'] = $input['cartid'];
 		$insertData['goodsinfo'] = $input['goodsinfo'];
 		$insertData['province'] = $input['province'];
 		$insertData['city'] = $input['city'];
 		$insertData['area'] = $input['area'];
+		$insertData['detail'] = $input['detail'];
 		$insertData['buyer_name'] = $input['buyer_name'];
 		$insertData['buyer_phone'] = $input['buyer_phone'];
 		$insertData['uid'] = $this->userId;
@@ -189,41 +208,16 @@ class Shoporder extends Base
 		    'order_sn'=>'require',
 		    'two_password'=>'require',
 		    'payment'=>'require',
-		    'goodsinfo'=>'require',
-		    'province'=>'require',
-		    'city'=>'require',
-		    'area'=>'require',
-		    'buyer_name'=>'require|max:25',
-		    'buyer_phone'=>'require|/^1[3456789]\d{9}$/',
 		];
 		$msg = [
 		    'order_sn.require'=>'订单号不能为空',
 		    'two_password.require'=>'支付密码不能为空',
 		    'payment.require'=>'支付方式不能为空',
-		    'goodsinfo.require'=>'商品信息不能为空',
-		    'province'=>'省不能为空',
-		    'city'=>'市不能为空',
-		    'area'=>'地区不能为空',
-		    'buyer_name'=>'用户名不能为空|名称最多不能超过25个字符',
-		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		// $_POST['order_sn'] = '201801091515483968621'; 
+		// $_POST['order_sn'] = '201801121515718028447'; 
 		// $_POST['two_password'] = '123456'; 
 		// $_POST['payment'] = '3'; 
-		// $_POST['province'] = '河南省'; 
-		// $_POST['city'] = '郑州市'; 
-		// $_POST['area'] = '金水区北三环中州大道963号康杰大酒店'; 
-		// $_POST['buyer_name'] = '王先生'; 
-		// $_POST['buyer_phone'] = '18236952689'; 
-		// $_POST['goodsinfo'] = array(
-		// 	// array('goodsid'=>34,'goodsnum'=>'3'),
-		// 	array('goodsid'=>35,'goodsnum'=>'1'),	
-		// 	// array('goodsid'=>33,'goodsnum'=>'1'),
-		// 	array('goodsid'=>32,'goodsnum'=>'1'),
-		// 	array('goodsid'=>31,'goodsnum'=>'1'),
-		// ); 
-
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -234,7 +228,7 @@ class Shoporder extends Base
 		//验证支付密码是否正确
 		$user = UserModel::get($this->userId);
 		if($user->two_password !== md5($input['two_password'])){
-		    return json(['msg'=>'支付密码不正确','code'=>1003]);
+		    return json(['msg'=>'支付密码不正确','code'=>0]);
 		}
 
 		//检查订单是否已经支付过，防止重复支付
@@ -252,12 +246,12 @@ class Shoporder extends Base
 			
 			if($sum > $user->balance){
 			    return json(['msg'=>'余额不足','code'=>0]);
-			}else if($sum < 0){
+			}else if($sum <= 0){
 				//订单总金额小于0 
 			    return json(['msg'=>'订单金额错误','code'=>0]);
 			}
 
-			//扣除余额 修改订单状态status为2：已支付 添加订单支付金额money
+			//扣除余额 修改订单状态status为2：已支付 
 			Db::startTrans();
 			try{
 			    //扣除用户余额
@@ -266,9 +260,8 @@ class Shoporder extends Base
 			    $user = UserModel::get($this->userId);
 			    $accountData = [];
 			    $accountData['uid'] = $this->userId;
-			    $accountData['balance'] = $sum; //账户扣除后的余额
+			    $accountData['balance'] = $sum; //账户 消费金额
 			    $accountData['remark'] = '商城订单支付';
-			    // $accountData['money'] = $sum;
 			    $accountData['inc'] = 2;
 			    $accountData['type'] = 12;  // 扣币类型 12：商城订单支付
 			    $accountData['create_at'] = date('YmdHis');
@@ -282,9 +275,12 @@ class Shoporder extends Base
         		$where = [];
         		$where['order_sn'] = input('post.order_sn');
         		foreach ($goodsinfo as $key => $value) {
-        		    $newData = db('ShopGoods')->where('id',$value['goodsid'])->field('name as goodsname,price,imgurl')->find();
+        		    $newData = db('shop_goods')->where('id',$value['goodsid'])->field('name as goodsname,price,imgurl')->find();
         		    $where['goodsid'] = $value['goodsid'];
         		    db('shop_order_detail')->where($where)->update($newData);
+        		    // 销量++
+        		    db('shop_goods')->where('id',$value['goodsid'])->setInc('hot',$value['goodsnum']);
+        		    db('shop_goods')->where('id',$value['goodsid'])->setInc('realhot',$value['goodsnum']);
         		}
 			    
 			    Db::commit();
@@ -305,7 +301,7 @@ class Shoporder extends Base
 	 */
 	public function orderCancel()
 	{
-		$order_sn = input('param.order_sn');
+		$order_sn = input('post.order_sn');
 
 		$re = db('shop_order')->where('order_sn',$order_sn)->update(['status'=>'0']);
 		if ($re > 0) {
@@ -324,7 +320,7 @@ class Shoporder extends Base
 	 */
 	public function orderDel()
 	{
-		$order_sn = input('param.order_sn');
+		$order_sn = input('post.order_sn');
 
 		$re = db('shop_order')->where('order_sn',$order_sn)->update(['is_delete'=>1]);
 		if ($re > 0) {
@@ -346,5 +342,10 @@ class Shoporder extends Base
 	    }while(db('shop_order')->where(['order_sn'=>$num])->find());
 	    return $num;
 	}
+
+
+
+
+	
 	
 }
