@@ -57,14 +57,16 @@ class Wechatlogin extends Controller{
      * 微信生成二维码
      */
     public function wechatQrcode($scene_id){
-        $config = new WxPayConf_pub();
-        $wechat = new Wechat($config);
-        $res = $wechat->get_qrcode($scene_id);
-        if(is_object($res)){
-            dump($res);die;
+        $path = './uploads/wechatQrcode/'.$scene_id.'.jpg';
+        if(!file_exists($path)){
+            $config = new WxPayConf_pub();
+            $wechat = new Wechat($config);
+            $res = $wechat->get_qrcode($scene_id);
+            if(is_object($res)){
+                dump($res);die;
+            }
+            file_put_contents($path,$res);
         }
-        $path = './uploads/wechatBind/'.$scene_id.'.jpg';
-        file_put_contents($path,$res);
         return $path;
     }
 
@@ -98,7 +100,6 @@ class Wechatlogin extends Controller{
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $RX_TYPE = trim($postObj->MsgType);
             #用户发送的消息类型判断
-            $result = true;
             switch ($RX_TYPE) {
                 case "event":
                     //用户关注事件
@@ -117,7 +118,7 @@ class Wechatlogin extends Controller{
                             /*=================用户扫码关注=====================*/
                             if(!empty($postObj->EventKey)){
                                 $punique = substr($postObj->EventKey,8);
-                                if(Db::table('sql_useres')->where('openid',$openid)->count() < 1){        //用户未注册过
+                                if(Db::table('sql_users')->where('openid',$openid)->count() < 1){        //用户未注册过
                                     $userInfo = $wechat->getUserInfo($openid);
                                     $userInfo = json_decode($userInfo,true);
                                     $pid = Db::table('sql_users')->where('unique',$punique)->value('id');

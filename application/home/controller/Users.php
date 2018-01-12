@@ -227,6 +227,20 @@ namespace app\home\controller;
      }
 
 
+     /**
+      * @return \think\response\Json
+      * 微信绑定
+      * 返回二维码所在路径
+      */
+     public function wechatBind(){
+         $this->userId = 1;
+         $user = Db::table('sql_users')
+             ->where('id',$this->userId)->find();
+         $wechatLogin = new Wechatlogin();
+         $unique = 'bind_'.$user['unique'];
+         $result = $wechatLogin->wechatQrcode($unique);
+        return json(['data'=>$result,'msg'=>'查询成功','code'=>200]);
+     }
 
 
 
@@ -331,6 +345,10 @@ namespace app\home\controller;
          }
          return json(['data'=>$result,'msg'=>'查询成功','code'=>200]);
      }
+
+
+
+
 
      //我的二维码
  /*    public function myQcode(){
