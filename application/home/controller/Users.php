@@ -323,6 +323,7 @@ namespace app\home\controller;
              ->where('id',$this->userId)->find();
          $result = [];
          $result['wechat'] = 0;
+         $result['unique'] = $user['unique'];
          if(is_weixin()){
              $wechatlogin = new Wechatlogin();
              $result['path'] = $wechatlogin->wechatQrcode($user['unique']);
