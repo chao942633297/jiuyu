@@ -83,6 +83,8 @@ class ShopOrderModel extends Model
         Db::startTrans();
         try{
             $goodsinfo = $param['goodsinfo'];
+            $cartid = $param['cartid'];
+            unset($param['cartid']);
             unset($param['goodsinfo']);
             $param['created_at'] = date('Y-m-d H:i:s',time());
             // 计算总价格插入到shop_order中  订单付款时需重新计算订单价格
@@ -116,6 +118,11 @@ class ShopOrderModel extends Model
                      Db::rollback();
                      return ['code' => 0, 'data' => $param['order_sn'], 'msg' => '生成订单失败！'];
                 }else{
+                    // 判断是否是购物车里面下的订单 
+                    if (!empty($cartid)) {
+                        // 下单成功 删除购物车对应数据
+                        db('shop_cart')->delete($cartid);
+                    }
                     Db::commit();
                     return ['code' => 1, 'data' => $param['order_sn'], 'msg' => '添加商城订单成功！'];
                 }
@@ -191,6 +198,10 @@ class ShopOrderModel extends Model
         return $sum;
     }
 
+
+
+
+   
 
     /**
      * 根据订单号 更新订单详情order_detail商品信息  用于未支付支付 支付过后更新商品（防止期间商品信息变动） 

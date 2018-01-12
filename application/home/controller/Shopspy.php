@@ -6,20 +6,21 @@ use app\backsystem\model\ShopGoodsModel;
 use app\backsystem\model\ShopSpyRecordModel;
 use think\Controller;
 use think\Validate;
+use think\Session;
 use think\Db;
 /**
 * 窥探商品
 */
 class Shopspy extends Controller
 {
-	protected $userId;
+	// protected $userId;
 
-	public function _initialize()
-	{
-	    parent::_initialize(); // 判断用户是否登陆
-	    session('home_user_id','90');
-	    $this->userId = session('home_user_id');
-	}
+	// public function _initialize()
+	// {
+	//     parent::_initialize(); // 判断用户是否登陆
+	//     session('home_user_id','90');
+	//     $userid = session('home_user_id');
+	// }
 
 
 	// 展示窥探商品列表 
@@ -32,12 +33,23 @@ class Shopspy extends Controller
 		$offset = ($page-1)*$limit;
 		$where = array();
 		$where['is_under'] = '0';
-		$where['cid'] = '2'; //只获取窥探商品 还没有过获奖间隔期的商品
+		$where['is_delete'] = '0';
+		$where['cid'] = '2'; //只获取窥探商品 
+		$where['status'] = '0'; //0:正常 1：中奖间隔期
 
-		// 返回列表之前先更新需要重新上架的窥探商品
-		
-		if (db('shop_spy_goods')->where(['sur_price'=>'0'])->count()) {
-			# code...
+		// 返回列表之前先检测和更新需要重新上架的窥探商品
+		if (Db::name('shop_goods')->where(['sur_price'=>'0'])->count()) {
+			$reData = Db::name('shop_goods')->where(['sur_price'=>'0'])->select();
+			foreach ($reData as $key => $value) {
+				if ((time()-strtotime($value['last_wintime']))/3600  > $value['she_timeint']) {
+					$setData = [];
+					$setData['sur_price'] = $value['price'];
+					$setData['spy_price'] = '0';
+					$setData['status'] = '0';
+					// $setData['times'] = $value['times']+1;  // 中奖成功后 轮次已经加1 此处不用再加
+					Db::name('shop_goods')->where('id',$value['id'])->update($setData);
+				}
+			}
 		}
 
 		$shopGoodsList = $shopgoods->getShopGoodsByWhere($where, $offset, $limit,'sort desc,id desc','id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot');
@@ -54,8 +66,12 @@ class Shopspy extends Controller
 	public function shopGoodsInfo()
 	{
 		$id = !empty(input('id')) && input('id') > 0 ? input('id') : exit(json_encode(['code'=>0,'data'=>'','msg'=>'参数异常']));
-		$shopgoods = new ShopGoodsModel();
-		$goodsInfo = $shopgoods->getOneShopGoods($id,"id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot");
+		$goodsInfo = Db::name('shop_goods')->where('id',$id)->field("id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot")->find();
+		if ($goodsInfo['cid'] != '2') {
+			return json(['code'=>0,'data'=>'','msg'=>'非窥探商品不予显示']);
+		}
+		// $shopgoods = new ShopGoodsModel();
+		// $goodsInfo = $shopgoods->getOneShopGoods($id,"id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot");
 		return json(['code'=>1,'data'=>$goodsInfo,'msg'=>'success']);
 	}
 
@@ -67,6 +83,14 @@ class Shopspy extends Controller
 	 */
 	public function spyadd()
 	{
+		// session::set('home_user_id','');
+		session('home_user_id','90');
+
+		$userid = session('home_user_id');
+		if (empty($userid) || ($userid < 0)) {
+			return json(['code'=>0,'data'=>'','msg'=>'请先登录！']);
+		}
+
 		$rule = [
 		    'goodsid'=>'require',
 		    'spy_num'=>'require',
@@ -80,10 +104,10 @@ class Shopspy extends Controller
 		    'two_password'=>'支付密码不能空',
 		];
 
-		// $_POST['two_password'] = '123456'; 
-		// $_POST['goodsid'] = '45'; 
-		// $_POST['spy_num'] = '3'; 
-		// $_POST['payment'] = '3'; 
+		$_POST['two_password'] = '123456'; 
+		$_POST['goodsid'] = '45'; 
+		$_POST['spy_num'] = '6'; 
+		$_POST['payment'] = '3'; 
 		
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -95,13 +119,13 @@ class Shopspy extends Controller
 		}
 
 		// 验证支付密码
-		$user = UserModel::get($this->userId);
+		$user = UserModel::get($userid);
 		if($user['two_password'] !== md5($input['two_password'])){
 		    return json(['msg'=>'支付密码不正确','code'=>0,'data'=>'']);
 		}
 		
 
-		$goodsInfo = db('shop_goods')->where('id',$input['goodsid'])->field('*')->find();
+		$goodsInfo = Db::name('shop_goods')->where('id',$input['goodsid'])->field('*')->find();
 		
 		if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
 			return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经下架,请选择其他商品窥探！']);
@@ -115,11 +139,11 @@ class Shopspy extends Controller
 
 
 		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
-		if (db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
-			$exdata = db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+		if (Db::name('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+			$exdata = Db::name('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
 			if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
 				// 将本订单更新为status=3  向spy_success插入一条数据 
-				db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+				Db::name('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
 				$successData = [];
 				$successData['goodsid'] = $input['goodsid'];
 				$successData['goodsname'] = $goodsInfo['name'];
@@ -129,40 +153,41 @@ class Shopspy extends Controller
 				$successData['sur_price'] = $exdata['sur_price'];
 				$successData['once_price'] = $goodsInfo['once_price'];
 				$successData['is_spy'] = '0'; // 是否是窥探中奖 0:不是（抢购中奖）1：窥探中奖
-				$successData['userid'] = $this->userId;
+				$successData['userid'] = $userid;
 				$successData['payment'] = $input['payment'];
 				$successData['times'] = $goodsInfo['times'];
 				$successData['last_amount'] = $exdata['sur_price'];
 				$successData['created_at'] = date("Y-m-d H:i:s");
-				db('shop_spying_goods')->insert($successData);
+				Db::name('shop_spying_goods')->insert($successData);
 
 				// 重置商品 信息  last_wintime  sur_price
-				db('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
-				db('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
+				Db::name('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
+				Db::name('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
 				
 				return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
 			}
 		}
 
-		$insertData['userid'] = $this->userId;
+		$insertData['userid'] = $userid;
 		$insertData['username'] = $user['nickname'];
 		$insertData['once_price'] = $goodsInfo['once_price'];
 		$insertData['spy_num'] = $input['spy_num'];
 		$insertData['amount'] = $insertData['once_price']*$insertData['spy_num'];
+		$insertData['sur_price'] = $goodsInfo['sur_price']-$insertData['amount']; // 窥探后剩余价格
 		$insertData['goodsid'] = $goodsInfo['id'];
 		$insertData['goodsname'] = $goodsInfo['name'];
 		$insertData['goodsimgurl'] = $goodsInfo['imgurl'];
 		$insertData['payment'] = $input['payment'];
 
 		//检查自己本轮次是否在抢购中  抢购中的用户 不能窥探 
-		if (db('shop_spying_goods')->where(['userid'=>$this->userId,'goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		if (Db::name('shop_spying_goods')->where(['userid'=>$userid,'goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
 			return json(['code'=>0,'data'=>'','msg'=>'您已经抢购了此商品，不能窥探！']);	
 		}
 
 
 		//余额支付 
 		$ShopSpy = new ShopSpyRecordModel();
-		$lastRecord =  $ShopSpy->getLastSpyRecords($this->userId,$goodsInfo['id']);
+		$lastRecord =  $ShopSpy->getLastSpyRecords($userid,$goodsInfo['id']);
 		$lastRecord = objToArray($lastRecord);
 
 		if (!empty($lastRecord) && time()-strtotime($lastRecord[0]['created_at']) < $goodsInfo['int_time']) {
@@ -192,6 +217,11 @@ class Shopspy extends Controller
 	 */
 	public function panicPay()
 	{
+		session('home_user_id','90');
+		$userid = session('home_user_id');
+		if (empty($userid) || ($userid < 0)) {
+			return json(['code'=>0,'data'=>'','msg'=>'请先登录！']);
+		}
 		$rule = [
 		    'goodsid'=>'require',
 		    'payment'=>'require',
@@ -199,6 +229,7 @@ class Shopspy extends Controller
 		    'province'=>'require',
 		    'city'=>'require',
 		    'area'=>'require',
+		    'detail'=>'require',
 		    'buyer_name'=>'require',
 		    'buyer_phone'=>'require',
 		];
@@ -208,7 +239,8 @@ class Shopspy extends Controller
 		    'two_password'=>'支付密码不能空',
 		    'province'=>'请填写省',
 		    'city'=>'请填写市',
-		    'area'=>'请填写详细地址',
+		    'area'=>'请填写区',
+		    'detail'=>'请填写详细地址',
 		    'buyer_name'=>'请填写收货人姓名',
 		    'buyer_phone'=>'请填写收货人联系电话',
 		];
@@ -219,8 +251,9 @@ class Shopspy extends Controller
 		$_POST['province'] = '河南省'; 
 		$_POST['city'] = '郑州市'; 
 		$_POST['area'] = '高新区'; 
+		$_POST['detail'] = '莲花街工大36号'; 
 		$_POST['buyer_name'] = '王先生'; 
-		$_POST['buyer_phone'] = '18623695469'; 
+		$_POST['buyer_phone'] = '18623695465'; 
 		
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -229,13 +262,13 @@ class Shopspy extends Controller
 		}
 
 		// 验证支付密码
-		$user = UserModel::get($this->userId);
+		$user = UserModel::get($userid);
 		if($user['two_password'] !== md5($input['two_password'])){
 		    return json(['msg'=>'支付密码不正确','code'=>0,'data'=>'']);
 		}
 		
 
-		$goodsInfo = db('shop_goods')->where('id',$input['goodsid'])->field('*')->find();
+		$goodsInfo = Db::name('shop_goods')->where('id',$input['goodsid'])->field('*')->find();
 		
 		if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
 			return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经下架,请选择其他商品抢购！']);
@@ -248,7 +281,7 @@ class Shopspy extends Controller
 		}
 
 		$insertData['spy_sn'] = $this->getSpySn();  //生成抢购单号
-		$insertData['userid'] = $this->userId;
+		$insertData['userid'] = $userid;
 		$insertData['username'] = $user['nickname'];
 		$insertData['sur_price'] = $goodsInfo['sur_price'];
 		$insertData['times'] = $goodsInfo['times'];
@@ -267,11 +300,11 @@ class Shopspy extends Controller
 		dump($r);
 		exit;
 		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
-		// if (db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
-		// 	$exdata = db('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+		// if (Db::name('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		// 	$exdata = Db::name('shop_spying_goods')->where(['goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->find();
 		// 	if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
 		// 		// 将本订单更新为status=3  向spy_success插入一条数据 
-		// 		db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+		// 		Db::name('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
 		// 		$successData = [];
 		// 		$successData['goodsid'] = $input['goodsid'];
 		// 		$successData['goodsname'] = $goodsInfo['name'];
@@ -281,23 +314,23 @@ class Shopspy extends Controller
 		// 		$successData['sur_price'] = $exdata['sur_price'];
 		// 		$successData['once_price'] = $goodsInfo['once_price'];
 		// 		$successData['is_spy'] = '0'; // 是否是窥探中奖 0:不是（抢购中奖）1：窥探中奖
-		// 		$successData['userid'] = $this->userId;
+		// 		$successData['userid'] = $userid;
 		// 		$successData['payment'] = $input['payment'];
 		// 		$successData['times'] = $goodsInfo['times'];
 		// 		$successData['last_amount'] = $exdata['sur_price'];
 		// 		$successData['created_at'] = date("Y-m-d H:i:s");
-		// 		db('shop_spying_goods')->insert($successData);
+		// 		Db::name('shop_spying_goods')->insert($successData);
 
 		// 		// 重置商品 信息  last_wintime  sur_price
-		// 		db('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
-		// 		db('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
+		// 		Db::name('shop_goods')->where(['id'=>$input['goodsid']])->setInc('spy_amount',$exdata['sur_price']);				
+		// 		Db::name('shop_goods')->where(['id'=>$input['goodsid']])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
 				
 		// 		return json(['code'=>0,'data'=>'','msg'=>'商品已经被别人抢走了']);	
 		// 	}
 		// }
 
 		//检查自己本轮次是否在抢购中 防止重复生成抢购订单
-		if (db('shop_spying_goods')->where(['userid'=>$this->userId,'goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		if (Db::name('shop_spying_goods')->where(['userid'=>$userid,'goodsid'=>$input['goodsid'],'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
 			return json(['code'=>0,'data'=>'','msg'=>'订单已经生成，请勿重复下单']);	
 		}
 		//余额支付 
@@ -327,16 +360,14 @@ class Shopspy extends Controller
 	public function checkSpy($goodsid)
 	{
 		//检查 本轮次 抢购中的订单 是否倒计时已过完 过完这表示中奖
-		// dump(db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->count());
-		// exit;
 		Db::startTrans();
 		try{
-			$goodsInfo = db('shop_goods')->find($goodsid);
-		    if (db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
-		    	$exdata = db('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->find();
+			$goodsInfo = Db::name('shop_goods')->find($goodsid);
+		    if (Db::name('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->count()) {
+		    	$exdata = Db::name('shop_spying_goods')->where(['goodsid'=>$goodsid,'times'=>$goodsInfo['times'],'status'=>'1'])->find();
 		    	if ((time()-strtotime($exdata['created_at']))/3600 > $goodsInfo['countdown']) {
 		    		// 将本订单更新为status=3  向spy_success插入一条数据 
-		    		db('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
+		    		Db::name('shop_spying_goods')->where(['id'=>$exdata['id']])->setField('status','3');
 		    		$successData = [];
 		    		$successData['goodsid'] = $goodsid;
 		    		$successData['goodsname'] = $goodsInfo['name'];
@@ -351,11 +382,11 @@ class Shopspy extends Controller
 		    		$successData['times'] = $goodsInfo['times'];
 		    		$successData['last_amount'] = $exdata['sur_price'];
 		    		$successData['created_at'] = date("Y-m-d H:i:s");
-		    		db('shop_spy_success')->insert($successData);
+		    		Db::name('shop_spy_success')->insert($successData);
 
 		    		// 重置商品 信息  last_wintime  sur_price
-		    		db('shop_goods')->where(['id'=>$goodsid])->setInc('spy_amount',$exdata['sur_price']);				
-		    		db('shop_goods')->where(['id'=>$goodsid])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
+		    		Db::name('shop_goods')->where(['id'=>$goodsid])->setInc('spy_amount',$exdata['sur_price']);				
+		    		Db::name('shop_goods')->where(['id'=>$goodsid])->update(['sur_price'=>'0','last_wintime'=>$successData['created_at']]);				
 		    		
 		    		return '1';	
 		    	}
@@ -379,7 +410,7 @@ class Shopspy extends Controller
  	public function getSpySn(){
 	    do{
 	        $num = date('Y').date('m').date('d').time().rand(1000,9999);
-	    }while(db('shop_spying_goods')->where(['spy_sn'=>$num])->find());
+	    }while(Db::name('shop_spying_goods')->where(['spy_sn'=>$num])->find());
 	    return $num;
 	}
 
