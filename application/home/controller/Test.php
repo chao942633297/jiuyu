@@ -49,7 +49,6 @@ class Test extends Validate{
     public function test(){
         session('home_user_id',1);
 
-
     }
 
 

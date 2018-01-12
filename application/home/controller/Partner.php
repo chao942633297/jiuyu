@@ -81,7 +81,8 @@ class Partner extends Controller
             return json(['msg'=>'参数错误','code'=>1001]);
         }
         $voucherData = VoucherModel::get($voucherId);
-        if($voucherData['user']['class'] > 1){
+
+        if(strpos($voucherData['user']['level'],$voucherData['type']) !== false){
             return json(['msg'=>'该用户已是合伙人,无需重复激活','code'=>1002]);
         }
         if($voucherData['activation']['balance'] < $voucherData['money']){

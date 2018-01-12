@@ -10,7 +10,7 @@ use wechatH5\WxPayConf_pub;
 
 vendor('wechatH5.WxMainMethod');
 vendor('wechatH5.WxPayConf_pub');
-class Wechatlogin extends Base{
+class Wechatlogin extends Controller{
 
     protected $userId;
 
@@ -53,19 +53,37 @@ class Wechatlogin extends Base{
     }*/
 
 
-
-
-    public function wechatQrcode(){
-        $dat['scene_str'] = '56fef2e82981a3d85a48de729850215d';
-        $data['action_name'] = 'QR_LIMIT_STR_SCENE';
-        $data['action_info'] = "{'scene':".json_encode($dat)."}";
-        $config = new WxPayConf_pub();
-        $wechat = new Wechat($config);
-        dump($wechat->getQrcode($data));
+    /**
+     * 微信生成二维码
+     */
+    public function wechatQrcode($scene_id){
+        $path = './uploads/wechatQrcode/'.$scene_id.'.jpg';
+        if(!file_exists($path)){
+            $config = new WxPayConf_pub();
+            $wechat = new Wechat($config);
+            $res = $wechat->get_qrcode($scene_id);
+            if(is_object($res)){
+                dump($res);die;
+            }
+            file_put_contents($path,$res);
+        }
+        return $path;
     }
 
 
 
+
+
+
+    public function test(){
+        $config = new WxPayConf_pub();
+        $wechat = new Wechat($config);
+        $openid = 'oknGV1fCoVZ9wnxYlZhctYPUr8cw';
+        $userinfo = $wechat->getUserInfo($openid);
+        dump($userinfo);
+//        $userinfo = json_decode($userinfo,true);
+        dump($userinfo['nickname']);
+    }
 
 
 
@@ -82,44 +100,46 @@ class Wechatlogin extends Base{
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $RX_TYPE = trim($postObj->MsgType);
             #用户发送的消息类型判断
-            $result = true;
             switch ($RX_TYPE) {
                 case "event":
                     //用户关注事件
                     if ($postObj->Event == 'subscribe') {
                         /*===========用户绑定微信=============*/
-                        $user = Db::table('sql_users')
-                            ->where('id',$this->userId)->find();
-                        if(empty($user['openid'])){
-                            $user['openid'] = $postObj->FromUserName;
-                            Db::table('sql_users')->update($user);
+                        $openid = $postObj->FromUserName;
+                        if(!empty($postObj->EventKey) && strpos($postObj->EventKey,'bind_')){
+                            $unique = substr($postObj->EventKey,13);
+                            $user = Db::table('sql_users')
+                                ->where('unique',$unique)->find();
+                            if($user && empty($user['openid'])){
+                                $user['openid'] = $openid;
+                                Db::table('sql_users')->update($user);
+                            }
+                        }else{
+                            /*=================用户扫码关注=====================*/
+                            if(!empty($postObj->EventKey)){
+                                $punique = substr($postObj->EventKey,8);
+                                if(Db::table('sql_users')->where('openid',$openid)->count() < 1){        //用户未注册过
+                                    $userInfo = $wechat->getUserInfo($openid);
+                                    $userInfo = json_decode($userInfo,true);
+                                    $pid = Db::table('sql_users')->where('unique',$punique)->value('id');
+                                    $userId = Db::table('sql_users')->insertGetId([
+                                        'pid'=>$pid,
+                                        'openid'=>$openid,
+                                        'nickname'=>$userInfo['nickname'],
+                                        'headimgurl'=>$userInfo['headimgurl']
+                                    ]);
+                                    $login = new Login();
+                                    $login->saveUserRelation($userId,$pid);
+                                }
+                            }
+                            //存储openid
+                            session('replay_openid',$postObj->FromUserName);
                         }
-                        //存储openid
-                        session('replay_openid',$postObj->FromUserName);
-                        $result = $wechat->receiveReply($postObj);
                     }
-//                    $result = $wechat->receiveFollow($postObj);
+                    $result = $wechat->receiveReply($postObj);
                     break;
-                /* case "text":  	 	#文本消息
-                     $result = $this->receiveText($postObj);
-                     break;
-                 case "image": 		#图片消息
-                     $result = $this->receiveImage($postObj);
-                     break;
-                 case "voice":  		#语音消息
-                     $result = $this->receiveVoice($postObj);
-                     break;
-                 case "video":  		#视频消息
-                     $result = $this->receiveVideo($postObj);
-                     break;
-                 case "location":	#位置消息
-                     $result = $this->receiveLocation($postObj);
-                     break;
-                 case "link":   		#链接消息
-                     $result = $this->receiveLink($postObj);
-                     break;*/
                 default:
-//                    $result = $wechat->receiveReply($postObj);
+                    $result = $wechat->receiveReply($postObj);
                     break;
             }
             echo $result;
@@ -134,7 +154,10 @@ class Wechatlogin extends Base{
         $wechat_config = new WxPayConf_pub();
         $wechat = new Wechat($wechat_config);
         $result = $wechat->createMenu();
-        dump($result);
+        if($result->errcode == 0 && $result->errmsg =='ok'){
+            return '菜单创建成功!';
+        }
+        return $result;
     }
 
 
