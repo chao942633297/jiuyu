@@ -91,7 +91,7 @@ class ShopOrderModel extends Model
             $param['amount'] = $this->sumGoods($goodsinfo);
       
             // $result = $this->validate('Shoporder')->insert($param);
-            $result = Db::table('sql_shop_order')->insertGetId($param);
+            $result = Db::name('shop_order')->insertGetId($param);
             if(false === $result){
                 // 验证失败 输出错误信息
                 return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
@@ -99,7 +99,7 @@ class ShopOrderModel extends Model
                 //生成插入订单详情数据 数据为生成订单时 的信息 ，防止未付款时期商品删除时订单商品异常，订单付款时需重新更新商品信息
                 $detailData = array(); 
                 foreach ($goodsinfo as $key => $value) {
-                    $goodsdata = db('shop_goods')->field('name,price,cid,imgurl,description')->find($value['goodsid']);
+                    $goodsdata = Db::name('shop_goods')->field('name,price,cid,imgurl,description')->find($value['goodsid']);
                     $detailData[$key]['goodsname'] = $goodsdata['name'];
                     $detailData[$key]['price'] = $goodsdata['price'];
                     $detailData[$key]['cid'] = $goodsdata['cid'];
@@ -113,7 +113,7 @@ class ShopOrderModel extends Model
                     $detailData[$key]['created_at'] = date('Y-m-d H:i:s',time());
                 }
 
-                $re = Db::table('sql_shop_order_detail')->insertAll($detailData);   
+                $re = Db::name('shop_order_detail')->insertAll($detailData);   
                 if ($re === false) {
                      Db::rollback();
                      return ['code' => 0, 'data' => $param['order_sn'], 'msg' => '生成订单失败！'];
@@ -121,7 +121,7 @@ class ShopOrderModel extends Model
                     // 判断是否是购物车里面下的订单 
                     if (!empty($cartid)) {
                         // 下单成功 删除购物车对应数据
-                        db('shop_cart')->delete($cartid);
+                        Db::name('shop_cart')->delete($cartid);
                     }
                     Db::commit();
                     return ['code' => 1, 'data' => $param['order_sn'], 'msg' => '添加商城订单成功！'];
@@ -141,7 +141,7 @@ class ShopOrderModel extends Model
     public function getOneShopOrder($id,$field="*")
     {
         $order = $this->where('id', $id)->field($field)->find();
-        $order['goodsinfo'] = db('shop_order_detail')->where('order_sn',$order['order_sn'])->select();
+        $order['goodsinfo'] = Db::name('shop_order_detail')->where('order_sn',$order['order_sn'])->select();
 
         return $order;
     }
@@ -172,7 +172,7 @@ class ShopOrderModel extends Model
     {
         $sum = 0;
         foreach ($goodsdata as $key => $value) {
-            $re = db('shop_goods')->field('price')->where('id',$value['goodsid'])->find();
+            $re = Db::name('shop_goods')->field('price')->where('id',$value['goodsid'])->find();
             $sum1 = $re['price']*$value['goodsnum'];
             $sum += $sum1;
         }
@@ -193,7 +193,7 @@ class ShopOrderModel extends Model
         // if (empty($re)) {
         //     return ['code' => 0, 'data' => '', 'msg' => '未查询到该订单'];
         // }
-        $goodsinfo = db('shop_order_detail')->where('order_sn',$order_sn)->select();
+        $goodsinfo = Db::name('shop_order_detail')->where('order_sn',$order_sn)->select();
         $sum  =  $this->sumGoods($goodsinfo);
         return $sum;
     }
@@ -210,7 +210,7 @@ class ShopOrderModel extends Model
      */
     // public function updateOrderDetail($order_sn)
     // {
-    //     $goodsinfo = db('shop_order_detail')->where('order_sn',$order_sn)->select();
+    //     $goodsinfo = Db::name('shop_order_detail')->where('order_sn',$order_sn)->select();
     //     $newData = [];
     //     foreach ($goodsinfo as $key => $value) {
     //         $newData[$key] = model('ShopGoodsModel')->getOneShopGoods($value['goodsid'],'goodsname,price,unit,imgurl');

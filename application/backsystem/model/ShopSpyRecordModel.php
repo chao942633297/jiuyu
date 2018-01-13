@@ -145,7 +145,7 @@ class ShopSpyRecordModel extends Model
 
 
 
-    /** 添加抢购记录
+    /** 添加抢购记录 
      *
      *
      *
