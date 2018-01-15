@@ -104,36 +104,37 @@ class ShopSpyRecordModel extends Model
                     $successData['username'] = $param['username'];
                     $successData['payment'] = $param['payment'];
                     $successData['created_at'] = $param['created_at'];
-                    db('shop_spy_success')->insert($successData);
+                    Db::name('shop_spy_success')->insert($successData);
                     Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('times');
                     Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('hot');    // 销量
                     Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('realhot'); // 销量
-                    Db::name('shop_goods')->where('id',$param['goodsid'])->setField('last_wintime',date("Y-m-d H:i:s"));
+                    // status  0： 正常  1：进入间隔期
+                    Db::name('shop_goods')->where('id',$param['goodsid'])->setField(['last_wintime'=>date("Y-m-d H:i:s"),'status'=>'1']);
 
 
                     // 获奖会员最后一下次窥探金额大于商品所剩金额 处理方法就是不返了
 
 
                     // 将状态为抢购中的订单 status 变为2 抢购失败， 1（默认）：抢购中  2：抢购失败  3：抢购成功
-                    if (db('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->count()) {
-                        db('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->setField('status','2');
+                    if (Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->count()) {
+                        Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->setField('status','2');
                     }
 
 
                     Db::commit();
-                    return ['code' => 1, 'data' => $re['spy_price'], 'msg' => '恭喜您在窥探游戏中获得奖品 '.$re["name"].' ，我们会尽快与您取得联系并发放奖品'];
+                    return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '恭喜您在窥探游戏中获得奖品 '.$re["name"].' ，我们会尽快与您取得联系并发放奖品'];
                     exit;
                 }
                 
                 if (($re['spy_price'])/($re['price']) > 0.6) {
-                    $re['spy_price'] = " 价格低于30%不予显示";
+                    $re['sur_price'] = " 价格低于30%不予显示";
                 }
 
                 // if (($re['sur_price'])/($re['price']) < 0.3) {
                 //     $re['spy_price'] = " 价格低于30%不予显示";
                 // }
                 Db::commit();
-                return ['code' => 1, 'data' => $re['spy_price'], 'msg' => '窥探成功'];
+                return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '窥探成功'];
             }
         }catch( PDOException $e){
             Db::rollback();
@@ -172,10 +173,10 @@ class ShopSpyRecordModel extends Model
 
             }
             // 更新其他参与本商品本轮次状态为抢购中记录为失败 status=2  并将抢购失败用户金额返还到余额
-            if (db('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->count()) {
-                $faildata = db('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->find();//理论上应该只有一条记录
+            if (Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->count()) {
+                $faildata = Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->find();//理论上应该只有一条记录
 
-                $r = db('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->setField('status','2');
+                $r = Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'times'=>$param['times'],'status'=>'1'])->setField('status','2');
                 if ($r) {
                     // 给被顶掉的抢购用户 返钱
                     UserModel::get($param['userid'])->setInc('balance',$faildata['sur_price']);
@@ -200,7 +201,7 @@ class ShopSpyRecordModel extends Model
             // 添加新的抢购记录
             // $result = $this->validate('ShopSpyRecord')->insert($param);
             $param['status'] = '1';   // 1抢购中  2抢购失败  3抢购成功
-            $result = db('shop_spying_goods')->insert($param);
+            $result = Db::name('shop_spying_goods')->insert($param);
 
             if($result <= 0){
                 // 生成新纪录失败

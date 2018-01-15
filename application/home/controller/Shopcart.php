@@ -48,7 +48,7 @@ class Shopcart extends Base
 			}
 		}
 
-		$cartList = db('shop_cart')->alias('c')->join('shop_goods g','c.goodsid = g.id','RIGHT')->where('c.userid',$this->userId)->where('c.goodsid','in',$gids)->page($page,$limit)->field('*')->select();
+		$cartList = db('shop_goods')->alias('g')->join('shop_cart c','c.goodsid = g.id','LEFT')->where('c.userid',$this->userId)->where('c.goodsid','in',$gids)->page($page,$limit)->field('*')->select();
 
 		return json(['code'=>1,'data'=>$cartList,'msg'=>'success']);
 	}
@@ -71,13 +71,16 @@ class Shopcart extends Base
 		    'goodsnum.require'=>'商品数量不能为空',
 		];
 
-		$input = Request::instance()->get();
+		// $_POST['goodsid'] = '35';
+		// $_POST['goodsnum'] = '2';
+
+		$input = input('post.');
 		$validate = new Validate($rule,$msg);
 		if(!$validate->check($input)){
 		    return json(['msg'=>$validate->getError(),'code'=>0]);
 		}
 
-		$insertData['goodsid'] = input('param.goodsid');
+		$insertData['goodsid'] = input('post.goodsid');
 		$insertData['userid'] = $this->userId;
 
 		//查询商品库存 和是否下架
@@ -88,14 +91,14 @@ class Shopcart extends Base
 		if ($goodsInfo['cid'] == 2) {
 			return json(['code'=>0,'data'=>'','msg'=>'窥探商品不能添加到购物车']);	
 		}
-		// if ($goodsInfo['num'] < input('param.goodsnum')) {
+		// if ($goodsInfo['num'] < input('post.goodsnum')) {
 		// 	return json(['code'=>0,'data'=>'','msg'=>'商品库存不足']);
 		// }
 	
 		// 首先判断购物车中是否已经存在相同规格的商品
 		$num = db('shop_cart')->where($insertData)->count();
 		if ($num > 0) {
-			$goodsnum = input('param.goodsnum');	
+			$goodsnum = input('post.goodsnum');	
 			//修改购物车中对应商品的数量
 			$r = db('shop_cart')->where($insertData)->setInc('goodsnum', $goodsnum);
 			if ($r) {
@@ -104,7 +107,7 @@ class Shopcart extends Base
 				return json(['code'=>0,'data'=>'','msg'=>'添加购物车失败！']);
 			}
 		}else{
-			$insertData['goodsnum'] = input('param.goodsnum');
+			$insertData['goodsnum'] = input('post.goodsnum');
 			$insertData['created_at'] = date("Y-m-d H:i:s");
 
 			$re = db('shop_cart')->insertGetid($insertData);
@@ -125,7 +128,7 @@ class Shopcart extends Base
 	public function cartGoodsUpdate()
 	{
 		// 整理更新数据
-		$data = input('param.data');
+		$data = input('post.data');
 		$updateData = array();
 		foreach ($data as $key => $value) {
 			// $updateData[$key]['userid'] = $this->userId;  
@@ -163,7 +166,7 @@ class Shopcart extends Base
 	 */
 	public function cartGoodsDel()
 	{
-		$data = input('param.data');
+		$data = input('post.data');
 
 		$re = db('shop_cart')->delete($data);
 		if ($re > 0) {

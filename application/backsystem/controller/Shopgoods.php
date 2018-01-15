@@ -26,6 +26,7 @@ class Shopgoods extends Base
             $offset = ($param['pageNumber'] - 1) * $limit;
 
             $where = [];
+            $where['is_delete'] = '0';
             if (!empty($param['name'])) {
                 $where['name'] = ['like', '%' . $param['name'] . '%'];
             }
