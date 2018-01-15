@@ -56,16 +56,10 @@ class Test extends Validate{
 
 
     public function test(){
-        $user = new UserModel();
-        $userData = $user->select();
-        foreach ($userData as $key=>$item) {
-            if(empty($item['unique'])){
-                $userData[$key]->unique = '123456789';
-                unset($userData[$key]['id']);
-            }
-        }
-        $res = $user->insertAll(objToArray($userData));
-        dump($res);die;
+     $user = Db::table('sql_users')
+         ->where('id',1)->find();
+        $user['actid'] += 1;
+        Db::table('sql_users')->where('id',1)->update($user);
     }
 
 

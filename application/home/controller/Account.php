@@ -94,7 +94,7 @@ class Account extends Base{
         }
         $type = $input['type'];           //提现方式1支付宝2微信
         $money = $input['money'];
-        $user = UserModel::get($this->userId);
+        $user = Db::table('sql_users')->where('id',$this->userId)->find();
         if($type == 1){
             if(empty($user['alipay'])){
                 return json(['msg'=>'请先绑定支付宝','code'=>1011]);
@@ -117,7 +117,8 @@ class Account extends Base{
         Db::startTrans();
         try{
             //减少用户余额
-            UserModel::get($this->userId)->setDec('balance',$money);
+            $user['balance'] -= $money;
+            Db::table('sql_users')->update($user);
             //增加提现记录
             $data['uid'] = $this->userId;
             $data['money'] = $money;
@@ -133,7 +134,7 @@ class Account extends Base{
             $record = AccountModel::getAccountData($this->userId,$money,'余额提现',5,2,'','',$res);
             AccountModel::create($record);
             //判断用户余额是否是负值
-            if(db('users')->where('id',$this->userId)->value('balance') < 0){
+            if($user['balance'] < 0){
                 Db::rollback();
                 return json(['msg'=>'操作错误','code'=>1001]);
             }else{
@@ -178,7 +179,7 @@ class Account extends Base{
         if($friendData['id'] == $this->userId){
             return json(['msg'=>'不能给自己转账','code'=>1001]);
         }
-        $user = UserModel::get($this->userId);
+        $user = Db::table('sql_users')->where('id',$this->userId)->find();
         if(!isset($password) || md5($password) != $user['two_password']){
             return json(['msg'=>'支付密码错误','code'=>1006]);
         }
@@ -193,19 +194,26 @@ class Account extends Base{
         try{
             /*=====================用户余额互转=====================*/
             //扣除用户余额
-            UserModel::get($this->userId)->setDec('balance', $money);
+            $userlist[0] = [
+                'id' => $user['id'],
+                'balance' =>['exp','balance -'. $money]
+            ];
             //增加用户转账记录
             $data[0] = AccountModel::getAccountData($this->userId, $money, '好友转账', 4, 2,'', $friendData['id']);
             //增加好友余额
-            $friendData->balance += $money;
-            $friendData->total_price += $money;
-            $friendData->save();
-            //UserModel::get($friendData['id'])->setInc('balance',$money);
+            $userlist[1] = [
+                'id' => $friendData['id'],
+                'balance' => ['exp','balance +'.$money],
+                'total_price' => ['exp','total_price +'.$money]
+            ];
+            $userModel = new UserModel();
+            $userModel->saveAll($userlist);
             //增加好友余额增加记录
             $data[1] = AccountModel::getAccountData($friendData['id'], $money, '好友转账', 4, 1,'', $this->userId);
-            $res = AccountModel::insertAll($data);
+            $account = new AccountModel();
+            $res = $account->insertAll($data);
             if ($res) {
-                if (db('users')->where('id', $this->userId)->value('balance') < 0) {
+                if ($user['balance'] < 0) {
                     Db::rollback();
                     return json(['msg' => '操作错误', 'code' => 1001]);
                 } else {
