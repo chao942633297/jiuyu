@@ -48,17 +48,18 @@ class Rebate extends Controller
         $this->matchB = $conf['actB'];                    //匹配报单中心奖励
         $this->matchC = $conf['actC'];                    //匹配报单中心奖励
 
-        $this->area_ach = $conf['area_ach'];            //县级报单中心业绩比例
-        $this->city_ach = $conf['city_ach'];            //市级报单中心业绩比例
-        $this->province_ach = $conf['province_ach'];    //省级报单中心业绩比例
-        $this->head_ach = $conf['head_ach'];    //总部报单中心
+        $this->area_ach = bcmul($conf['area_ach'],0.01);            //县级报单中心业绩比例
+        $this->city_ach = bcmul($conf['city_ach'],0.01);            //市级报单中心业绩比例
+        $this->province_ach = bcmul($conf['province_ach'],0.01);    //省级报单中心业绩比例
+        $this->head_ach = bcmul($conf['head_ach'],0.01);    //总部报单中心
 //        $this->manage = $conf['manage'];    //管理奖
     }
 
     /**
      * @param $addr
      * @return bool
-     * 用户成为合伙人,地址匹配报单中心返佣
+     * 用户成为合伙人,
+     * 激活人(需是报单中心)获取业绩,
      * 上级报单中心业绩增加
      */
     public function partnerRebate($actId, $userId,$voucherId)
@@ -70,32 +71,64 @@ class Rebate extends Controller
         $voucher = Db::table('sql_voucher')->where('id',$voucherId)->find();
         $match = 'match'.$voucher['type'];          //套餐对应报单中心奖励
 
+
+
         $achievement = 0;
         $reword = UserModel::get($actId);
-        if ($reword['class'] == 3) {
-            $achievement = $voucher['money'] * $this->area_ach * 0.01;           //业绩分红
-        } else if ($reword['class'] == 4) {
-            $achievement = $voucher['money'] * $this->city_ach * 0.01;          //业绩分红
-        } else if ($reword['class'] == 5) {
-            $achievement = $voucher['money'] * $this->province_ach * 0.01;     //业绩分红
-        } else if ($actId == 1) {
-            $achievement = $voucher['money'] * $this->head_ach * 0.01;         //业绩分红
+        $i = 0;
+        if($reword['class'] == 5){     //省级报单中心,直接计算业绩
+            $achievement = bcmul($voucher['money'],$this->province_ach);           //激活者业绩分红
+        }
+        if($reword['class'] <= 4){            //市级报单中心,判断省级报单中心是否存在,并计算业绩
+            $achievement = bcmul($voucher['money'],$this->city_ach);           //激活者业绩分红
+            $provinceId = Db::table('sql_voucher')
+                ->where(['province'=>$voucher['province'],'status'=>2])->value('uid');
+            if(!empty($provinceId)){
+                $provinceAchievement = bcmul($voucher['money'],$this->province_ach);
+                if($provinceAchievement > 0){
+                    $newList[$i] = [                   //增加余额
+                        'balance' => ['exp', 'balance + ' . $provinceAchievement],
+                        'total_price' => ['exp', 'total_price + ' . $provinceAchievement],
+                        'id' => $provinceId
+                    ];
+                    //增加余额记录
+                    $lists[$i] = AccountModel::getAccountData($provinceId, $achievement, '业绩分红', 9, 1, $voucher['type'],$userId);
+                    $i ++;
+                }
+            }
+        }
+        if($reword['class'] == 3){          //县级报单中心,判断市级报单中心是否存在,并计算业绩
+            $achievement = bcmul($voucher['money'],$this->area_ach);           //激活者业绩分红
+            $cityId = Db::table('sql_apply')
+                ->where(['province'=>$voucher['province'],'city'=>$voucher['city'],'status'=>2])->value('uid');
+            if(!empty($cityId)){
+                $cityAchievement = bcmul($voucher['money'],$this->city_ach);
+                if($cityAchievement > 0){
+                    $newList[$i] = [
+                        'balance' => ['exp', 'balance + ' . $cityAchievement],
+                        'total_price' => ['exp', 'total_price + ' . $cityAchievement],
+                        'id' => $cityId
+                    ];
+                    $lists[$i] = AccountModel::getAccountData($cityId, $achievement, '业绩分红', 9, 1, $voucher['type'],$userId);
+                    $i ++;
+                }
+            }
         }
         $money = $this->$match + $achievement;       //用户余额总增加
-
         Db::startTrans();
         try {
             //增加用户余额
-            $newList = [
+            $newList[$i] = [
                 'balance' => ['exp', 'balance + ' . $money],
                 'total_price' => ['exp', 'total_price + ' . $money],
                 'id' => $actId
             ];
             db('users')->update($newList);
             //增加余额记录
-            $lists[0] = AccountModel::getAccountData($actId, $this->$match, '激活奖', 8, 1,$voucher['type'], $userId);
+            $lists[$i] = AccountModel::getAccountData($actId, $this->$match, '激活奖', 8, 1,$voucher['type'], $userId);
+            $i ++;
             if ($achievement > 0) {
-                $lists[1] = AccountModel::getAccountData($actId, $achievement, '业绩分红', 9, 1, $voucher['type'],$userId);
+                $lists[$i] = AccountModel::getAccountData($actId, $achievement, '业绩分红', 9, 1, $voucher['type'],$userId);
             }
             db('account')->insertAll($lists);
             Db::commit();

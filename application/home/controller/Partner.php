@@ -277,7 +277,7 @@ class Partner extends Controller
 
             //激活合伙人-报单中心返佣(及余额记录)
             $rebate = new Rebate();
-            $rebate->partnerRebate($input,$newUser['id'],$voucher['id']);
+            $rebate->partnerRebate($this->userId,$newUser['id'],$voucher['id']);
             //进入公排
             if(db('config')->where('id',1)->value('switch') == 1){
                 $rebate->goQualifying($newUser['id'],$newUser['phone'],$voucher['id'],$this->userId);
@@ -324,18 +324,18 @@ class Partner extends Controller
             $where['level'] = 5;
         }
         if ($input['level'] <= 4) {
-            $where['city'] = $input['city'];
-            $where['level'] = 4;
             if(empty($input['city'])){
                 return json(['msg'=>'城市不能为空','code'=>1001]);
             }
+            $where['city'] = $input['city'];
+            $where['level'] = 4;
         }
         if ($input['level'] == 3) {
-            $where['area'] = $input['area'];
-            $where['level'] = 3;
             if(empty($input['city']) || empty($input['area'])){
                 return json(['msg'=>'城市和县/区都不能为空','code'=>1001]);
             }
+            /*$where['area'] = $input['area'];
+            $where['level'] = 3;*/
         }
         $where['status'] = 2;
         $res1 = db('apply')->where($where)->count();

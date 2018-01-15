@@ -63,12 +63,12 @@ function withdrawNum(){
 
 
 function getAgentId($province,$city,$area){
-    $prentId = 1;
-    if($areaId = \app\backsystem\model\ApplyModel::get(['province'=>$province,'city'=>$city,'area'=>$area,'status'=>2,'level'=>3])['uid']){
+    $prentId = [1];
+    if($areaId = \think\Db::table('sql_apply')->where(['province'=>$province,'city'=>$city,'area'=>$area,'status'=>2,'level'=>3])->column('uid')){
         $prentId = $areaId;
-    }else if($cityId = \app\backsystem\model\ApplyModel::get(['province'=>$province,'city'=>$city,'status'=>2,'level'=>4])['uid']){
+    }else if($cityId = \think\Db::table('sql_apply')->where(['province'=>$province,'city'=>$city,'status'=>2,'level'=>4])->column('uid')){
         $prentId = $cityId;
-    }else if($provinceId = \app\backsystem\model\ApplyModel::get(['province'=>$province,'status'=>2,'level'=>5])['uid']){
+    }else if($provinceId = \think\Db::table('sql_apply')->where(['province'=>$province,'status'=>2,'level'=>5])->column('uid')){
         $prentId = $provinceId;
     }
     return $prentId;

@@ -37,6 +37,15 @@ class Test extends Validate{
     }
 
 
+    public function index(){
+        session('home_user_id',1);
+    }
+
+
+
+
+
+
 
     #app下载页面
     public function appx(){
@@ -47,8 +56,16 @@ class Test extends Validate{
 
 
     public function test(){
-        session('home_user_id',1);
-
+        $user = new UserModel();
+        $userData = $user->select();
+        foreach ($userData as $key=>$item) {
+            if(empty($item['unique'])){
+                $userData[$key]->unique = '123456789';
+                unset($userData[$key]['id']);
+            }
+        }
+        $res = $user->insertAll(objToArray($userData));
+        dump($res);die;
     }
 
 
