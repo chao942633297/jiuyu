@@ -65,11 +65,14 @@ class Shopspy extends Controller
 	 */
 	public function shopGoodsInfo()
 	{
-		$id = !empty(input('id')) && input('id') > 0 ? input('id') : exit(json_encode(['code'=>0,'data'=>'','msg'=>'参数异常']));
+		$id = !empty(input('post.id')) && input('post.id') > 0 ? input('post.id') : exit(json_encode(['code'=>0,'data'=>'','msg'=>'参数异常']));
 		$goodsInfo = Db::name('shop_goods')->where('id',$id)->field("id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot")->find();
 		if ($goodsInfo['cid'] != '2') {
 			return json(['code'=>0,'data'=>'','msg'=>'非窥探商品不予显示']);
 		}
+
+		$user = UserModel::get(session('home_user_id'));
+		$goodsInfo['balance'] = $user->balance;
 		// $shopgoods = new ShopGoodsModel();
 		// $goodsInfo = $shopgoods->getOneShopGoods($id,"id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot");
 		return json(['code'=>1,'data'=>$goodsInfo,'msg'=>'success']);

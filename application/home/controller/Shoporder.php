@@ -49,7 +49,7 @@ class Shoporder extends Base
 		$page = !empty(input('post.page')) && input('post.page') > 0 ? input('post.page') : '1' ;
 		$limit = !empty(input('post.limit')) && input('post.limit') > 0 ? input('post.limit') : '10' ;
 		$status = input('post.status');
-		$status = 5; 
+		// $status = 5; 
 
 		if (($status==NULL)  || $status < 0 ) {
 			return json(['code'=>1,'data'=>'','msg'=>'获取失败，参数异常']);
