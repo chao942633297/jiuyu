@@ -37,6 +37,15 @@ class Test extends Validate{
     }
 
 
+    public function index(){
+        session('home_user_id',1);
+    }
+
+
+
+
+
+
 
     #app下载页面
     public function appx(){
@@ -47,8 +56,10 @@ class Test extends Validate{
 
 
     public function test(){
-        session('home_user_id',1);
-
+     $user = Db::table('sql_users')
+         ->where('id',1)->find();
+        $user['actid'] += 1;
+        Db::table('sql_users')->where('id',1)->update($user);
     }
 
 

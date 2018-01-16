@@ -2,6 +2,7 @@
 namespace app\home\controller;
 
 use app\backsystem\controller\File;
+use app\backsystem\model\ApplyModel;
 use app\backsystem\model\UserModel;
 use app\backsystem\model\VoucherModel;
 use think\Controller;
@@ -50,7 +51,7 @@ class Package extends Controller
 		if(empty($packageId)){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
-		$packageDetail = Db::table('sql_goods')->field('name,price,img,unit')
+		$packageDetail = Db::table('sql_goods')->field('id,name,price,img,unit')
 			->where('id',$packageId)->find();
 		$user = UserModel::get($this->userId);
 		if(!strstr($user['pusers']['level'],$packageDetail['unit'])){
@@ -62,10 +63,35 @@ class Package extends Controller
 			$where['uid'] = $this->userId;
 		}
 		$address = Db::table('sql_address')
-			->field('consignee,phone,province,city,area,detail')
+			->field('id,consignee,phone,province,city,area,detail')
 			->where($where)->order('is_default','desc')->find();
 		return json(['data'=>['packageDetail'=>$packageDetail,'address'=>$address],'msg'=>'查询成功','code'=>200]);
 	}
+
+
+
+	/**
+	 * @param Request $request
+	 * @return \think\response\Json
+	 * 选择服务中心
+	 * addrId 收货地址id
+	 */
+	public function selectService(Request $request){
+		$addrId = $request->param('addrId');
+		if(empty($addrId)){
+			return json(['msg'=>'收货地址不能为空','code'=>1001]);
+		}
+		$address = Db::table('sql_address')->where('id',$addrId)->find();
+		$agentId = getAgentId($address['province'],$address['city'],$address['area']);
+		$apply = new ApplyModel();
+		$serviceData = $apply->field('id,uid,name,phone,province,city,area')
+			->where(['uid'=>['in',$agentId],'status'=>2])->select();
+		foreach($serviceData as $key=>$val){
+			$serviceData[$key]['headimgurl'] = $val['user']['headimgurl'];
+		}
+		return json(['data'=>$serviceData,'msg'=>'查询成功','code'=>200]);
+	}
+
 
 
 	/**
@@ -78,7 +104,8 @@ class Package extends Controller
 		$input = $request->post();
 		$packageId = $input['packageId'];
 		$addrId = $input['addrId'];
-		if(empty($packageId)){
+		$agentId = $input['agentId'];
+		if(empty($packageId) || empty($agentId)){
 			$packageId = session('home_package_id');
 		}
 		if(empty($packageId)){
@@ -94,15 +121,12 @@ class Package extends Controller
 		if(!strstr($user['pusers']['level'],$package['unit'])){
 			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
 		}
-		$address = Db::table('sql_address')
-			->field('id,province,city,area')
-			->where('id',$addrId)->find();
-		$agentId = getAgentId($address['province'],$address['city'],$address['area']);
 		$qrcode = Db::table('sql_qrcode')
 			->field('uid,wqcode,aqcode')
 			->where('uid',$agentId)->find();
 		return json(['data'=>['qrcode'=>$qrcode,'packageMoney'=>$package['price']],'msg'=>'查询成功','code'=>200]);
 	}
+
 
 
 	/**
@@ -114,12 +138,13 @@ class Package extends Controller
 	 */
 	public function payNow(Request $request){
 		$input = $request->post();
-		if(empty($input['packageId']) || empty($input['addrId']) || empty($input['type'])){
+		if(empty($input['packageId']) || empty($input['addrId']) || empty($input['type']) || empty($input['agentId'])){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
 		$packageId = $input['packageId'];
 		$addrId = $input['addrId'];
 		$type = $input['type'];           //1支付宝支付 2 微信支付
+		$prentId = $input['agentId'];           //报单中心id
 		//获取套餐信息
 		$package = Db::table('sql_goods')
 			->field('name,price,img,unit')
@@ -148,9 +173,6 @@ class Package extends Controller
 		$address = Db::table('sql_address')
 			->field('id,province,city,area')
 			->where('id',$addrId)->find();
-		//获取报单中心id
-		$prentId = getAgentId($address['province'],$address['city'],$address['area']);
-
 		$list = VoucherModel::getVoucherData($this->userId,$prentId,$package['price'],$package['unit'],$type,$package['name'],$package['price'],$package['img'],$address['province'],$address['city'],$address['area'],$address['detail']);
 		$res = VoucherModel::create($list);
 		if(empty($res['img'])){
