@@ -5,6 +5,7 @@ namespace app\home\controller;
 use Service\Wechat;
 use think\Controller;
 use think\Db;
+use think\Request;
 use wechatH5\JsApi_pub;
 use wechatH5\WxPayConf_pub;
 
@@ -25,32 +26,69 @@ class Wechatlogin extends Controller{
      * @throws \think\Exception
      * 用户授权,获取用户openid
      */
-    /*public function index(){
-        $user = Db::table('sql_users')
-            ->where('id',$this->userId)->find();
-        if(empty($user['openid'])){
-            $jsApi = new JsApi_pub();
-//            触发微信返回code码
-            if(empty($_GET['code'])){
-                $url = $jsApi->createOauthUrlForUserInfo(WxPayConf_pub::JS_API_BIND_URL);
-                Header("Location: $url");exit;
+    public function index(Request $request){
+        $unique = $request->param('unique');
+        if(false !== strpos($unique,'bind_')){           //授权绑定openid
+            $unique = substr($unique,5);
+            $user = Db::table('sql_users')
+                ->where('unique',$unique)->find();
+            if(empty($user['openid'])){
+                $unique = 'bind_'.$unique;
+                $result = $this->getOpenid($unique);
+                $user['openid'] = $result['openid'];
+                $res = Db::table('sql_users')->update($user);
+                if($res){
+                    return json(['msg'=>'绑定成功','code'=>200]);
+                }
+                return json(['msg'=>'绑定失败','code'=>1002]);
             }else{
-                $code = $_GET['code'];
-                $jsApi->setCode($code);
-//            获取code码，以获取openid
-                $openid = $jsApi->getOpenId();
+                return json(['msg'=>'用户已绑定微信','code'=>2001]);
             }
-            $user['openid'] = $openid;
-            $res = Db::table('sql_users')->update($user);
-            if($res){
-                return json(['msg'=>'绑定成功','code'=>200]);
+        }else{                                      //扫码注册绑定上下级
+            if (is_weixin()) {
+                $result = $this->getOpenid($unique);
+                if(Db::table('sql_users')->where('openid',$result['openid'])->count() < 1){        //用户未注册过
+                    $wechat_config = new WxPayConf_pub();
+                    $wechat = new Wechat($wechat_config);
+                    $userInfo = $wechat->getUserInfo($result['openid']);
+                    $userInfo = json_decode($userInfo,true);
+                    $pid = Db::table('sql_users')->where('unique',$result['unique'])->value('id');
+                    $userId = Db::table('sql_users')->insertGetId([
+                        'pid'=>$pid,
+                        'openid'=>$result['openid'],
+                        'nickname'=>$userInfo['nickname'],
+                        'headimgurl'=>$userInfo['headimgurl']
+                    ]);
+                    $login = new Login();
+                    $login->saveUserRelation($userId,$pid);
+                }
             }
-            return json(['msg'=>'绑定失败','code'=>1002]);
-        }else{
-            return json(['msg'=>'用户已绑定微信','code'=>2001]);
+            $url = 'http://admin.jiuyushangmao.com/home/Login/webRegister?prentId='.$unique;
+            header('Location:'.$url);
         }
 
-    }*/
+    }
+
+    /**
+     * @param string $unique
+     * @return array
+     * 获取openid
+     */
+    public function getOpenid($unique = ''){
+        $jsApi = new JsApi_pub();
+//            触发微信返回code码
+        if(empty($_GET['code'])){
+            $url = $jsApi->createOauthUrlForUserInfo(WxPayConf_pub::JS_API_BIND_URL.'?unique='.$unique);
+            Header("Location: $url");exit;
+        }else{
+            $code = $_GET['code'];
+            $unique = $_GET['unique'];
+            $jsApi->setCode($code);
+//            获取code码，以获取openid
+            $openid = $jsApi->getOpenId();
+        }
+        return ['unique'=>$unique,'openid'=>$openid];
+    }
 
 
     /**
@@ -69,22 +107,6 @@ class Wechatlogin extends Controller{
         }
         return $path;
     }
-
-
-
-
-
-
-    public function test(){
-        $config = new WxPayConf_pub();
-        $wechat = new Wechat($config);
-        $openid = 'oknGV1fCoVZ9wnxYlZhctYPUr8cw';
-        $userinfo = $wechat->getUserInfo($openid);
-        dump($userinfo);
-//        $userinfo = json_decode($userinfo,true);
-        dump($userinfo['nickname']);
-    }
-
 
 
     /**

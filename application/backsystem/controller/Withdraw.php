@@ -145,8 +145,8 @@ class Withdraw extends Base{
                 $charge = 1 - $withdrawData['charge'] * 0.01;
                 $data['money'] = bcmul($withdrawData['money'],$charge);
                 $data['withdraw_sn'] = $withdrawData['withdraw_sn'];
-                $data['alipay_account'] = $withdrawData['users']['alipay']['alipay_account'];
-                $data['alipay_name'] = $withdrawData['users']['alipay']['alipay_name'];
+                $data['alipay_account'] = $withdrawData['alipay_account'];
+                $data['alipay_name'] = $withdrawData['alipay_name'];
                 $alipay = new Alipay();
                 $result = $alipay->withDraw($data);
                 $result = objToArray($result);
@@ -173,17 +173,13 @@ class Withdraw extends Base{
         $return['nickname'] = $data['users']['nickname'];
         $return['pay_type'] = $data['type'];
         $return['type'] =config('Withdraw_type')[$data['type']];
-        if($data['type'] == 3){
-            $return['bank_name'] = $data['bank_name'];
-            $return['bank_account'] = $data['bank_account'];
-            $return['user_name'] = $data['user_name'];
-            $return['user_phone'] = $data['user_phone'];
-            $return['voucher'] = $data['voucher'];
-        }else if($data['type'] == 2){
-            $return['alipay_account'] = $data['users']['alipay']['alipay_account'];
-            $return['alipay_name'] = $data['users']['alipay']['alipay_name'];
-        }
-
+        $return['bank_name'] = $data['bank_name'];
+        $return['bank_account'] = $data['bank_account'];
+        $return['user_name'] = $data['user_name'];
+        $return['user_phone'] = $data['user_phone'];
+        $return['voucher'] = $data['voucher'];
+        $return['alipay_account'] = $data['alipay_account'];
+        $return['alipay_name'] = $data['alipay_name'];
         return json($return);
     }
 

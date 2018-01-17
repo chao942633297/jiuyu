@@ -38,7 +38,7 @@ class Test extends Validate{
 
 
     public function index(){
-        session('home_user_id',1);
+        session('home_user_id',99);
     }
 
 
@@ -56,10 +56,9 @@ class Test extends Validate{
 
 
     public function test(){
-     $user = Db::table('sql_users')
-         ->where('id',1)->find();
-        $user['actid'] += 1;
-        Db::table('sql_users')->where('id',1)->update($user);
+        $data = 'bind_56fef2e82981a3d85a48de729850215d';
+        dump($data);
+        dump(strpos($data,'123456'));
     }
 
 

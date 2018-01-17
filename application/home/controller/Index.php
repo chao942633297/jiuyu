@@ -25,6 +25,7 @@ class Index extends Controller
             $goodInfo[$key]['id']   = $value['id'];
             $goodInfo[$key]['name'] = $value['name'];
             $goodInfo[$key]['img']  = $value['img'];
+            $goodInfo[$key]['price']  = $value['price'];
         }
         //轮播图
         $lunbo = db('lunbo')->where('sort',1)->select();
@@ -32,11 +33,20 @@ class Index extends Controller
         $broadcast = db('order')->where('status',2)->order('id','desc')->select();
         //商城区
         $shopGoods = Db::table('sql_shop_goods')
+            ->field('id,name,imgurl,price')
             ->where('is_under',0)
+            ->limit(3)
             ->order('sort','asc')->select();
-        #车辆品牌
-//        $class = db('class')->limit(10)->select();
-        return json(['code'=>200,'goods'=>$goodInfo,'lunbo'=>$lunbo,'broadcast'=>$broadcast,'shopGoods'=>$shopGoods,'msg'=>'查询成功']);
+        //未读公告数量
+        $unreadNum = 0;
+        if(session('home_user_id')){
+            $user = Db::table('sql_users')->where('id',session('home_user_id'))->find();
+            $allid = json_decode($user['notice_id'],true);
+            $readNum = count($allid);
+            $totalCount = Db::table('sql_article')->count();
+            $unreadNum = $totalCount - $readNum;
+        }
+        return json(['code'=>200,'goods'=>$goodInfo,'lunbo'=>$lunbo,'noticeNum'=>$unreadNum,'broadcast'=>$broadcast,'shopGoods'=>$shopGoods,'msg'=>'查询成功']);
 
     }
 

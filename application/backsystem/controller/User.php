@@ -59,7 +59,7 @@ class User extends Base{
                 $selectResult[$key]['phone'] = '<a href="javascript:user_detail('.$vo['id'].')">'.$vo['nickname'].'('.$vo['phone'].')</a>';
                 $p_user = db('users')->where(['id'=>$vo['pid']])->find();
 
-                $selectResult[$key]['rowNum'] = db('row')->where(['user_id'=>$vo['id'],'position'=>1])->count();;
+//                $selectResult[$key]['rowNum'] = db('row')->where(['user_id'=>$vo['id'],'position'=>1])->count();
                 if($p_user){
                     if($p_user['nickname']){
                         $selectResult[$key]['p_phone'] = '<a href="javascript:user_detail('.$p_user['id'].')">'.$p_user['nickname'].'('.$p_user['phone'].')</a>';
@@ -150,7 +150,7 @@ class User extends Base{
                     $inc = 2;    //减少
                     $msg = '后台扣除';
                 }
-                $insert = AccountModel::getAccountData($id,$money,$msg,6,$inc);
+                $insert = AccountModel::getAccountData($id,$money,$msg,6,$inc,'');
                 db(self::ACCOUNT)->insert($insert);
                 return json(['code' => 1, 'data' => '', 'msg' => '编辑成功']);
             }else{

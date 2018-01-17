@@ -65,10 +65,10 @@ class Buycar extends Base
     //执行我要购车
     public function actBuyCar(Request $request){
         //一个账号只能购买一辆车
-        $count = db('order')->where('uid',$this->userId)->count();
+      /*  $count = db('order')->where('uid',$this->userId)->count();
         if($count >= 1){
             return json(['msg'=>'一个账号只能购买一辆车','code'=>1001]);
-        }
+        }*/
         //执行购买车辆
         $input = $request->post();
         $validate = Loader::validate('Goods');
@@ -198,22 +198,27 @@ class Buycar extends Base
         if($user['balance'] < $orderData['price']){
             return json(['msg'=>'余额不足,请选购其他车辆','code'=>1002]);
         }
-        $count = Db::table('sql_order')->where(['uid'=>$this->userId,'status'=>['EGT',2]])->count();
+    /*    $count = Db::table('sql_order')->where(['uid'=>$this->userId,'status'=>['EGT',2]])->count();
         if($count > 1){
             return json(['msg'=>'一个账号只能购买一辆车','code'=>1002]);
-        }
+        }*/
         Db::startTrans();
         try{
             //扣除用户余额
-            UserModel::get($this->userId)->setDec('balance',$orderData['price']);
+            $user['balance'] -= $orderData['price'];
+            Db::table('sql_users')->update($user);
             //增加用户余额消费记录
             $list = AccountModel::getAccountData($this->userId,$orderData['price'],'购买车辆',7,2,$orderData['id']);
             AccountModel::create($list);
+            if($user['balance'] < 0){
+                Db::rollback();
+                return json(['msg'=>'余额不足,提车失败','code'=>1005]);
+            }
             Db::commit();
             return json(['msg'=>'提交购车成功','code'=>200]);
         }catch(Exception $e){
             Db::rollback();
-            return json(['msg'=>$e->getMessage(),'code'=>1005]);
+            return json(['msg'=>'余额不足,提车失败','code'=>1005]);
         }
     }
 

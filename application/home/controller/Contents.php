@@ -4,6 +4,7 @@ namespace app\home\controller;
 
 use app\backsystem\model\ArticleModel;
 use think\Controller;
+use think\Db;
 use think\Request;
 
 class Contents extends Controller
@@ -35,7 +36,7 @@ class Contents extends Controller
     public function newHandDetail(Request $request)
     {
         $newId = $request->param('newId');
-        $new = ArticleModel::get($newId)['content'];
+        $new = ArticleModel::get($newId);
         return json(['data'=>$new,'msg'=>'查询成功','code'=>200]);
     }
 
@@ -57,10 +58,18 @@ class Contents extends Controller
     public function noticeDetail(Request $request)
     {
         $noticeId = $request->param('noticeId');
-        $data = ArticleModel::get($noticeId);
+        $data = Db::table('sql_article')->where('id',$noticeId)->find();
         $return = [];
         $return['title'] = $data['title'];
+        $return['created_at'] = date('Y-m-d H:i:s',$data['create_at']);
         $return['content'] = $data['content'];
+        if(session('home_user_id')){
+            $user = Db::table('sql_users')->where('id',session('home_user_id'))->find();
+            $allid = json_decode($user['notice_id'],true);
+            array_push($allid,$noticeId);
+            $user['notice_id'] = json_encode($allid);
+            Db::table('sql_users')->update($user);
+        }
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
     }
 

@@ -38,6 +38,7 @@ class Login extends Controller
         #存储session
         session('home_user_id', $userinfo['id']);
         $_SESSION['home_user_id'] = $userinfo['id'];
+        session('replay_openid', null);
         return json(['code' => 200, 'msg' => '登陆成功']);
     }
 
@@ -225,11 +226,11 @@ class Login extends Controller
         //限制用户10分钟只能发短信10条
         $befor = date('Y-m-d H:i:s', time() - 600);
         $count = Db::table('sql_code')->where(['phone' => $phone, 'created_at' => ['between', [$befor,date('Y-m-d H:i:s')]]])->count();
-        if ($count >= 10) {
+   /*     if ($count >= 10) {
             return json(['msg' => '发送短信数量过多，请稍后再试', 'code' => 1004]);
         } else if (DB::table('sql_code')->where('phone',$phone)->whereTime('created_at','today')->count() >= 15) {
             return json(['msg' => '今天发送短信数量完毕，请明天再试', 'code' => 1004]);
-        }
+        }*/
 
         $msg = new MsgCode();
         $result = $msg->sendMsg($phone, $type);

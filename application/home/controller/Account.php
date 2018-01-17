@@ -94,7 +94,7 @@ class Account extends Base{
         }
         $type = $input['type'];           //提现方式1支付宝2微信
         $money = $input['money'];
-        $user = Db::table('sql_users')->where('id',$this->userId)->find();
+        $user = UserModel::get($this->userId);
         if($type == 1){
             if(empty($user['alipay'])){
                 return json(['msg'=>'请先绑定支付宝','code'=>1011]);
@@ -126,6 +126,8 @@ class Account extends Base{
             $data['charge'] = $this->charge;        //提现手续费为5%
             $data['realmoney'] = $money * (100 - $this->charge) * 0.01;
             $data['status'] = 1;
+            $data['alipay_account'] = $user['alipay']['alipay_account'];
+            $data['alipay_name'] = $user['alipay']['alipay_name'];
             $data['created_at'] = date('YmdHis');
             $data['type'] = $type;
             $withdraw = new WithdrawModel();

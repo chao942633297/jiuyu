@@ -7,7 +7,7 @@ use think\Db;
 use think\Loader;
 use think\Request;
 
-class Address extends Controller
+class Address extends Base
 {
 
     protected $userId;
@@ -47,7 +47,11 @@ class Address extends Controller
         if (!$validate->check($input)) {
             return json(['msg' => $validate->getError(), 'code' => 1001]);
         }
+        $input['uid'] = $this->userId;
         $input['created_at'] = date('YmdHis');
+        if(isset($input['is_default']) && $input['is_default'] == 1){
+            Db::table('sql_address')->where('uid',$this->userId)->update(['is_default'=>0,'created_at'=>date('YmdHis')]);
+        }
         $res = Db::table('sql_address')->insert($input);
         if($res){
             return json(['msg' =>'添加成功', 'code' => 200]);
@@ -81,7 +85,7 @@ class Address extends Controller
      */
     public function actEditAddr(Request $request){
         $input = $request->post();
-        if(empty($input['addrId'])){
+        if(empty($input['id'])){
             return json(['msg'=>'参数错误','code'=>1001]);
         }
         $validate = Loader::validate('Address');
@@ -89,6 +93,9 @@ class Address extends Controller
             return json(['msg' => $validate->getError(), 'code' => 1001]);
         }
         $input['updated_at'] = date('YmdHis');
+        if(isset($input['is_default']) && $input['is_default'] == 1){
+            Db::table('sql_address')->where('uid',$this->userId)->update(['is_default'=>0,'created_at'=>date('YmdHis')]);
+        }
         $res = Db::table('sql_address')->update($input);
         if($res){
             return json(['msg'=>'编辑成功','code'=>200]);
@@ -97,6 +104,20 @@ class Address extends Controller
     }
 
 
+    /*
+     * 设置默认地址
+     */
+    public function setDefault(Request $request){
+        $addrId = $request->param('addrId');
+        if(empty($addrId)){
+            return json(['msg'=>'参数错误','code'=>1001]);
+        }
+        $res = Db::table('sql_address')->where('uid',$this->userId)->update(['is_default'=>0,'created_at'=>date('YmdHis')]);
+        if($res){
+            Db::table('sql_address')->where('id',$addrId)->update(['is_default'=>1,'updated_at'=>date('YmdHis')]);
+        }
+        return json(['msg'=>'设置成功','code'=>200]);
+    }
 
 
 
@@ -111,9 +132,9 @@ class Address extends Controller
             return json(['msg' => '参数错误', 'code' => 1001]);
         }
         $addr = Db::table('sql_address')->where('id', $addrId)->find();
-        if ($addr['is_default'] == 1) {
+     /*   if ($addr['is_default'] == 1) {
             return json(['msg' => '默认地址暂不能删除', 'code' => 1002]);
-        }
+        }*/
         $res = Db::table('sql_address')->where('id', $addrId)->delete();
         if ($res) {
             return json(['msg' => '删除成功', 'code' => 200]);

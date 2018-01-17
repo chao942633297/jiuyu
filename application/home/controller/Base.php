@@ -44,9 +44,7 @@ class Base extends Controller
                 return json(['msg'=>'请登录','code'=>3000])->send();
             }
         }
-
-
-        if(session('replay_openid')) {
+   /*     if(session('replay_openid')) {
             $openid = session('replay_openid');
             $user = Db::table('sql_users')
                 ->where('openid', $openid)->find();
@@ -54,7 +52,11 @@ class Base extends Controller
                 session('home_user_id', $user['id']);
                 $_SESSION['home_user_id'] = $user['id'];
             }
-        }
+        }*/
+    }
+
+    public function puckLogin(){
+        return json(['msg'=>'已登录','code'=>200]);
     }
 
 
