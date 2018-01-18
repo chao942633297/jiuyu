@@ -103,7 +103,7 @@ function getSubtree($arr,$parent=0){
 }
 
 function foo($size=16) {
-    $dict = '0123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ';
+    $dict = '0123456789abcdefghijkmnopqrstuvwxyABCDEFGHJKLMNOPQRSTUVWXYZ';
     $len = strlen($dict);
     $res = '';
     for($i=0; $i<$size; $i++) $res .= $dict{rand(0, $len - 1)};

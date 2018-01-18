@@ -291,7 +291,7 @@ class Users extends Base
      */
     public function wechatBind(){
         $user = Db::table('sql_users')
-            ->where('id', 91)->find();
+            ->where('id', $this->userId)->find();
         $unique = 'bind_' . $user['unique'];
         $name = 'user_bind_qcode_' . $user['unique'];
         $path = 'uploads/qcodeLogo/' . $name . '.png';     //的二维码

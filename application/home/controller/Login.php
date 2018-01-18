@@ -100,8 +100,8 @@ class Login extends Controller
         try {
             //增加用户
             $userData = [];
-//            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
-            $falg = ['password' => 123456, 'two_password' => 123456];      //获取登陆密码支付密码
+            $falg = ['password'=>foo(6),'two_password'=>rand(100000,999999)];      //获取登陆密码支付密码
+//            $falg = ['password' => 123456, 'two_password' => 123456];      //获取登陆密码支付密码
             $userData['pid'] = $prentId;
             $userData['phone'] = $input['phone'];
             $userData['unique'] = md5($input['phone']);

@@ -75,7 +75,7 @@ class User extends Base{
                 $operate = [
                     '编辑' => url('user/userEdit', ['id' => $vo['id']]),
                     '充值用户余额' => "javascript:userEdit('".$vo['id']."','".$vo['balance']."')",
-                    '解冻直推金额' => "javascript:thawBouns('".$vo['id']."','".$vo['direct_frozen']."')",
+//                    '解冻直推金额' => "javascript:thawBouns('".$vo['id']."','".$vo['direct_frozen']."')",
                     '用户详情' => "javascript:user_detail('".$vo['id']."')",
                     '资金明细' => "javascript:user_account('".$vo['id']."')"
                 ];
@@ -149,6 +149,7 @@ class User extends Base{
                 if($money < 0){
                     $inc = 2;    //减少
                     $msg = '后台扣除';
+                    $money = -$money;        //转化为正数
                 }
                 $insert = AccountModel::getAccountData($id,$money,$msg,6,$inc,'');
                 db(self::ACCOUNT)->insert($insert);
@@ -218,7 +219,6 @@ class User extends Base{
         $id = input('id');
         $user = db('account')->where(['uid'=>$id])->order('id desc')->select();
         foreach($user as $k=>$v){
-            $user[$k]['create_at'] = date('Y-m-d H:i:s',$v['create_at']);
             $user[$k]['type'] = config('account_type')[$v['type']];
         }
         return json($user);
@@ -331,10 +331,6 @@ class User extends Base{
         $id = input('id');
         $data = db('apply')->where('id',$id)->find();
         $where = [];
-
-
-
-        $where = [];
         if ($data['level'] <= 5) {
             $where['province'] = $data['province'];
             $where['level'] = 5;
@@ -343,10 +339,10 @@ class User extends Base{
             $where['city'] = $data['city'];
             $where['level'] = 4;
         }
-        if ($data['level'] == 3) {
+ /*       if ($data['level'] == 3) {                  //县级可以有多个报单中心
             $where['area'] = $data['area'];
             $where['level'] = 3;
-        }
+        }*/
         $where['status'] =2;
         $count = db('apply')->where($where)->count();
         if($count >= 1){
