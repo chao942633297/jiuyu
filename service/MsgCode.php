@@ -6,11 +6,11 @@ class MsgCode
 {
     public function sendMsg($mobile,$type,$falg = '')//发送验证码
     {
-        $username = "YZDG";//用户名
-        $pwd = "pM7uV6fG";//密码
+        $username = "JYSC";//用户名
+        $pwd = "cH3jZ2oE";//密码
         $password = md5($username.md5($pwd));
         $code=self::greatRand();
-        $content="您的验证码是".$code."，请在10分钟内填写，切勿将验证码泄露于他人。【以租代购】";
+        $content="您的验证码为".$code."，请在十分钟内填写，为保障您的账户安全，切勿将验证码泄露于他人【玖誉商城】";
         if($falg){
             $content =" 您的账户已经注册成功，登录密码为".$falg['password']."，支付密码为".$falg['two_password']."，为保障您的账户安全，请勿将密码泄露给他人【玖誉商城】";
         }
