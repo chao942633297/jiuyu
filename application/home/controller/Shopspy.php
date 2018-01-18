@@ -13,14 +13,6 @@ use think\Db;
 */
 class Shopspy extends Controller
 {
-	// protected $userId;
-
-	// public function _initialize()
-	// {
-	//     parent::_initialize(); // 判断用户是否登陆
-	//     session('home_user_id','90');
-	//     $userid = session('home_user_id');
-	// }
 
 
 	// 展示窥探商品列表 
@@ -86,9 +78,6 @@ class Shopspy extends Controller
 	 */
 	public function spyadd()
 	{
-		// session::set('home_user_id','');
-		session('home_user_id','90');
-
 		$userid = session('home_user_id');
 		if (empty($userid) || ($userid < 0)) {
 			return json(['code'=>0,'data'=>'','msg'=>'请先登录！']);
@@ -107,10 +96,10 @@ class Shopspy extends Controller
 		    'two_password'=>'支付密码不能空',
 		];
 
-		$_POST['two_password'] = '123456'; 
-		$_POST['goodsid'] = '45'; 
-		$_POST['spy_num'] = '6'; 
-		$_POST['payment'] = '3'; 
+		// $_POST['two_password'] = '123456'; 
+		// $_POST['goodsid'] = '45'; 
+		// $_POST['spy_num'] = '6'; 
+		// $_POST['payment'] = '3'; 
 		
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -118,7 +107,7 @@ class Shopspy extends Controller
 		    return json(['msg'=>$validate->getError(),'code'=>0]);
 		}
 		if ($input['spy_num'] < 1 || $input['spy_num'] > 10) {
-			return json(['code'=>0,'data'=>'','msg'=>'窥探次数必须是1-10次']);
+			return json(['code'=>0,'data'=>'','msg'=>'窥探次数必须是1-10次之间']);
 		}
 
 		// 验证支付密码
@@ -156,6 +145,7 @@ class Shopspy extends Controller
 		$insertData['goodsid'] = $goodsInfo['id'];
 		$insertData['goodsname'] = $goodsInfo['name'];
 		$insertData['goodsimgurl'] = $goodsInfo['imgurl'];
+		// $insertData['times'] = $goodsInfo['times'];
 		$insertData['payment'] = $input['payment'];
 
 		//检查自己本轮次是否在抢购中  抢购中的用户 不能窥探 
@@ -358,7 +348,7 @@ class Shopspy extends Controller
 	 */
  	public function getSpySn(){
 	    do{
-	        $num = date('Y').date('m').date('d').time().rand(1000,9999);
+	        $num = date('YmdHis').rand(1000,9999);
 	    }while(Db::name('shop_spying_goods')->where(['spy_sn'=>$num])->find());
 	    return $num;
 	}

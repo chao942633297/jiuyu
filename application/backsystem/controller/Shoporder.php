@@ -60,7 +60,7 @@ class Shoporder extends Base
             $shopOrder = new ShopOrderModel();
             // $selectResult = $shopOrder->getsOrderByWhere($where, $offset, $limit,'is_under , sort desc ,id desc');
             $selectResult = $shopOrder->getShopOrderByWhere($where, $offset, $limit);
-            $status = ['用户取消','待付款','待发货','已发货','完成'];
+            $status = ['用户取消','待付款','待发货','已发货','完成',''];
 
             foreach($selectResult as $key=>$vo){
                 $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
@@ -116,13 +116,12 @@ class Shoporder extends Base
         $selectResult = $shopOrder->getShopOrder($where,$order='id desc','order_sn,buyer_name,buyer_phone,amount,money,province,city,area,status,payment,waybill_name,waybill_no,created_at,remark,admin_remark');
         $selectResult = objToArray($selectResult);
         
-        $status = ['用户取消','待付款','待发货','已发货','完成'];
-        $payment = ['','微信','支付宝','余额'];
+        $status = ['用户取消','待付款','待发货','已发货','完成',''];
+        $payment = ['1'=>'支付宝','2'=>'微信','3'=>'余额'];
 
         foreach($selectResult as $key=>$vo){
             $selectResult[$key]['status'] = $status[$vo['status']];
-            $selectResult[$key]['payment'] = $payment[$vo['status']];
-
+            $selectResult[$key]['payment'] = !empty($vo['payment']) && in_array($vo['payment'], [1,2,3])  ? $payment[$vo['payment']] : ''; 
             // $detail = db('shop_order_detail')->where('order_sn',$vo['order_sn'])->field('id,goodsid,goodsname,goodsnum,price,unit,imgurl')->select();
             $detail = db('shop_order_detail')->where('order_sn',$vo['order_sn'])->field('goodsname,goodsnum,price')->select();
             $detail = objToArray($detail);
@@ -136,14 +135,11 @@ class Shoporder extends Base
             $selectResult[$key]  = array_merge($selectResult[$key],$result);           
         }
 
-
-
-
         // 商品太多 会超出26列
         $excel = new Excel();
-        $first = ['A1'=>'订单号','B1'=>'收货人','C1'=>'手机号','D1'=>'总价','E1'=>'支付价格','F1'=>'省','G1'=>'市','H1'=>'街道','I1'=>'订单状态','J1'=>'支付方式','K1'=>'物流公司','L1'=>'运单号','M1'=>'下单时间','N1'=>'用户留言','O1'=>'管理员留言'];
-        $excel->toExcel('1',$selectResult,$first);
-        header('Location:/uploads/file.xlsx');
+        $first = ['订单号','收货人','手机号','总价','支付价格','省','市','街道','订单状态','支付方式','物流公司','运单号','下单时间','用户留言','管理员留言','商品名称','数量','购买时单价'];
+        array_unshift($selectResult,$first);
+        $excel->exportExcel('订单导出'.date("YmdHis"),$selectResult);
     }
 
 

@@ -14,6 +14,7 @@ namespace app\backsystem\controller;
 use app\backsystem\model\ShopSpyRecordModel;
 use app\backsystem\model\ShopSpySuccessModel;
 use app\backsystem\controller\Excel;
+use think\Db;
 
 class Shopspy extends Base
 {
@@ -52,8 +53,11 @@ class Shopspy extends Base
             foreach($selectResult as $key=>$vo){
                 //窥探窥探记录操作按钮
                 $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
-                $selectResult[$key]['goodsimgurl'] = "<img src=".$vo['goodsimgurl']." width='120' />";
-                $selectResult[$key]['is_spy'] = empty($vo['is_spy']) ? '抢购中奖' : '窥探中奖';
+                // $userData = Db::name('users')->field('phone')->find($vo['userid']);
+                // $selectResult[$key]['phone'] = $userData['phone'];
+
+                // $selectResult[$key]['goodsimgurl'] = "<img src=".$vo['goodsimgurl']." width='120' />";
+                // $selectResult[$key]['is_spy'] = empty($vo['is_spy']) ? '抢购中奖' : '窥探中奖';
 
             }
 
@@ -92,20 +96,19 @@ class Shopspy extends Base
         }
 
 
-        $selectResult = db('shop_spy_success')->where($where)->field('id,userid,username,goodsid,goodsname,last_amount,times,payment,remark,created_at')->select();
+        $selectResult = Db::name('shop_spy_success')->where($where)->field('username,goodsname,goodsprice,times,created_at')->select();
         $selectResult = objToArray($selectResult);
         
-        $payment = ['','微信','支付宝','余额'];
+        // $payment = ['1'=>'支付宝','2'=>'微信','3'=>'余额'];
 
-        foreach($selectResult as $key=>$vo){
-            $selectResult[$key]['payment'] = $payment[$vo['payment']];
-        }
+        // foreach($selectResult as $key=>$vo){
+        //     $selectResult[$key]['payment'] = $payment[$vo['payment']];
+        // }
 
-        // 导出类型错误，修改后缀名xlsx
         $excel = new Excel();
-        $first = ['A1'=>'订单号','B1'=>'收货人','C1'=>'手机号','D1'=>'总价','E1'=>'支付价格','F1'=>'省','G1'=>'市'];
-        $excel->toExcel('获奖名单',$selectResult,$first);
-        header('Location:/uploads/file.xlsx');
+        $first = ['用户名','商品','原价','中奖轮次','中奖时间'];
+        array_unshift($selectResult,$first);
+        $excel->exportExcel('获奖名单'.date('YmdHis'),$selectResult);
     }
 
 
@@ -118,21 +121,21 @@ class Shopspy extends Base
     public function spydetail()
     {
         $id = input('param.id');
-        $successdata = db('shop_spy_success')->find($id);
+        $successdata = Db::name('shop_spy_success')->find($id);
         if (request()->isPost()) {
             $remark = input('post.remark');
             if (empty(trim($remark))) {
                 return json(['code'=>0, 'data'=>'', 'msg'=>'请填写处理意见！']);
             }
-            $re = db('shop_spy_success')->where('id',$id)->setfield(['remark'=>$remark,'status'=>1]);
+            $re = Db::name('shop_spy_success')->where('id',$id)->setfield(['remark'=>$remark,'status'=>1]);
             if ($re || ($successdata['remark'] == $remark)) {
                 return json(['code'=>1, 'data'=>'', 'msg'=>'提交成功！']);
             }
             return json(['code'=>0, 'data'=>'', 'msg'=>'提交失败']);
         }
 
-        $recorddata = db('shop_spy_record')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
-        $spyingdata = db('shop_spying_goods')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
+        $recorddata = Db::name('shop_spy_record')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
+        $spyingdata = Db::name('shop_spying_goods')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
         
         $this->assign('successdata',$successdata);
         $this->assign('spyingdata',$spyingdata);
