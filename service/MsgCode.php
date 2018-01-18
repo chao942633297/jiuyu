@@ -12,7 +12,7 @@ class MsgCode
         $code=self::greatRand();
         $content="您的验证码是".$code."，请在10分钟内填写，切勿将验证码泄露于他人。【以租代购】";
         if($falg){
-            $content ="尊敬的用户，恭喜您注册成功，您的登录密码为：".$falg['password']."，支付密码为：".$falg['two_password']."，为了保证您的账户安全，请登录后自觉修改密码【以租代购】";
+            $content =" 您的账户已经注册成功，登录密码为".$falg['password']."，支付密码为".$falg['two_password']."，为保障您的账户安全，请勿将密码泄露给他人【玖誉商城】";
         }
         $url = "http://120.55.248.18/smsSend.do?";
         $data=array('username'=>$username,'password'=>$password,'mobile'=>$mobile,'content'=>urlencode($content));

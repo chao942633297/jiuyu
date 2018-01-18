@@ -38,7 +38,7 @@ class Wechatlogin extends Controller{
                 $user['openid'] = $result['openid'];
                 $res = Db::table('sql_users')->update($user);
                 if($res){
-                    return json(['msg'=>'绑定成功','code'=>200]);
+                    return "<script> alert('绑定成功!');window.href='http://www.jiuyushangmao.com' </script>";
                 }
                 return json(['msg'=>'绑定失败','code'=>1002]);
             }else{

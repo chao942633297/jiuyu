@@ -23,7 +23,7 @@ class Record extends Controller
             $offset = ($param['pageNumber'] - 1) * $limit;
 
             $where = $whereu = $uids = [];
-            $where['type'] = ['in',[7,8,10,11]];
+            $where['type'] = ['in',[7,8,10,12,13]];
             if (isset($param['truename']) && !empty($param['truename'])) {      //收货人查询
                 $whereu['nickname'] = ['like','%'.$param['truename'].'%'];
             }

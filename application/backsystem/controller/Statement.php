@@ -38,6 +38,17 @@ class Statement extends Base{
                 $uids = db('users')->where($whered)->column('id');
             }
 
+            if (isset($param['buyer_name']) && !empty($param['buyer_name'])) {      //收货人查询
+                $where['consignee'] = $param['buyer_name'];
+            }
+
+            if (isset($param['buyer_phone']) && !empty($param['buyer_phone'])) {      //收货人手机查询
+                $where['phone'] = $param['buyer_phone'];
+            }
+
+            if (isset($param['type']) && $param['type'] != '0') {      //套餐类型查询
+                $where['type'] = $param['type'];
+            }
             //下单时间段
             if (isset($param['end']) && !empty($param['end']) && isset($param['start']) && !empty($param['start'])) {
                 $time[1] = strtotime($param['end'].' 23:59:59');
@@ -62,9 +73,9 @@ class Statement extends Base{
                 if($param['excel'] != 'to_excel'){
                     $selectResult[$key]['id'] = $vo['id'];
                 }
-                $selectResult[$key]['user_name'] = $vo['user']['nickname'];
-                $selectResult[$key]['user_phone'] = $vo['user']['phone'];
-//                $selectResult[$key]['voucher'] = '<img onclick="toBig(\''.$vo['img'].'\')" src="'.$vo['img'].'" style="width:50px;height:50px" />';
+                $selectResult[$key]['user_detail'] = $vo['user']['nickname'] . '<br />' . $vo['user']['phone'];
+                $selectResult[$key]['buyer_detail'] =$vo['consignee']. '<br />' .$vo['phone'];
+                $selectResult[$key]['address_detail'] =$vo['province'].$vo['city'].$vo['area'].$vo['detail'];
                 $selectResult[$key]['voucher'] = '<div class="img'.$vo['id'].'" ><img layer-pid='.$vo['id'].' onclick="toBig('.$vo['id'].')" layer-src="'.$vo['img'].'" src="'.$vo['img'].'" style="height:100px;"  alt="'.$vo['user']['nickname'].'"></div>';
                 $selectResult[$key]['export'] = $vo['img'];
                 $selectResult[$key]['act_nickname'] = $vo['activation']['nickname'];
@@ -72,19 +83,22 @@ class Statement extends Base{
                 $selectResult[$key]['create_at'] = $vo['created_at'];
             }
             if(isset($param['excel']) && $param['excel'] == 'to_excel'){    //导出到excel
-                $content = json_decode(json_encode($selectResult),true);
-                foreach($content as $k=>$v){
-                    unset($content[$k]['uid']);
-                    unset($content[$k]['img']);
-                    unset($content[$k]['voucher']);
-                    unset($content[$k]['actid']);
-                    unset($content[$k]['user']);
-                    unset($content[$k]['activation']);
-                    unset($content[$k]['created_at']);
+                $content = [];
+                foreach($selectResult as $k=>$v){
+                    $content[$k]['uid'] = $v['uid'];
+                    $content[$k]['user_detail'] = $v['user_detail'];
+                    $content[$k]['buyer_detail'] = $v['buyer_detail'];
+                    $content[$k]['address_detail'] = $v['address_detail'];
+                    $content[$k]['package_name'] = $v['package_name'];
+                    $content[$k]['package_price'] = $v['package_price'];
+                    $content[$k]['voucher'] = $v['voucher'];
+                    $content[$k]['act_nickname'] = $v['act_nickname'];
+                    $content[$k]['act_phone'] = $v['act_phone'];
+                    $content[$k]['created_at'] = $v['created_at'];
                 }
 //                dump($content);exit;
                 $excel = new Excel();
-                $first = ['A1'=>'编号ID','B1'=>'用户名','C1'=>'手机号','D1'=>'支付凭证','E1'=>'激活人昵称','F1'=>'激活人手机号','G1'=>'下单时间'];
+                $first = ['A1'=>'编号ID','B1'=>'用户昵称/用户手机号','C1'=>'收货人/收货人手机号','D1'=>'收货地址','E1'=>'购买套餐','F1'=>'套餐价格','G1'=>'支付凭证','H1'=>'激活人昵称','I1'=>'激活人手机号','J1'=>'下单时间'];
                 $excel->toExcel('订单列表',$content,$first);
                 return json(['code'=>1]);
             }

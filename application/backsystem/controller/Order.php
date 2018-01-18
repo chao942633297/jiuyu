@@ -66,8 +66,8 @@ class Order extends Base{
                 if($param['excel'] != 'to_excel'){
                     $selectResult[$key]['order_sn'] = '<a href="javascript:getOrder('.$vo['id'].')">'.$vo['order_sn'].'</a>';
                 }
-                $selectResult[$key]['user_name'] = $vo['buyer_name'].'/'.$vo['user']['nickname'];
-                $selectResult[$key]['user_phone'] = $vo['buyer_phone'].'/'.$vo['user']['phone'];
+                $selectResult[$key]['user_name'] = $vo['user']['nickname'].'/'.$vo['user']['phone'];
+                $selectResult[$key]['user_phone'] = $vo['buyer_name'].'/'.$vo['buyer_phone'];
                 $selectResult[$key]['user_address'] = $vo['user']['address']['province'].$vo['user']['address']['city'].$vo['user']['address']['area'];
                 if($vo['payment']){
                     $selectResult[$key]['payment'] = $payment[$vo['payment']];

@@ -79,7 +79,7 @@
                         <th data-field="created_at">用户注册时间</th>
                         <th data-field="balance">用户余额</th>
                         <th data-field="frozen_price">冻结金额</th>
-                        <th data-field="direct_frozen">直推冻结金额</th>
+                        <!--<th data-field="direct_frozen">直推冻结金额</th>-->
                         <th data-field="total_price">总收益</th>
                         <th data-field="user_class">用户等级</th>
                         <th data-field="p_phone">推荐人昵称(手机号)</th>
@@ -192,7 +192,7 @@
     <thead>
     <th>id</th>
     <th>余额变化</th>
-    <th>消费基金变化</th>
+    <th>消费类型</th>
     <th>原因</th>
     <th>时间</th>
     </thead>
@@ -365,8 +365,8 @@
                 content += '<tr>';
                 content += '<td>'+res[i].id+'</td>';
                 content += '<td>'+res[i].balance+'</td>';
-                content += '<td>'+res[i].score+'</td>';
                 content += '<td>'+res[i].type+'</td>';
+                content += '<td>'+res[i].remark+'</td>';
                 content += '<td>'+res[i].create_at+'</td>';
                 content += '</tr>';
                 account_content.append(content);

@@ -35,6 +35,23 @@
                     </div>
 
                     <div class="form-group">
+                        <label>收货人：</label>
+                        <input type="text" class="form-control" id="buyer_name" name="buyer_name">
+                    </div>
+                    <div class="form-group">
+                        <label>收货人手机号：</label>
+                        <input type="text" class="form-control" id="buyer_phone" name="buyer_phone">
+                    </div>
+                    <div class="form-group">
+                        <label>套餐类型：</label>
+                        <select name="type" id="type" class="form-control">
+                            <option value="0">全部</option>
+                            <option value="A">A套餐</option>
+                            <option value="B">B套餐</option>
+                            <option value="C">C套餐</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label class="font-noraml">下单时间段</label>
                         <div class="input-daterange input-group">
                             <input type="date" class="form-control" id="start">
@@ -64,8 +81,11 @@
                     <table id="cusTable" data-height="700">
                         <thead>
                         <th data-field="id">编号ID</th>
-                        <th data-field="user_name">用户名</th>
-                        <th data-field="user_phone">手机号</th>
+                        <th data-field="user_detail">用户昵称/用户手机号</th>
+                        <th data-field="buyer_detail">收货人/收货手机号</th>
+                        <th data-field="address_detail">收货地址</th>
+                        <th data-field="package_name">购买套餐</th>
+                        <th data-field="package_price">套餐价格</th>
                         <th data-field="voucher">支付凭证</th>
                         <th data-field="act_nickname">激活人昵称</th>
                         <th data-field="act_phone">激活人手机号</th>
@@ -114,6 +134,9 @@
                     pageSize: params.pageSize,
                     name:$('#name').val(),
                     phone:$('#phone').val(),
+                    buyer_name:$('#buyer_name').val(),
+                    buyer_phone:$('#buyer_phone').val(),
+                    type:$('#type').val(),
                     start:$('#start').val(),
                     end:$('#end').val(),
                     excel:$('#excel').val(),
