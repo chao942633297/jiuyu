@@ -42,7 +42,7 @@ class Wechatlogin extends Controller{
                 }
                 return json(['msg'=>'绑定失败','code'=>1002]);
             }else{
-                return json(['msg'=>'用户已绑定微信','code'=>2001]);
+                return "<script> alert('用户已绑定微信!');window.href='http://www.jiuyushangmao.com' </script>";
             }
         }else{                                      //扫码注册绑定上下级
             if (is_weixin()) {
