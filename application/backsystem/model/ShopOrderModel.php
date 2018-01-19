@@ -83,7 +83,7 @@ class ShopOrderModel extends Model
         Db::startTrans();
         try{
             $goodsinfo = $param['goodsinfo'];
-            $cartid = $param['cartid'];
+            $cartid = !empty($param['cartid']) ? $param['cartid'] : '';
             unset($param['cartid']);
             unset($param['goodsinfo']);
             $param['created_at'] = date('Y-m-d H:i:s',time());

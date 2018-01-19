@@ -102,6 +102,8 @@ class ShopSpyRecordModel extends Model
                     $successData['once_price'] = $re['once_price'];
                     $successData['userid'] = $param['userid'];
                     $successData['username'] = $param['username'];
+                    $user = UserModel::get($param['userid']);
+                    $successData['usermobile'] = $user->phone;
                     $successData['payment'] = $param['payment'];
                     $successData['created_at'] = $param['created_at'];
                     Db::name('shop_spy_success')->insert($successData);
@@ -116,8 +118,8 @@ class ShopSpyRecordModel extends Model
 
 
                     // 将状态为抢购中的订单 status 变为2 抢购失败， 1（默认）：抢购中  2：抢购失败  3：抢购成功
-                    if (Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->count()) {
-                        Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1'])->setField('status','2');
+                    if (Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1','times'=>$re['times']])->count()) {
+                        Db::name('shop_spying_goods')->where(['goodsid'=>$param['goodsid'],'status'=>'1','times'=>$re['times']])->setField('status','2');
                     }
 
 
