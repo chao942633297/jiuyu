@@ -86,8 +86,8 @@ class Shoporder extends Base
 				$orderData[$key]['order_sn'] = $value['spy_sn'];
 				$orderData[$key]['amount'] = $value['sur_price'];
 				$orderData[$key]['status'] = '0';
-				// $orderData[$key]['countdown'] = $goodsInfo['countdown'];   //单位 小时
-				// $orderData[$key]['created_at'] = $value['created_at'];
+				$orderData[$key]['lefttime'] = '1';  //前端参数  
+				$orderData[$key]['timeout'] = '1'; //前端参数
 				$orderData[$key]['endtime'] = date("Y-m-d H:i:s",strtotime($value['created_at'])+(3600*$goodsInfo['countdown'])); //结束时间
 				$orderData[$key]['goodsInfo'][0]['goodsnum'] = '1';
 				$orderData[$key]['goodsInfo'][0]['price'] = $value['sur_price'];
@@ -111,11 +111,11 @@ class Shoporder extends Base
 	 */
 	public function orderDetail()
 	{
-		if (!input('?post.orderid') && !input('?post.order_sn')) {
+		if (!input('?param.orderid') && !input('?param.order_sn')) {
 			return json(['code'=>0,'data'=>'','msg'=>'参数异常']);
 		}
-		$orderid = input('post.orderid'); 
-		$order_sn = input('post.order_sn'); 
+		$orderid = input('param.orderid'); 
+		$order_sn = input('param.order_sn'); 
 		$orderInfo = [];
 		if (!empty($orderid)) {
 			$orderInfo = Db::name('shop_order')->where(['id'=>$orderid])->field('id,order_sn,buyer_name,buyer_phone,amount,province,city,area,detail,status,payment,waybill_no,created_at,remark')->find(); 
@@ -124,22 +124,56 @@ class Shoporder extends Base
 		}
 		$orderDetail = [];
 
-		//待付款 和取消的 订单详情 里面 商品价格需要重新获取
-		if ($orderInfo['status'] <= 1 ) {
-			$ShopOrder = new ShopOrderModel();
-			$orderDetailList = Db::name('shop_order_detail')->where('order_sn',$orderInfo['order_sn'])->select();
-			foreach ($orderDetailList as $key => $value) {
-				$orderDetail[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field("name as goodsname,price,imgurl")->find();
-				$orderDetail[$key]['goodsnum'] = $value['goodsnum'];
+		//一般订单
+		if (!empty($orderInfo)) {
+			//待付款 和取消的 订单详情 里面 商品价格需要重新获取
+			if ($orderInfo['status'] <= 1 ) {
+				$ShopOrder = new ShopOrderModel();
+				$orderDetailList = Db::name('shop_order_detail')->where('order_sn',$orderInfo['order_sn'])->select();
+				foreach ($orderDetailList as $key => $value) {
+					$orderDetail[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field("name as goodsname,price,imgurl")->find();
+					$orderDetail[$key]['goodsnum'] = $value['goodsnum'];
+				}
+				//重新计算订单价格
+				$orderInfo['amount'] = $ShopOrder->sumGoodsByordersn($orderInfo['order_sn']);
+			}else{
+				//已经付过款的商品信息 从order_detail中获取 防止商品下架或者删除获取不到
+				$orderDetail = Db::name('shop_order_detail')->where('order_sn',$orderInfo['order_sn'])->field('goodsname,imgurl,price,goodsnum')->select();
 			}
-			//重新计算订单价格
-			$orderInfo['amount'] = $ShopOrder->sumGoodsByordersn($orderInfo['order_sn']);
+			$orderInfo['lefttime'] = '';  // 前端参数
+			$orderInfo['timeout'] = ''; // 前端参数
+			$orderInfo['goodsinfo'] =$orderDetail;
 		}else{
-			//已经付过款的商品信息 从order_detail中获取 防止商品下架或者删除获取不到
-			$orderDetail = Db::name('shop_order_detail')->where('order_sn',$orderInfo['order_sn'])->field('goodsname,imgurl,price,goodsnum')->select();
+			// 抢购订单
+			$spyOrderInfo = Db::name('shop_spying_goods')->where(['spy_sn'=>$order_sn])->field('*')->find();
+			$goodsInfo = Db::name('shop_goods')->where(['id'=>$spyOrderInfo['goodsid']])->field('countdown')->find();
+			if (!empty($spyOrderInfo)) {
+				$orderInfo['id'] = $spyOrderInfo['id'];
+				$orderInfo['order_sn'] = $spyOrderInfo['spy_sn'];
+				$orderInfo['buyer_name'] = $spyOrderInfo['buyer_name'];
+				$orderInfo['buyer_phone'] = $spyOrderInfo['buyer_phone'];
+				$orderInfo['amount'] = $spyOrderInfo['sur_price'];
+				$orderInfo['province'] = $spyOrderInfo['province'];
+				$orderInfo['city'] = $spyOrderInfo['city'];
+				$orderInfo['area'] = $spyOrderInfo['area'];
+				$orderInfo['detail'] = $spyOrderInfo['detail'];
+				$orderInfo['status'] = '0'; //抢购中 前端传参
+				$orderInfo['payment'] = $spyOrderInfo['payment'];
+				$orderInfo['waybill_no'] = '';
+				$orderInfo['created_at'] = $spyOrderInfo['created_at'];
+				$orderInfo['remark'] = '';
+				$orderInfo['lefttime'] = '';  // 前端参数
+				$orderInfo['timeout'] = ''; // 前端参数
+				$orderInfo['endtime'] = date("Y-m-d H:i:s",strtotime($spyOrderInfo['created_at'])+3600*$goodsInfo['countdown']);
+				$orderInfo['goodsinfo'][0]['goodsname'] = $spyOrderInfo['goodsname'];
+				$orderInfo['goodsinfo'][0]['imgurl'] = $spyOrderInfo['goodsimgurl'];
+				$orderInfo['goodsinfo'][0]['price'] = $spyOrderInfo['sur_price'];
+				$orderInfo['goodsinfo'][0]['goodsnum'] = '1';
+			}else{
+				return json(['code'=>1,'data'=>'','msg'=>'未查到相关订单']);			
+			}
 		}
 		
-		$orderInfo['goodsinfo'] =$orderDetail;
 		return json(['code'=>1,'data'=>$orderInfo,'msg'=>'success']);	
 	}
 
@@ -190,7 +224,7 @@ class Shoporder extends Base
 		// $status = ['0','1','2','3','4','5'];   // 0:用户取消  1：待付款 2：待发货 3：已发货 4：完成 5：抢购中
 		$where['status'] = '5';
 		$this->checkSpySuccess();  //获取抢购订单前先检测更新一下抢购表
-		$data[0] = Db::name('shop_order')->where(['userid'=>$this->userId,'status'=>'1'])->count();   //  抢购中的订单
+		$data[0] = Db::name('shop_spying_goods')->where(['userid'=>$this->userId,'status'=>'1'])->count();   //  抢购中的订单
 		$where['status'] = '1';
 		$data[1] = Db::name('shop_order')->where($where)->count();  //待付款
 		$where['status'] = '2';
@@ -411,7 +445,10 @@ class Shoporder extends Base
 	 */
 	public function orderCancel()
 	{
-		$order_sn = input('post.order_sn');
+		$order_sn = input('param.order_sn');
+		if (empty($order_sn)) {
+			return json(['code'=>0,'data'=>'','msg'=>'参数异常']);
+		}
 
 		$re = Db::name('shop_order')->where('order_sn',$order_sn)->update(['status'=>'0']);
 		if ($re > 0) {
