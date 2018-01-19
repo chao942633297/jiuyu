@@ -461,6 +461,20 @@ class Users extends Base
             return json(['data'=>$return,'msg'=>'生成成功','code'=>200]);
         }*/
 
+    /**
+     * @return \think\response\Json
+     * 判断是否设置支付密码
+     */
+    public function puckPayPassword(){
+        $user = UserModel::get($this->userId);
+        if($user && !empty($user['two_password'])){
+            return json(['data'=>1,'msg'=>'已设置','code'=>200]);
+        }
+        return json(['data'=>0,'msg'=>'未设置','code'=>201]);
+    }
+
+
+
 
     /**
      * 退出
