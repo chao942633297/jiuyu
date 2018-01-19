@@ -56,9 +56,12 @@ class Test extends Validate{
 
 
     public function test(){
-        $data = 'bind_56fef2e82981a3d85a48de729850215d';
+        $usr = new UserModel();
+       $data = $usr->select();
+        foreach ($data as $key=>$item) {
+            $data[$key]['user'] = 1;
+        }
         dump($data);
-        dump(strpos($data,'123456'));
     }
 
 

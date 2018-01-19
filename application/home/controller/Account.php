@@ -118,7 +118,7 @@ class Account extends Base{
         try{
             //减少用户余额
             $user['balance'] -= $money;
-            Db::table('sql_users')->update($user);
+            $user->save();
             //增加提现记录
             $data['uid'] = $this->userId;
             $data['money'] = $money;
@@ -154,7 +154,7 @@ class Account extends Base{
 
     //提现记录
     public function withdrawRecord(){
-        $page = input('page')?:1;
+        $page = input('page',1);
         $list = 10;
         $limit = ($page - 1) * $list;
         $withdrawData = Db::table('sql_withdraw')
@@ -163,7 +163,7 @@ class Account extends Base{
             ->limit($limit,$list)
             ->order('id','desc')->select();
         foreach($withdrawData as $key=>$val){
-            $withdrawData[$key]->status = config('Withdraw_status')[$val['status']];
+            $withdrawData[$key]['status'] = config('Withdraw_status')[$val['status']];
         }
         return json(['data'=>$withdrawData,'msg'=>'查询成功','code'=>200]);
     }
@@ -196,9 +196,10 @@ class Account extends Base{
         try{
             /*=====================用户余额互转=====================*/
             //扣除用户余额
+            $user['balance'] -= $money;
             $userlist[0] = [
                 'id' => $user['id'],
-                'balance' =>['exp','balance -'. $money]
+                'balance' => $user['balance']
             ];
             //增加用户转账记录
             $data[0] = AccountModel::getAccountData($this->userId, $money, '好友转账', 4, 2,'', $friendData['id']);
@@ -225,7 +226,7 @@ class Account extends Base{
             }
         }catch(Exception $e){
             Db::rollback();
-            return json(['msg'=>'转账失败'.$e->getMessage(),'code'=>1004]);
+            return json(['msg'=>'转账失败','code'=>1004]);
         }
     }
 
@@ -235,7 +236,7 @@ class Account extends Base{
         $page = $request->param('page',1);
         $list = 10;
         $limit = ($page - 1) * $list;
-        $inc = $request->param('inc');          //1收入 2 支出
+        $inc = $request->param('inc',1);          //1收入 2 支出
         if(!in_array($inc,[1,2])){
             return json(['msg'=>'参数错误','code'=>1001]);
         }
@@ -248,11 +249,13 @@ class Account extends Base{
         });
         $return = [];
         foreach($transferData as $key=>$val){
-            $return[$key]['from_name'] = $val['from']['nickname'];
-            $return[$key]['from_headimgurl'] = $val['from']['headimgurl'];
             $return[$key]['balance'] = $val['balance'];
             $return[$key]['create_at'] = $val['create_at'];
-            $return[$key]['inc'] = $val['inc'];
+            if($inc == 1){
+                $return[$key]['from_user'] = $val['from']['phone'] . '-转入';
+            }else{
+                $return[$key]['from_user'] = '转出-'.$val['from']['phone'];
+            }
         }
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
     }
