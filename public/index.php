@@ -8,7 +8,7 @@ exit;*/
 //}
 
 $allow_origin = array(
-    'http://jiuyu.app',
+    'http://web.jiuyushangmao.com',
     'http://admin.jiuyushangmao.com',
     'http://localhost:8080'
 );

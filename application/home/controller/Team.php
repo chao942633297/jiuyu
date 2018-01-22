@@ -33,7 +33,6 @@ class Team extends Base{
             $query->limit($page,$list);
             $query->order('id','desc');
         });
-
         $return = [];
         $key = 0;
         foreach($allUser as $key=>$val){

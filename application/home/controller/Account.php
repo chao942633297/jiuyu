@@ -41,14 +41,14 @@ class Account extends Base{
 
     //收支详情
     public function fundDetail(){           //收入记录传入inc=1 支出记录传入inc=2
-        $inc = input('inc');
+        $inc = input('inc',1);
         $list = 10;
-        $page = input('page')?:1;
+        $page = input('page',1);
         $page = ($page - 1) * $list;
         $fundData = AccountModel::all(function($query)use($inc,$page,$list){
             $query->order('id','desc');
             $query->limit($page,$list);
-            $query->field('balance,remark,package_type,type,withdraw_id,status,create_at,from_uid');
+            $query->field('balance,package_type,status,type,withdraw_id,create_at,from_uid');
             $query->where(['inc'=>$inc,'uid'=>$this->userId]);
         });
         $return = [];
@@ -56,12 +56,32 @@ class Account extends Base{
             $return[$key]['balance'] = $val['balance'];
             $return[$key]['create_at'] = $val['create_at'];
             $return[$key]['type'] = $val['type'];
-            if($val['type'] == 4){
-                $return[$key]['headimgurl'] = $val['from']['headimgurl'];
-                $return[$key]['nickname'] = $val['from']['nickname'];
-            }
-            if($val['withdraw_id']){
-                $return[$key]['status'] = config('Withdraw_status')[$val['withdraw']['status']];
+            if($val['type'] == 1){
+                $return[$key]['message'] = '直推奖';
+            }else if($val['type'] == 2){
+                $return[$key]['message'] = '感恩奖';
+            }else if($val['type'] == 4){
+                $return[$key]['message'] = hideStar($val['from']['phone']) . '-转入';
+                if($inc == 2){
+                    $return[$key]['message'] = '转出-' . hideStar($val['from']['phone']);
+                }
+            }else if($val['type'] == 5){
+                $return[$key]['withdraw_status'] = $val['withdraw']['status'];
+                $return[$key]['message'] = '提现';
+            }else if($val['type'] == 6){
+                $return[$key]['message'] = '后台充值';
+            }else if($val['type'] == 7){
+                $return[$key]['message'] = '购买车辆';
+            }else if($val['type'] == 8){
+                $return[$key]['message'] = '激活合伙人';
+            }else if($val['type'] == 9){
+                $return[$key]['message'] = '业绩分红';
+            }else if($val['type'] == 10){
+                $return[$key]['message'] = '冻结金额转化';
+            }else if($val['type'] == 12){
+                $return[$key]['message'] = '商城消费';
+            }else if($val['type'] == 13){
+                $return[$key]['message'] = '窥探消费';
             }
         }
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
@@ -163,7 +183,7 @@ class Account extends Base{
             ->limit($limit,$list)
             ->order('id','desc')->select();
         foreach($withdrawData as $key=>$val){
-            $withdrawData[$key]['status'] = config('Withdraw_status')[$val['status']];
+            $withdrawData[$key]['status_name'] = config('Withdraw_status')[$val['status']];
         }
         return json(['data'=>$withdrawData,'msg'=>'查询成功','code'=>200]);
     }
@@ -243,7 +263,7 @@ class Account extends Base{
         $transferData = AccountModel::all(function($query)use($limit,$list,$inc){
             $query->order('id','desc');
             $query->limit($limit,$list);
-            $query->field('uid,balance,create_at,inc,from_uid');
+            $query->field('uid,balance,status,create_at,inc,from_uid');
             $query->where('type',4);
             $query->where(['uid'=>$this->userId,'inc'=>$inc]);
         });
@@ -264,7 +284,7 @@ class Account extends Base{
 
     //直推奖/感恩奖/激活奖
     public function accountBonus(){           //直推奖传入type = 1 感恩奖传入type = 2 激活奖传入 type= 8
-        $type = input('type');
+        $type = input('type',1);
         $page = input('page')?:1;
         $list = 10;
         $limit = ($page - 1) * $list;
@@ -312,7 +332,9 @@ class Account extends Base{
         $totalPrice = 0;
         foreach($accountData as $key=>$val){
             $return[$key]['monthMoney'] = $val['monthMoney'];
-            $return[$key]['create_at'] = substr($val['create_at'],0,7);
+            $return[$key]['create_at'] = date('n',strtotime($val['create_at']));
+//            $return[$key]['detail_date'] = date('Y-m-t 00:00:00',strtotime($val['create_at']));
+            $return[$key]['detail_date'] = $val['create_at'];
             $totalPrice += $val['monthMoney'];
         }
         return json(['data'=>['return'=>$return,'totalPrice'=>$totalPrice],'msg'=>'查询成功','code'=>200]);
