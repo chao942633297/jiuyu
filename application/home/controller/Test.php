@@ -56,14 +56,17 @@ class Test extends Validate{
 
 
     public function test(){
-        $usr = new UserModel();
-       $data = $usr->select();
-        foreach ($data as $key=>$item) {
-            $data[$key]['user'] = 1;
-        }
-        dump($data);
+      $a = 0;
+        dump($this->z($a));
     }
 
+    public function z($a){
+        $a ++;
+        if($a < 5){
+            $this->z($a);
+        }
+        return $a;
+    }
 
 
 

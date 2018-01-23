@@ -12,7 +12,7 @@ class UserRelationModel extends Model{
 
 
     public function user(){
-        $this->belongsTo(UserModel::class,'user_id');
+      return  $this->belongsTo(UserModel::class,'user_id');
     }
 
 

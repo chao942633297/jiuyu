@@ -43,6 +43,7 @@ class Partner extends Controller
             $return[$key]['user_name'] = $val['user']['nickname'];
             $return[$key]['user_phone'] = $val['user']['phone'];
             $return[$key]['user_headimgurl'] = $val['user']['headimgurl'];
+            $return[$key]['created_at'] = $val['created_at'];
         }
         $totalNum = $key + 1;
         return json(['data'=>$return,'totalNum'=>$totalNum,'msg'=>'查询成功','code'=>200]);
@@ -89,9 +90,9 @@ class Partner extends Controller
             return json(['msg'=>'余额不足,暂不能激活','code'=>1002]);
         }
 
-//        if(!isset($input['password']) || md5($input['password']) !== $voucherData['activation']['two_password']){
-//            return json(['msg'=>'支付密码不正确','code'=>1002]);
-//        }
+       if(!isset($input['password']) || md5($input['password']) !== $voucherData['activation']['two_password']){
+            return json(['msg'=>'支付密码不正确','code'=>1002]);
+        }
         Db::startTrans();
         try{
             //扣除自己余额
@@ -207,7 +208,7 @@ class Partner extends Controller
         $package = Db::table('sql_goods')
             ->field('id,price')
             ->whereIn('id',$packageId)->select();
-        return json(['data'=>['package'=>$package,'balance'=>$balance],'msg'=>'查询成功','cpde'=>200]);
+        return json(['data'=>['package'=>$package,'balance'=>$balance],'msg'=>'查询成功','code'=>200]);
     }
 
     /**

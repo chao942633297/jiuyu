@@ -53,6 +53,23 @@ class Index extends Controller
 
     /**
      * @return \think\response\Json
+     * 车系.车辆
+     */
+    public function webCarlist(){
+        $class = Db::table('sql_class')
+            ->field('id,class,remark')
+            ->order('sort','asc')->limit(10)->select();
+        $goods = Db::table('sql_goods')
+            ->field('id,name,price,img')
+            ->where('id','gt',3)
+            ->limit(3)->select();
+        return json(['data'=>['class'=>$class,'goods'=>$goods],'msg'=>'查询成功','code'=>200]);
+    }
+
+
+
+    /**
+     * @return \think\response\Json
      * 搜索页--推荐发现
      */
     public function recommend(){
@@ -112,8 +129,13 @@ class Index extends Controller
              $Carinfo[$key]['price'] = $value['price']; 
              $Carinfo[$key]['id'] = $value['id']; 
          }
+
          return json(['code'=>200,'info'=>$Carinfo,'msg'=>'success']);
     }
+
+
+
+
 
 
     /**
@@ -121,7 +143,7 @@ class Index extends Controller
      */
     public function  carType()
     {
-        $class = '';
+        $class = [];
         if (input('type') == 1) {
             $class = db('class')->select();
             #按字母分组
@@ -142,8 +164,11 @@ class Index extends Controller
                     ->whereIn('id',$value['groups'])->field('id,name')->select()) ;
             }
         }
-        return json(['code'=>200,'info'=>$class,'msg'=>'success']);
-
+        $selfClass = Db::table('sql_class')
+            ->field('id,class,remark')
+            ->where('id',input('class_id'))
+            ->find();
+        return json(['code'=>200,'info'=>$class,'selfClass'=>$selfClass,'msg'=>'success']);
     }
 
     /**
