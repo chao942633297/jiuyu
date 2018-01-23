@@ -18,8 +18,7 @@ vendor('AliPay.AlipayTradeWapPayContentBuilder');
 vendor('AliPay.AlipayFundTransToaccountTransferRequest');
 class Alipay extends Controller{
 
-    public function webPay(Request $request){             //支付宝支付
-        $orderId = $request->param('orderId');
+    public function webPay($orderId){             //支付宝支付
         if(empty($orderId)){
             return json(['msg'=>'参数错误','code'=>'1001']);
         }
