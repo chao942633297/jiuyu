@@ -14,11 +14,41 @@ vendor('wechatH5.WxPayConf_pub');
 class Wechatlogin extends Controller{
 
     protected $userId;
-
+    protected $jump_url;
     public function _initialize()
     {
         $this->userId = session('home_user_id');
+        $this->jump_url = config('back_domain') . '/home/Wechatlogin/userGrant';
     }
+
+
+    public function userGrant(){
+            $jsApi = new JsApi_pub();
+//            触发微信返回code码
+            if(empty($_GET['code'])){
+                $url = $jsApi->createOauthUrlForCode($this->jump_url);
+                Header("Location: $url");exit;
+            }else{
+                $code = $_GET['code'];
+                $jsApi->setCode($code);
+//            获取code码，以获取openid
+                $openid = $jsApi->getOpenId();
+            }
+            $user = Db::table('sql_users')
+                ->where('openid', $openid)->find();
+            if (!empty($user['phone'])) {
+                session('home_user_id', $user['id']);
+                $_SESSION['home_user_id'] = $user['id'];
+            }else{
+                session('replay_openid',$openid);
+                $url = config('front_domain') . '/login';
+                header('Location:' .$url);die;
+            }
+        $selfurl = config('front_domain') . '/index';
+        header('Location:'.$selfurl);die;
+    }
+
+
 
 
     /**

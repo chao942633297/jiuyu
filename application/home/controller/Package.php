@@ -31,7 +31,7 @@ class Package extends Controller
 		if(empty($packageId)){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
-		$packageDetail = Db::table('sql_goods')->field('name,price,img,description')
+		$packageDetail = Db::table('sql_goods')->field('id,name,price,img,description')
 			->where('id',$packageId)->find();
 		return json(['data'=>$packageDetail,'msg'=>'查询成功','code'=>200]);
 	}

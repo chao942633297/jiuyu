@@ -3,7 +3,7 @@
 return [
 
     //前端域名
-    'front_domain'=>'http://cciev.cn/',
+    'front_domain'=>'http://web.jiuyushangmao.com',
     'back_domain'=>'http://admin.jiuyushangmao.com',
 
 
