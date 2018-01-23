@@ -129,7 +129,7 @@ class ShopSpyRecordModel extends Model
                 }
                 
                 if (($re['spy_price'])/($re['price']) > 0.6) {
-                    $re['sur_price'] = " 价格低于30%不予显示";
+                    $re['sur_price'] = "价格低于30%不予显示";
                 }
 
                 // if (($re['sur_price'])/($re['price']) < 0.3) {

@@ -14,7 +14,6 @@ class Shopcart extends Base
 	{
 	    parent::_initialize(); // 判断用户是否登陆
 	    $this->userId = session('home_user_id');
-	    // $this->userId = input('param.userId');
 	    if ($this->userId < 0 || empty($this->userId)) {
 	    	return json(['code'=>0,'data'=>'','msg'=>'获取用户信息失败']);
 	    }
@@ -36,19 +35,19 @@ class Shopcart extends Base
 		$limit = !empty(input('param.limit')) && input('param.limit') > 0 ? input('param.limit') : '10' ;
 
 		//过滤商品已经被后台下架或者被删除的商品数据
-		$cartData = db('shop_cart')->where('userid',$this->userId)->select();
+		$cartData = Db::name('shop_cart')->where('userid',$this->userId)->select();
 		$gids = array();
 		foreach ($cartData as $key => $value) {
-			$goodsinfo = db('shop_goods')->where('id',$value['goodsid'])->field('is_under')->find();
+			$goodsinfo = Db::name('shop_goods')->where('id',$value['goodsid'])->field('is_under')->find();
 			if (!empty($goodsinfo) && $goodsinfo['is_under'] == '0') {
 				$gids[] = $value['goodsid'];
 			}else if (empty($goodsinfo) || $goodsinfo['is_under'] == '1') {
 				//删除购物车中添加过之后被下架或者删除的商品记录 以防垃圾数据
-				db('shop_cart')->where(['userid'=>$this->userId,'goodsid'=>$value['goodsid']])->delete();
+				Db::name('shop_cart')->where(['userid'=>$this->userId,'goodsid'=>$value['goodsid']])->delete();
 			}
 		}
 
-		$cartList = db('shop_goods')->alias('g')->join('shop_cart c','c.goodsid = g.id','LEFT')->where('c.userid',$this->userId)->where('c.goodsid','in',$gids)->page($page,$limit)->field('*')->select();
+		$cartList = Db::name('shop_goods')->alias('g')->join('shop_cart c','c.goodsid = g.id','LEFT')->where('c.userid',$this->userId)->where('c.goodsid','in',$gids)->page($page,$limit)->field('*')->select();
 
 		return json(['code'=>1,'data'=>$cartList,'msg'=>'success']);
 	}
@@ -84,7 +83,7 @@ class Shopcart extends Base
 		$insertData['userid'] = $this->userId;
 
 		//查询商品库存 和是否下架
-		$goodsInfo = db('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under,cid')->find();
+		$goodsInfo = Db::name('shop_goods')->where('id',$insertData['goodsid'])->field('num,is_under,cid')->find();
 		if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
 			return json(['code'=>0,'data'=>'','msg'=>'商品已经下架']);
 		}
@@ -96,11 +95,11 @@ class Shopcart extends Base
 		// }
 	
 		// 首先判断购物车中是否已经存在相同规格的商品
-		$num = db('shop_cart')->where($insertData)->count();
+		$num = Db::name('shop_cart')->where($insertData)->count();
 		if ($num > 0) {
 			$goodsnum = input('post.goodsnum');	
 			//修改购物车中对应商品的数量
-			$r = db('shop_cart')->where($insertData)->setInc('goodsnum', $goodsnum);
+			$r = Db::name('shop_cart')->where($insertData)->setInc('goodsnum', $goodsnum);
 			if ($r) {
 				return json(['code'=>1,'data'=>'','msg'=>'添加购物车成功！']);
 			}else{
@@ -110,7 +109,7 @@ class Shopcart extends Base
 			$insertData['goodsnum'] = input('post.goodsnum');
 			$insertData['created_at'] = date("Y-m-d H:i:s");
 
-			$re = db('shop_cart')->insertGetid($insertData);
+			$re = Db::name('shop_cart')->insertGetid($insertData);
 			if ($re) {
 				return json(['code'=>1,'data'=>'','msg'=>'添加购物车成功！']);
 			}
@@ -136,7 +135,7 @@ class Shopcart extends Base
 			// 查询商品是否已经下架 和库存
 			$where = array();
 			$where['goodsid'] = $value['goodsid'];
-			$kucun = db('shop_goods')->where($where)->field('num,is_under')->find();
+			$kucun = Db::name('shop_goods')->where($where)->field('num,is_under')->find();
 			if ($kucun['is_under'] == '1' || empty($kucun)) {
 				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架,请重新选择']);
 			}
@@ -149,7 +148,7 @@ class Shopcart extends Base
 			
 		}
 
-		$re = db('shop_cart')->saveAll($updateData);
+		$re = Db::name('shop_cart')->saveAll($updateData);
 		if ($re > 0) {
 			return json(['code'=>1,'data'=>'','msg'=>'修改成功']);
 		}
@@ -168,7 +167,7 @@ class Shopcart extends Base
 	{
 		$data = input('post.data');
 
-		$re = db('shop_cart')->delete($data);
+		$re = Db::name('shop_cart')->delete($data);
 		if ($re > 0) {
 			return json(['code'=>1,'data'=>'','msg'=>'删除成功']);
 		}
@@ -180,7 +179,7 @@ class Shopcart extends Base
 	//一键清空购物车 
 	public function cartClear()
 	{
-		$re = db('shop_cart')->where('userid',$this->userId)->delete();
+		$re = Db::name('shop_cart')->where('userid',$this->userId)->delete();
 		if ($re > 0) {
 			return json(['code'=>1,'data'=>'','msg'=>'清空购物车成功']);
 		}else{

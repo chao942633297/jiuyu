@@ -434,7 +434,32 @@ class Shoporder extends Base
 			
 	}
 
+	/* 确认收货
+	 *
+	 * @param $order_sn
+	 *
+	 */
+	public function orderSuccess()
+	{
 
+		$order_sn = input('param.order_sn');
+		$two_password = input('param.two_password');
+		//验证支付密码是否正确
+		$user = UserModel::get($this->userId);
+		if($user->two_password !== md5($two_password)){
+		    return json(['msg'=>'支付密码不正确','code'=>0]);
+		}
+
+		if (empty($order_sn)) {
+			return json(['code'=>0,'data'=>'','msg'=>'参数异常']);
+		}
+
+		$re = Db::name('shop_order')->where('order_sn',$order_sn)->update(['status'=>'4']);
+		if ($re > 0) {
+			return json(['code'=>1,'data'=>'','msg'=>'确认成功']);
+		}
+		return json(['code'=>0,'data'=>'','msg'=>'确认失败']);
+	}
 
 
 

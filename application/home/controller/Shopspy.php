@@ -50,6 +50,15 @@ class Shopspy extends Controller
 
 	}
 
+	//中奖列表
+	public function wonlist()
+	{
+		$page = !empty(input('param.page')) ? input('param.page') : '1';
+		$limit = !empty(input('param.limit')) ? input('param.limit') : '10';
+		$offset = ($page-1)*$limit;
+		$listData = Db::name('shop_spy_success')->field("id,username,goodsname,goodsid,created_at")->limit($offset,$limit)->select();
+		return json(['code'=>1,'data'=>$listData,'msg'=>'success']);
+	}
 
 	/*获取窥探商品详情
 	 * @param id 商品id
@@ -57,14 +66,18 @@ class Shopspy extends Controller
 	 */
 	public function shopGoodsInfo()
 	{
-		$id = !empty(input('post.id')) && input('post.id') > 0 ? input('post.id') : exit(json_encode(['code'=>0,'data'=>'','msg'=>'参数异常']));
+		$id = !empty(input('param.id')) && input('param.id') > 0 ? input('param.id') : exit(json_encode(['code'=>0,'data'=>'','msg'=>'参数异常']));
 		$goodsInfo = Db::name('shop_goods')->where('id',$id)->field("id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot")->find();
 		if ($goodsInfo['cid'] != '2') {
 			return json(['code'=>0,'data'=>'','msg'=>'非窥探商品不予显示']);
 		}
 
-		$user = UserModel::get(session('home_user_id'));
-		$goodsInfo['balance'] = $user->balance;
+		if (empty(session('home_user_id'))) {
+			$goodsInfo['balance'] = '0.00';
+		}else{
+			$user = UserModel::get(session('home_user_id'));
+			$goodsInfo['balance'] = $user->balance;
+		}
 		// $shopgoods = new ShopGoodsModel();
 		// $goodsInfo = $shopgoods->getOneShopGoods($id,"id,name,cid,unit,imgurl,remark,description,canshu,once_price,int_time,countdown,hot");
 		return json(['code'=>1,'data'=>$goodsInfo,'msg'=>'success']);
@@ -186,7 +199,6 @@ class Shopspy extends Controller
 	 */
 	public function panicPay()
 	{
-		session('home_user_id','90');
 		$userid = session('home_user_id');
 		if (empty($userid) || ($userid < 0)) {
 			return json(['code'=>0,'data'=>'','msg'=>'请先登录！']);
@@ -214,15 +226,15 @@ class Shopspy extends Controller
 		    'buyer_phone'=>'请填写收货人联系电话',
 		];
 
-		$_POST['two_password'] = '123456'; 
-		$_POST['goodsid'] = '46'; 
-		$_POST['payment'] = '3'; 
-		$_POST['province'] = '河南省'; 
-		$_POST['city'] = '郑州市'; 
-		$_POST['area'] = '高新区'; 
-		$_POST['detail'] = '莲花街工大36号'; 
-		$_POST['buyer_name'] = '王先生'; 
-		$_POST['buyer_phone'] = '18623695465'; 
+		// $_POST['two_password'] = '123456'; 
+		// $_POST['goodsid'] = '46'; 
+		// $_POST['payment'] = '3'; 
+		// $_POST['province'] = '河南省'; 
+		// $_POST['city'] = '郑州市'; 
+		// $_POST['area'] = '高新区'; 
+		// $_POST['detail'] = '莲花街工大36号'; 
+		// $_POST['buyer_name'] = '王先生'; 
+		// $_POST['buyer_phone'] = '18623695465'; 
 		
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
