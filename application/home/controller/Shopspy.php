@@ -8,6 +8,7 @@ use think\Controller;
 use think\Validate;
 use think\Session;
 use think\Db;
+use app\home\Alipay;
 /**
 * 窥探商品
 */
@@ -295,6 +296,14 @@ class Shopspy extends Controller
 		$ShopSpy = new ShopSpyRecordModel();
 		if ($input['payment'] == 3) {
 			$flag = $ShopSpy->addShopSpying($insertData);		
+		}else if ($input['payment'] == 1) {
+			$alipay = new Alipay();
+			$alipay->webPay();
+
+		}else if ($input['payment'] == 2) {
+			# code...
+		}else{
+			return json(['code'=>$flag['code'], 'data'=>'', 'msg'=>'支付方式错误']);
 		}
 
 		return json(['code'=>$flag['code'], 'data'=>$flag['data'], 'msg'=>$flag['msg']]);

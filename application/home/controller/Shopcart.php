@@ -1,9 +1,11 @@
 <?php 
 
 namespace app\home\controller;
+use app\backsystem\model\UserModel;
 use think\Controller;
 use think\Request;
 use think\Validate;
+use think\Db;
 
 
 class Shopcart extends Base
@@ -119,6 +121,67 @@ class Shopcart extends Base
 	}
 
 
+
+	/**
+	 * 请求订单数据
+	 * 请求方式 post
+	 * @param [[goodsid,goodsnum],[goodsid,goodsnum],[goodsid,goodsnum]] 商品id
+	 * return 商品图片 数量 单价 总价 默认地址  余额
+	 */
+	public function createOrder()
+	{
+		// $_POST['data'] = [['goodsid'=>'35','goodsnum'=>'1'],['goodsid'=>'37','goodsnum'=>'2']];
+		// $_POST['data'] = [['goodsid'=>'45','goodsnum'=>1]];
+
+		$postData = input('post.');
+		$input = $postData['data'];
+		if (!is_array($input) || empty($input)) {
+			return json(['code'=>0,'data'=>'','msg'=>'提交数据类型错误，请重新下单']);
+		}
+
+		$userid = $this->userId;
+		$reData = [];
+		$user = UserModel::get($this->userId);
+		$reData['balance'] = $user->balance;
+		if (Db::name('address')->where(['uid'=>$userid,'is_default'=>'1'])->count()) {
+			$address = Db::name('address')->field('*')->where(['uid'=>$userid,'is_default'=>'1'])->order('id desc')->limit('1')->find();
+
+		}else if (Db::name('address')->where(['uid'=>$userid])->count()) {
+			$address = Db::name('address')->field('*')->where(['uid'=>$userid])->order('id desc')->limit('1')->find();
+		}else{
+			$address = '';
+			
+		}
+		$reData['address'] = $address;
+		
+		//查询商品是否下架
+		$goodsInfo = [];
+		$reData['amount'] = 0;
+		foreach ($input as $key => $value) {
+			$goodsInfo[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field('is_under,cid,name as goodsname,imgurl as goodsimgurl,price,times')->find();
+			if ($goodsInfo[$key]['is_under'] == '1' || empty($goodsInfo[$key])) {
+				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架,请重新下单']);
+			}
+			if ($goodsInfo[$key]['cid'] == 2) {
+				// 窥探商品需要从spy_record里面查询
+				$spyPrice = Db::name('shop_spy_record')->field('sur_price')->where(['goodsid'=>$value['goodsid'],'userid'=>$userid,'times'=>$goodsInfo[$key]['times']])->order('id desc')->limit('1')->find(); 
+				if (empty($spyPrice)) {
+					$goodsInfo[$key]['price'] = $goodsInfo[$key]['price'];
+				}else{
+					$goodsInfo[$key]['price'] = $spyPrice['sur_price'];
+				}
+				$goodsInfo[$key]['goodsnum'] = '1';
+			}	
+			$goodsInfo[$key]['goodsnum'] = $value['goodsnum'];
+			$reData['amount'] += $goodsInfo[$key]['price']*$goodsInfo[$key]['goodsnum'];
+		}	
+		$reData['amount'] = sprintf("%01.2f",$reData['amount']);
+		$reData['goodsInfo'] = $goodsInfo;
+
+		return json(['code'=>1,'data'=>$reData,'msg'=>'success']);
+	}
+
+
 	/**
 	 * 批量更新修改购物车商品
 	 * 请求方式 
@@ -127,33 +190,19 @@ class Shopcart extends Base
 	public function cartGoodsUpdate()
 	{
 		// 整理更新数据
-		$data = input('post.data');
-		$updateData = array();
+		$input = input('post.');
+		$data = $input['data'];
+	
+		
+		if (empty($data)) {
+			return json(['code'=>0,'data'=>'','msg'=>'提交数据错误，删除失败']);
+		}
+
 		foreach ($data as $key => $value) {
-			// $updateData[$key]['userid'] = $this->userId;  
-			// $updateData[$key]['goodsid'] = $value['goodsid'];  
-			// 查询商品是否已经下架 和库存
-			$where = array();
-			$where['goodsid'] = $value['goodsid'];
-			$kucun = Db::name('shop_goods')->where($where)->field('num,is_under')->find();
-			if ($kucun['is_under'] == '1' || empty($kucun)) {
-				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架,请重新选择']);
-			}
-			// if ($kucun['num'] < $value['goodsnum']) {
-			// 	return json(['code'=>0,'data'=>'','msg'=>'部分商品库存不足']);	
-			// }
-			
-			$updateData[$key]['goodsnum'] = $value['goodsnum'];  
-			$updateData[$key]['cartid'] = $value['id'];  
-			
+			Db::name('shop_cart')->where(['id'=>$value['id']])->update(['goodsnum' => $value['goodsnum']]);
 		}
 
-		$re = Db::name('shop_cart')->saveAll($updateData);
-		if ($re > 0) {
-			return json(['code'=>1,'data'=>'','msg'=>'修改成功']);
-		}
-
-		return json(['code'=>0,'data'=>'','msg'=>'商品没有变化']);
+		return json(['code'=>1,'data'=>'','msg'=>'修改购物车成功']);
 	
 	}
 
@@ -165,9 +214,18 @@ class Shopcart extends Base
 	 */
 	public function cartGoodsDel()
 	{
-		$data = input('post.data');
+		$input = input('post.');
+		$data = $input['data'];
 
-		$re = Db::name('shop_cart')->delete($data);
+		if (empty($data)) {
+			return json(['code'=>0,'data'=>'','msg'=>'提交数据错误，删除失败']);
+		}
+		$delData = [];
+		foreach ($data as $key => $value) {
+			$delData[] = $value;
+		}
+
+		$re = Db::name('shop_cart')->delete($delData);
 		if ($re > 0) {
 			return json(['code'=>1,'data'=>'','msg'=>'删除成功']);
 		}

@@ -15,7 +15,7 @@ class Config
             'notify_url' => "http://admin.jiuyushangmao.com/home/Notify/aliPayNotify",
 
             //同步跳转
-            'return_url' => 'http://admin.jiuyushangmao.com/pay_success.html',
+            'return_url' => 'http://web.jiuyushangmao.com/success.html',
 
             //编码格式
             'charset' => "UTF-8",

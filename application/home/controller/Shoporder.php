@@ -10,6 +10,8 @@ use think\Request;
 use think\Db;
 use think\Model;
 use think\Validate;
+use app\home\controller\Alipay;
+use app\home\controller\Wxpay;
 
 
 
@@ -45,8 +47,8 @@ class Shoporder extends Base
 		//已经支付的订单 商品信息从order_detail 中获取  防止购买后商品价格变动造成总价对不上或者商品被删除
 
 		//加分页
-		$page = !empty(input('post.page')) && input('post.page') > 0 ? input('post.page') : '1' ;
-		$limit = !empty(input('post.limit')) && input('post.limit') > 0 ? input('post.limit') : '10' ;
+		$page = !empty(input('param.page')) && input('param.page') > 0 ? input('param.page') : '1' ;
+		$limit = !empty(input('param.limit')) && input('param.limit') > 0 ? input('param.limit') : '10' ;
 		$status = input('param.status');
 
 		if (($status==NULL)  || $status < 0 ) {
@@ -355,9 +357,9 @@ class Shoporder extends Base
 		    'payment.require'=>'支付方式不能为空',
 		];
 
-		// $_POST['order_sn'] = '201801121515718028447'; 
+		// $_POST['order_sn'] = '2018011315158113224997'; 
 		// $_POST['two_password'] = '123456'; 
-		// $_POST['payment'] = '3'; 
+		// $_POST['payment'] = '2'; 
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -372,17 +374,17 @@ class Shoporder extends Base
 		}
 
 		//检查订单是否已经支付过，防止重复支付
-		$orderData = Db::name('shop_order')->where('order_sn',input('post.order_sn'))->find();
+		$orderData = Db::name('shop_order')->where('order_sn',$input['order_sn'])->find();
 		if ($orderData['status'] >= 2) {
 			return json(['msg'=>'订单已经支付过','code'=>0]);
 		}
 		
 		
 		// 支付方式 1:支付宝  2：微信 3：余额
-		if (input('post.payment') == 3) {
+		if ($input['payment'] == 3) {
 			// 检查账户余额是否充足 根据订单号重新计算商品总额，防止商品价格变动产生的影响
 			$ShopOrder = new ShopOrderModel();
-			$sum = $ShopOrder->sumGoodsByordersn(input('post.order_sn')); // float 型
+			$sum = $ShopOrder->sumGoodsByordersn($input['order_sn']); // float 型
 			
 			if($sum > $user->balance){
 			    return json(['msg'=>'余额不足','code'=>0]);
@@ -408,12 +410,12 @@ class Shoporder extends Base
 			    
 			    AccountModel::create($accountData);
 			    //更新订单状态  更新订单 详情信息 （商品单价等）
-			    Db::name('shop_order')->where('order_sn',input('post.order_sn'))->setField(['status'=>2,'amount'=>$sum,'payment'=>3]); 
+			    Db::name('shop_order')->where('order_sn',$input['order_sn'])->setField(['status'=>2,'amount'=>$sum,'payment'=>3]); 
 
-        		$goodsinfo = Db::name('shop_order_detail')->where('order_sn',input('post.order_sn'))->select();
+        		$goodsinfo = Db::name('shop_order_detail')->where('order_sn',$input['order_sn'])->select();
         		$newData = [];
         		$where = [];
-        		$where['order_sn'] = input('post.order_sn');
+        		$where['order_sn'] = $input['order_sn'];
         		foreach ($goodsinfo as $key => $value) {
         		    $newData = Db::name('shop_goods')->where('id',$value['goodsid'])->field('name as goodsname,price,imgurl')->find();
         		    $where['goodsid'] = $value['goodsid'];
@@ -430,6 +432,14 @@ class Shoporder extends Base
 			    return json(['msg'=>$e->getMessage(),'code'=>0]);
 			}
 			
+		}else if ($input['payment'] == 1) {
+			$alipay = new Alipay();
+			$alipay->webPay($orderData['id']);
+		}else if ($input['payment'] == 2) {
+			$wxpay = new Wxpay();
+			$wxpay->wechatPay($orderData['id']);
+		}else{
+			return json(['msg'=>'支付方式错误，请从新下单','code'=>0,'data'=>'']);
 		}
 			
 	}

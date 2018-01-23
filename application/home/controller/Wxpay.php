@@ -16,10 +16,10 @@ class Wxpay extends Controller
 {
 
     //微信支付
-    public function wechatPay(Request $request)
+    public function wechatPay($orderId)
     {
         $jsApi = new JsApi_pub();
-        $orderId = $request->param('orderId');
+        // $orderId = $request->param('orderId');
         if (empty($orderId)) {
             exit("<script> alert('缺少主键');history.back(); </script>");
         }
