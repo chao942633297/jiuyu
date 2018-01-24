@@ -57,13 +57,14 @@ class ShopSpyRecordModel extends Model
     {
         Db::startTrans();
         try{
+            $user = UserModel::get($param['userid']);
             $param['created_at'] = date('Y-m-d H:i:s');
             if ($param['payment'] == 3) {
                 // 扣除用户余额并产生一条消费记录
                 // 扣除用户余额
                 UserModel::get($param['userid'])->setDec('balance',$param['amount']);
                 // 增加用户余额消费记录
-                $user = UserModel::get($param['userid']);
+                
                 $accountData = [];
                 $accountData['uid'] = $param['userid'];
                 $accountData['balance'] = $param['amount']; //变动金额
@@ -137,7 +138,9 @@ class ShopSpyRecordModel extends Model
                 //     $re['spy_price'] = " 价格低于30%不予显示";
                 // }
                 Db::commit();
-                return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '窥探成功'];
+                $data['sur_price'] = $re['sur_price'];
+                $data['balance'] = $user->balance;
+                return ['code' => 1, 'data' => $data, 'msg' => '窥探成功'];
             }
         }catch( PDOException $e){
             Db::rollback();

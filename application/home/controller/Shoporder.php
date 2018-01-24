@@ -502,11 +502,11 @@ class Shoporder extends Base
 			}
 			
 		}else if ($input['payment'] == 1) {
-			$alipay = new Alipay();
-			$alipay->webPay($flag['orderid']);
+			$url = config('back_domain').'/home/alipay/webPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 		}else if ($input['payment'] == 2) {
-			$wxpay = new Wxpay();
-			$wxpay->wechatPay($flag['orderid']);
+			$url = config('back_domain').'/home/Wxpay/wechatPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 		}else{
 			return json(['msg'=>'支付方式错误，请从新下单','code'=>0,'data'=>'']);
 		}
@@ -534,7 +534,7 @@ class Shoporder extends Base
 
 		// $_POST['order_sn'] = '2018011315158113224997'; 
 		// $_POST['two_password'] = '123456'; 
-		// $_POST['payment'] = '2'; 
+		// $_POST['payment'] = '1'; 
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -608,11 +608,13 @@ class Shoporder extends Base
 			}
 			
 		}else if ($input['payment'] == 1) {
-			$alipay = new Alipay();
-			$alipay->webPay($orderData['id']);
+			$url = config('back_domain').'/home/alipay/webPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 		}else if ($input['payment'] == 2) {
-			$wxpay = new Wxpay();
-			$wxpay->wechatPay($orderData['id']);
+			// $wxpay = new Wxpay();
+			// $wxpay->wechatPay($orderData['id']);
+			$url = config('back_domain').'/home/alipay/webPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 		}else{
 			return json(['msg'=>'支付方式错误，请从新下单','code'=>0,'data'=>'']);
 		}

@@ -157,6 +157,7 @@ class Shopcart extends Base
 		//查询商品是否下架
 		$goodsInfo = [];
 		$reData['amount'] = 0;
+		$reData['goodsamount'] = 0;
 		foreach ($input as $key => $value) {
 			$goodsInfo[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field('is_under,cid,name as goodsname,imgurl as goodsimgurl,price,times')->find();
 			if ($goodsInfo[$key]['is_under'] == '1' || empty($goodsInfo[$key])) {
@@ -174,8 +175,10 @@ class Shopcart extends Base
 			}	
 			$goodsInfo[$key]['goodsnum'] = $value['goodsnum'];
 			$reData['amount'] += $goodsInfo[$key]['price']*$goodsInfo[$key]['goodsnum'];
+			$reData['goodsamount'] += $value['goodsnum'];
 		}	
 		$reData['amount'] = sprintf("%01.2f",$reData['amount']);
+		$reData['goodsamount'] = strval($reData['goodsamount']);
 		$reData['goodsInfo'] = $goodsInfo;
 
 		return json(['code'=>1,'data'=>$reData,'msg'=>'success']);

@@ -301,13 +301,20 @@ class Shopspy extends Controller
 		//余额支付 
 		$ShopSpy = new ShopSpyRecordModel();
 		if ($input['payment'] == 3) {
-			$flag = $ShopSpy->addShopSpying($insertData);		
+			$flag = $ShopSpy->addShopSpying($insertData);	
+			$data = [];
+			if ($flag['code'] == 1) {
+
+				$data['endtime'] = date("Y-m-d H:i:s",$goodsInfo['countdown']*3600+time());
+			}
+			return json(['code'=>$flag['code'], 'data'=>$data, 'msg'=>$flag['msg']]);	
 		}else if ($input['payment'] == 1) {
-			$alipay = new Alipay();
-			$alipay->webPay();
+			$url = config('back_domain').'/home/alipay/webPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 
 		}else if ($input['payment'] == 2) {
-			# code...
+			$url = config('back_domain').'/home/alipay/webPay?orderId='.$orderData['id'];
+			return json(['msg'=>'','code'=>1,'data'=>$url]);
 		}else{
 			return json(['code'=>$flag['code'], 'data'=>'', 'msg'=>'支付方式错误']);
 		}
@@ -316,6 +323,15 @@ class Shopspy extends Controller
 
 	}
 
+	/** 
+	 * 获取 窥探商品最后一次窥探剩余价格
+	 *
+	 *
+	 */
+	public function getLast()
+	{
+		# code...
+	}
 
 	/*检测 抢购表中 是否有倒计时走完的订单
 	 *
