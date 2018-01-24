@@ -124,7 +124,8 @@ class ShopSpyRecordModel extends Model
 
 
                     Db::commit();
-                    return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '恭喜您在窥探游戏中获得奖品 '.$re["name"].' ，我们会尽快与您取得联系并发放奖品'];
+                    // code 返回100 表示窥探中奖
+                    return ['code' => 100, 'data' => $re['sur_price'], 'msg' => $re["name"]];
                     exit;
                 }
                 
@@ -144,6 +145,28 @@ class ShopSpyRecordModel extends Model
         }
     }
 
+
+
+    /**
+     * 插入商城窥探记录shop_spy_record 同时插入shop_spy_record
+     * @param $param  userid once_price spy_num amount goodsid goodsname goodsimgurl
+     * @param 
+     */
+    public function addOneSpyRecord($param)
+    {
+        try{
+            // $result =  $this->validate('RoleValidate')->save($param);
+            $result =  $this->insertGetId($param);
+            if(false === $result){
+                // 验证失败 输出错误信息
+                return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
+            }else{
+                return ['code' => 1, 'data' => '', 'msg' => '添加抢购记录成功'];
+            }
+        }catch( PDOException $e){
+            return ['code' => -2, 'data' => '', 'msg' => $e->getMessage()];
+        }
+    }
 
 
 

@@ -6,13 +6,8 @@
  * Time: 下午6:39
  */
 namespace app\home\controller;
-use app\backsystem\controller\File;
-use app\backsystem\model\AccountModel;
 use app\backsystem\model\CodeModel;
 use app\backsystem\model\RowModel;
-use app\backsystem\model\UserModel;
-use BaconQrCode\Encoder\QrCode;
-use Service\Alipay;
 use think\Controller;
 use think\Db;
 use think\Exception;
@@ -56,8 +51,9 @@ class Test extends Validate{
 
 
     public function test(){
-      $a = 0;
-        dump($this->z($a));
+      $alipay = new Alipay();
+        $alipay->webPay();
+
     }
 
     public function z($a){

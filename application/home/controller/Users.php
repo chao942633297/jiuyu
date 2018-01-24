@@ -474,6 +474,23 @@ class Users extends Base
     }
 
 
+    /**
+     * @return \think\response\Json
+     * 判断报单中心是否设置收款码
+     */
+    public function puckService(){
+        $user = UserModel::get($this->userId);
+        $seeting = 0;
+        if($user['class'] >2){
+            if(empty($user['qcode']['wqcode']) && empty($user['qcode']['aqcode'])){
+                $seeting = 1;
+                return json(['data'=>$seeting,'msg'=>'未设置收款码','code'=>100]);
+            }
+        }
+        return json(['data'=>$seeting,'msg'=>'已设置收款码','code'=>200]);
+    }
+
+
 
 
     /**

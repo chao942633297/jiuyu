@@ -159,7 +159,7 @@ class Shopspy extends Controller
 		$insertData['goodsid'] = $goodsInfo['id'];
 		$insertData['goodsname'] = $goodsInfo['name'];
 		$insertData['goodsimgurl'] = $goodsInfo['imgurl'];
-		// $insertData['times'] = $goodsInfo['times'];
+		$insertData['times'] = $goodsInfo['times'];
 		$insertData['payment'] = $input['payment'];
 
 		//检查自己本轮次是否在抢购中  抢购中的用户 不能窥探 
@@ -181,6 +181,12 @@ class Shopspy extends Controller
 		// exit;
 		if ($input['payment'] == 3) {
 			$flag = $ShopSpy->addShopSpyRecord($insertData);		
+		}else if ($input['payment'] == 1) {
+			
+		}else if ($input['payment'] == 2) {
+			# code...
+		}else{
+			return json(['code'=>0, 'data'=>'', 'msg'=>'支付方式错误']);
 		}
 
 		return json(['code'=>$flag['code'], 'data'=>$flag['data'], 'msg'=>$flag['msg']]);

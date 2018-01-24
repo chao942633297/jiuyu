@@ -1,5 +1,4 @@
 <?php
-
 namespace app\home\controller;
 
 use think\Controller;
@@ -13,8 +12,6 @@ vendor('AliPay.Config');
 vendor('AliPay.AlipayTradeService');
 class Notify extends Controller
 {
-
-
     /**
      * 微信回调
      */
@@ -35,7 +32,7 @@ class Notify extends Controller
                    echo 'success';
                }*/
             if ($order['status'] == 1) {
-                $res = Db::table('sql_shop_order')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee]);
+                $res = Db::table('sql_shop_order')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee],'payment' => '2');
                 if ($res) {
                     return 'success';
                 }
@@ -45,10 +42,13 @@ class Notify extends Controller
     }
 
 
+
+
+
     /**
      * @return string
      * @throws \think\Exception
-     * 支付宝支付回调
+     * 支付宝支付回调  普通订单
      */
     public function aliPayNotify()
     {
@@ -62,7 +62,7 @@ class Notify extends Controller
             $order = Db::table('sql_shop_order')->where('order_sn', $orderCode)->find();
             if ($arr['trade_status'] == 'TRADE_SUCCESS') {
                 $total_fee = $arr['total_amount'];
-                $res = Db::table('sql_shop_order')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee]);
+                $res = Db::table('sql_shop_order')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee],'payment' => '1');
                 if ($res) {
                     return 'success';
                 }
@@ -70,6 +70,36 @@ class Notify extends Controller
             }
         }
     }
+
+    /**
+     * @return string
+     * @throws \think\Exception
+     * 支付宝支付回调   窥探支付
+     */
+    public function aliPaySpyNotify()
+    {
+        $arr = $_POST;
+//        $this->log_result('ali_notify.log', json_encode($arr));
+        $config = \vendor\AliPay\Config::config();
+        $alipayService = new AlipayTradeService($config);
+        $result = $alipayService->check($arr);
+        if ($result) {
+            $orderCode = htmlspecialchars($arr['out_trade_no']);
+            $order = Db::table('sql_shop_spy_record')->where('spy_sn', $orderCode)->find();
+            if ($arr['trade_status'] == 'TRADE_SUCCESS') {
+                $total_fee = $arr['total_amount'];
+                $res = Db::table('sql_shop_spy_record')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee],'payment' => '1');
+                if ($res) {
+                    return 'success';
+                }
+                return 'fail';
+            }
+        }
+    }
+
+
+
+
 
     // 打印log
     public function log_result($file, $word)
@@ -88,7 +118,20 @@ class Notify extends Controller
 
 
 
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
 
 
 

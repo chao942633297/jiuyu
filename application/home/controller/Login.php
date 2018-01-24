@@ -106,7 +106,8 @@ class Login extends Controller
             $userData['phone'] = $input['phone'];
             $userData['unique'] = md5($input['phone']);
             $userData['headimgurl'] = config('back_domain') . '/uploads/default.png';
-            $userData['nickname'] = '用户' . $input['phone'];
+//            $userData['nickname'] = '用户' . $input['phone'];
+            $userData['nickname'] = '用户' . foo(4);
             $userData['password'] = md5($falg['password']);
             $userData['two_password'] = md5($falg['two_password']);
             $userData['class'] = 1;

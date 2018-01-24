@@ -86,6 +86,8 @@ class ShopOrderModel extends Model
             $cartid = !empty($param['cartid']) ? $param['cartid'] : '';
             unset($param['cartid']);
             unset($param['goodsinfo']);
+            unset($param['payment']);
+            unset($param['two_password']);
             $param['created_at'] = date('Y-m-d H:i:s',time());
             // 计算总价格插入到shop_order中  订单付款时需重新计算订单价格
             $param['amount'] = $this->sumGoods($goodsinfo);
@@ -114,9 +116,10 @@ class ShopOrderModel extends Model
                 }
 
                 $re = Db::name('shop_order_detail')->insertAll($detailData);   
+
                 if ($re === false) {
                      Db::rollback();
-                     return ['code' => 0, 'data' => $param['order_sn'], 'msg' => '生成订单失败！'];
+                     return ['code' => 0, 'data' => $result, 'msg' => '生成订单失败！'];
                 }else{
                     // 判断是否是购物车里面下的订单 
                     if (!empty($cartid)) {
@@ -124,7 +127,8 @@ class ShopOrderModel extends Model
                         Db::name('shop_cart')->delete($cartid);
                     }
                     Db::commit();
-                    return ['code' => 1, 'data' => $param['order_sn'], 'msg' => '添加商城订单成功！'];
+                    //返回 orderid
+                    return ['code' => 1, 'data' => $param['order_sn'], 'msg' => '添加商城订单成功！','orderid'=>$result];
                 }
             }
         }catch( PDOException $e){

@@ -15,7 +15,7 @@ use think\Exception;
 use think\Loader;
 use think\Request;
 
-class Partner extends Controller
+class Partner extends Base
 {
     protected $userId;
 
@@ -63,6 +63,7 @@ class Partner extends Controller
         }
         $return = [];
         $return['id'] = $voucherData['id'];
+        $return['pay_type'] = $voucherData['pay_type'];
         $return['user_phone'] = $voucherData['user']['phone'];
         $return['voucher'] = $voucherData['img'];
         $return['cost'] = $voucherData['money'];
@@ -239,9 +240,9 @@ class Partner extends Controller
         if($input['phone'] != $codeData['phone'] && $code != $codeData['code']){
             return json(['msg'=>'验证码不正确','code'=>1002]);
         }
-        if(strtotime($codeData['created_at']) < $time ){
+     /*   if(strtotime($codeData['created_at']) < $time ){
             return json(['msg'=>'验证码已失效,请重新获取','code'=>1010]);
-        }
+        }*/
         $user = UserModel::get($this->userId);
         if(!isset($input['password']) || md5($input['password']) !== $user['two_password']){
             return json(['msg'=>'支付密码不正确','code'=>1003]);
@@ -262,7 +263,7 @@ class Partner extends Controller
             $userData['phone'] = $input['phone'];
             $userData['unique'] = md5($input['phone']);
             $userData['headimgurl'] = config('back_domain').'/uploads/default.png';
-            $userData['nickname'] = '用户'.$input['phone'];
+            $userData['nickname'] = '用户'.foo(4);
             $userData['password'] = md5($falg['password']);
             $userData['two_password'] = md5($falg['two_password']);
             $userData['class'] = 2;
@@ -273,7 +274,7 @@ class Partner extends Controller
             $list = AccountModel::getAccountData($this->userId,$package['price'],'注册新合伙人',8,2,$package['unit'],$newUser['id']);
             AccountModel::create($list);
 
-            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],$input['province'],$input['city'],$input['area'],$input['detail']);
+            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],1,$input['consignee'],$input['mobile'],$input['province'],$input['city'],$input['area'],$input['detail']);
             $voucher = VoucherModel::create($list);
 
             //激活合伙人-报单中心返佣(及余额记录)
@@ -295,10 +296,10 @@ class Partner extends Controller
                 //验证码修改状态
             db('code')->where('id',$codeData['id'])->update(['status'=>2]);
              Db::commit();
-            return json(['data'=>$newUser,'msg'=>'注册成功','code'=>200]);
+            return json(['msg'=>'注册成功','code'=>200]);
         }catch(Exception $e){
             Db::rollback();
-            return json(['msg'=>$e->getMessage(),'code'=>1004]);
+            return json(['msg'=>'注册失败','code'=>1004]);
         }
     }
 

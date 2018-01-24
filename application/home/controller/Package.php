@@ -31,7 +31,7 @@ class Package extends Controller
 		if(empty($packageId)){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
-		$packageDetail = Db::table('sql_goods')->field('name,price,img,description')
+		$packageDetail = Db::table('sql_goods')->field('id,name,price,img,description')
 			->where('id',$packageId)->find();
 		return json(['data'=>$packageDetail,'msg'=>'查询成功','code'=>200]);
 	}
@@ -180,7 +180,7 @@ class Package extends Controller
 			return json(['msg'=>'提交失败','code'=>1001]);
 		}
 		session('home_package_id',null);
-		$user = Db::table('sql_users')->field('truename,phone')->where('id',$res['uid'])->find();
+		$user = Db::table('sql_users')->field('truename,phone')->where('id',$res['actid'])->find();
 		return json(['data'=>$user,'msg'=>'提交成功','code'=>200]);
 	}
 

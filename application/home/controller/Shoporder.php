@@ -271,13 +271,11 @@ class Shoporder extends Base
 		// $_POST['area'] = '金水区'; 
 		// $_POST['detail'] = '北三环中州大道963号康杰大酒店'; 
 		// $_POST['buyer_name'] = '王先生'; 
-		// $_POST['buyer_phone'] = '18236952689'; 
+		// $_POST['buyer_phone'] = '18236910812'; 
 		// $_POST['goodsinfo'] = array(
 		// 	//商城区
-		// 	array('goodsid'=>31,'goodsnum'=>'1'),
-		// 	array('goodsid'=>35,'goodsnum'=>'3'),
-		// 	array('goodsid'=>37,'goodsnum'=>'1'),	
-		// 	array('goodsid'=>30,'goodsnum'=>'1'),	
+		// 	array('goodsid'=>46,'goodsnum'=>'1'),
+		// 	array('goodsid'=>37,'goodsnum'=>'3'),
 		// ); 
 
 		$input = input('post.');
@@ -335,6 +333,183 @@ class Shoporder extends Base
         $ShopOrder = new ShopOrderModel();
         $flag = $ShopOrder->addShopOrder($insertData);
         return json([$flag['code'], $flag['data'], $flag['msg']]);
+
+	}
+
+	/**
+	 * 生成订单
+	 * 请求方式 
+	 * @param  商品信息 二维数组 goodsinfo array(array('goodsid'=>**,'goodsnum'=>**),array('goodsid'=>**,'goodsnum'=>**),)
+	 * @param 
+	 */
+	public function goodsBuy()
+	{
+		$rule = [
+		    'payment'=>'require',
+		    'two_password'=>'require',
+		    'goodsinfo'=>'require',
+		    'province'=>'require',
+		    'city'=>'require',
+		    'area'=>'require',
+		    'detail'=>'require',
+		    'buyer_name'=>'require|max:25',
+		    'buyer_phone'=>'require|/^1[3456789]\d{9}$/',
+		];
+		$msg = [
+		    'payment.require'=>'请选择支付方式',
+		    'two_password.require'=>'支付密码不能为空',
+		    'goodsinfo.require'=>'商品信息不能为空',
+		    'province'=>'省不能为空',
+		    'city'=>'市不能为空',
+		    'area'=>'地区不能为空',
+		    'detail'=>'详细地址不能为空',
+		    'buyer_name'=>'用户名不能为空|名称最多不能超过25个字符',
+		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
+		];
+
+		// $_POST['payment'] = '1'; 
+		// $_POST['two_password'] = '123456'; 
+		// // $_POST['cartid'] = ['21','22']; 
+		// $_POST['province'] = '河南省'; 
+		// $_POST['city'] = '郑州市'; 
+		// $_POST['area'] = '金水区'; 
+		// $_POST['detail'] = '北三环中州大道963号康杰大酒店'; 
+		// $_POST['buyer_name'] = '王先生'; 
+		// $_POST['buyer_phone'] = '18236910812'; 
+		// $_POST['goodsinfo'] = array(
+		// 	//商城区
+		// 	array('goodsid'=>46,'goodsnum'=>'1'),
+		// 	array('goodsid'=>37,'goodsnum'=>'3'),
+		// ); 
+
+		$input = input('post.');
+		$validate = new Validate($rule,$msg);
+		if(!$validate->check($input)){
+		    return json(['msg'=>$validate->getError(),'code'=>0]);
+		}
+
+		//验证支付密码是否正确
+		$user = UserModel::get($this->userId);
+		if($user->two_password !== md5($input['two_password'])){
+		    return json(['msg'=>'支付密码不正确','code'=>0]);
+		}
+
+		$insertData = [];  //插入订单数据 参数数组
+		// 购物车下单 读取购物车商品
+		if (!empty($input['cartid'])) {
+			$input['goodsinfo'] = [];
+			$d = Db::name('shop_cart')->where('id','in',$input['cartid'])->field('*')->select();
+			foreach ($d as $key => $value) {
+				$input['goodsinfo'][$key]['goodsid'] = $value['goodsid'];
+				$input['goodsinfo'][$key]['goodsnum'] = $value['goodsnum'];
+			}
+			$insertData['cartid'] = $input['cartid'];
+		}
+
+
+
+		$goodsInfo = $input['goodsinfo'];
+
+		$cid = ''; //不同区的商品不能合并结算 套餐和商品不能合并结算
+		foreach ($goodsInfo as $key => $value) {
+			//查询商品库存 和 是否下架  
+			$goodsInfo = Db::name('shop_goods')->where('id',$value['goodsid'])->field('name,num,is_under,cid')->find();
+			if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
+				return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经下架,请重新下单！']);
+				break;
+			}
+
+			// if ($goodsInfo['num'] < $value['goodsnum']) {
+			// 	return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品库存不足，请重新下单！']);
+			// 	break;
+			// }
+			if (!empty($cid) && $cid !== $goodsInfo['cid']) {
+				return json(['code'=>0,'data'=>'','msg'=>'请将窥探和商城分开下单！']);
+			}
+			$cid = $goodsInfo['cid'];
+			
+		}
+
+		$insertData['goodsinfo'] = $input['goodsinfo'];
+		$insertData['province'] = $input['province'];
+		$insertData['city'] = $input['city'];
+		$insertData['area'] = $input['area'];
+		$insertData['detail'] = $input['detail'];
+		$insertData['buyer_name'] = $input['buyer_name'];
+		$insertData['buyer_phone'] = $input['buyer_phone'];
+		$insertData['uid'] = $this->userId;
+		$insertData['order_sn'] = $this->orderNum();
+
+
+        $ShopOrder = new ShopOrderModel();
+        $flag = $ShopOrder->addShopOrder($insertData);
+        if ($flag['code'] != 1) {
+        	// return json([$flag['code'], $flag['data'], $flag['msg']]);
+        	return json(['msg'=>'生成订单失败','code'=>0,'data'=>'']);
+        }
+
+
+		// 支付方式 1:支付宝  2：微信 3：余额
+		if ($input['payment'] == 3) {
+			// 检查账户余额是否充足 根据订单号重新计算商品总额，防止商品价格变动产生的影响
+			$ShopOrder = new ShopOrderModel();
+			$sum = $ShopOrder->sumGoodsByordersn($insertData['order_sn']); // float 型
+			
+			if($sum > $user->balance){
+			    return json(['msg'=>'余额不足','code'=>0]);
+			}else if($sum <= 0){
+				//订单总金额小于0 
+			    return json(['msg'=>'订单金额错误','code'=>0]);
+			}
+
+			//扣除余额 修改订单状态status为2：已支付 
+			Db::startTrans();
+			try{
+			    //扣除用户余额
+			    UserModel::get($this->userId)->setDec('balance',$sum);
+			    //增加用户余额消费记录
+			    $user = UserModel::get($this->userId);
+			    $accountData = [];
+			    $accountData['uid'] = $this->userId;
+			    $accountData['balance'] = $sum; //账户 消费金额
+			    $accountData['remark'] = '商城订单支付';
+			    $accountData['inc'] = 2;
+			    $accountData['type'] = 12;  // 扣币类型 12：商城订单支付
+			    $accountData['create_at'] = date('YmdHis');
+			    
+			    AccountModel::create($accountData);
+			    //更新订单状态  更新订单 详情信息 （商品单价等）
+			    Db::name('shop_order')->where('order_sn',$insertData['order_sn'])->setField(['status'=>2,'amount'=>$sum,'payment'=>3]); 
+
+        		$goodsinfo = Db::name('shop_order_detail')->where('order_sn',$insertData['order_sn'])->select();
+        		$newData = [];
+        		$where = [];
+        		$where['order_sn'] = $insertData['order_sn'];
+        		foreach ($goodsinfo as $key => $value) {
+        		    $newData = Db::name('shop_goods')->where('id',$value['goodsid'])->field('name as goodsname,price,imgurl')->find();
+        		    $where['goodsid'] = $value['goodsid'];
+        		    Db::name('shop_order_detail')->where($where)->update($newData);
+        		    // 销量++
+        		    Db::name('shop_goods')->where('id',$value['goodsid'])->setInc('hot',$value['goodsnum']);
+        		    Db::name('shop_goods')->where('id',$value['goodsid'])->setInc('realhot',$value['goodsnum']);
+        		}
+			    
+			    Db::commit();
+			    return json(['msg'=>'支付成功','code'=>1]);
+			}catch(Exception $e){
+			    Db::rollback();
+			    return json(['msg'=>$e->getMessage(),'code'=>0]);
+			}
+			
+		}else if ($input['payment'] == 1) {
+			$alipay = new Alipay();
+			$alipay->webPay($flag['orderid']);
+		}else if ($input['payment'] == 2) {
+			$wxpay = new Wxpay();
+			$wxpay->wechatPay($flag['orderid']);
+		}else{
+			return json(['msg'=>'支付方式错误，请从新下单','code'=>0,'data'=>'']);
+		}
 
 	}
 
