@@ -274,7 +274,7 @@ class Partner extends Base
             $list = AccountModel::getAccountData($this->userId,$package['price'],'注册新合伙人',8,2,$package['unit'],$newUser['id']);
             AccountModel::create($list);
 
-            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],1,$input['consignee'],$input['mobile'],$input['province'],$input['city'],$input['area'],$input['detail']);
+            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],$input['consignee'],$input['mobile'],$input['province'],$input['city'],$input['area'],$input['detail']);
             $voucher = VoucherModel::create($list);
 
             //激活合伙人-报单中心返佣(及余额记录)

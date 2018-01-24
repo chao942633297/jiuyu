@@ -12,6 +12,7 @@ use think\Controller;
 use think\Db;
 use think\Exception;
 use think\Log;
+use think\Request;
 use think\Validate;
 
 
@@ -32,8 +33,9 @@ class Test extends Validate{
     }
 
 
-    public function index(){
-        session('home_user_id',99);
+    public function index(Request $request){
+        $uid = $request->param('uid');
+        session('home_user_id',$uid);
     }
 
 

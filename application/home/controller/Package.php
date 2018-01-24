@@ -63,7 +63,7 @@ class Package extends Controller
 			$where['uid'] = $this->userId;
 		}
 		$address = Db::table('sql_address')
-			->field('id,consignee,phone,province,city,area,detail')
+			->field('id,consignee,mobile,province,city,area,detail')
 			->where($where)->order('is_default','desc')->find();
 		return json(['data'=>['packageDetail'=>$packageDetail,'address'=>$address],'msg'=>'查询成功','code'=>200]);
 	}
