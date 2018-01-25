@@ -63,7 +63,12 @@ class Shoporder extends Base
             $status = ['用户取消','待付款','待发货','已发货','完成',''];
 
             foreach($selectResult as $key=>$vo){
-                $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
+                if ($vo['status'] == 4) {
+                    $selectResult[$key]['operate'] = $this->showOperate($this->makeOneButton($vo['id']));
+                }else{
+                    $selectResult[$key]['operate'] = $this->showOperate($this->makeButton($vo['id']));
+                    
+                }
                 $selectResult[$key]['status'] = $status[$vo['status']];
 
             }
@@ -179,6 +184,9 @@ class Shoporder extends Base
             if ($orderData['status'] < 2) {
                 return json(['code'=>0, 'data'=>'', 'msg'=>'订单未付款不能发货']);
             }
+            if ($orderData['status'] > 3) {
+                return json(['code'=>0, 'data'=>'', 'msg'=>'该订单已完成']);
+            }
             $param['status'] = '3'; // 订单发货 订单状态修改为“已发货”
             $flag = model('ShopOrderModel')->editShopOrder($param);
 
@@ -232,6 +240,30 @@ class Shoporder extends Base
             '发货' => [
                 'auth' => 'shoporder/orderdeal',
                 'href' => url('shoporder/orderdeal', ['id' => $id]),
+                'btnStyle' => 'primary',
+                'icon' => 'fa fa-paste'
+            ],
+            // '删除' => [
+            //     'auth' => 'shoporder/orderdel',
+            //     'href' => "javascript:OrderDel(" . $id . ")",
+            //     'btnStyle' => 'danger',
+            //     'icon' => 'fa fa-trash-o'
+            // ]
+        ];
+    }
+
+    /**
+     * 拼装操作按钮
+     * @param $id
+     * @return array
+     */
+    private function makeOneButton($id)
+    {
+        return [
+            '详情' => [
+                'auth' => 'shoporder/orderlist',
+                // 'href' => url('shoporder/orderdetail', ['id' => $id]),
+                'href' => url('shoporder/orderdetail', ['id' => $id]),
                 'btnStyle' => 'primary',
                 'icon' => 'fa fa-paste'
             ],

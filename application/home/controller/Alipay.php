@@ -77,7 +77,7 @@ class Alipay extends Controller{
         $payRequestBuilder->setTimeExpress($timeout_express);
 
         $payResponse = new AlipayTradeService($config);
-        $config['return_url'] = config('front_domain')."success";
+        $config['return_url'] = config('front_domain')."/success";
         $config['notify_url'] = config('back_domain')."/home/Notify/aliPayNotify";
         $payResponse->wapPay($payRequestBuilder,$config['return_url'],$config['notify_url']);
 
@@ -160,7 +160,50 @@ class Alipay extends Controller{
     }
 
 
+    public function webSpyPay($orderId){             //支付宝支付 窥探支付
 
+        if(empty($orderId)){
+
+            return json(['msg'=>'参数错误','code'=>'1001']);
+
+        }
+
+        $order = Db::table('sql_shop_spy_record')->where('id',$orderId)->find();
+
+        $body = '商城购物';
+
+        $subject = '玖誉商城';
+
+        $out_trade_no = $order['spy_sn'];
+
+        $total_amount = $order['amount'];
+
+          #TODO 测试金额
+
+        $total_amount = 0.01;
+
+        $timeout_express = '1m';
+
+        $config = Config::config();
+
+        $payRequestBuilder = new AlipayTradeWapPayContentBuilder();
+
+        $payRequestBuilder->setBody($body);
+
+        $payRequestBuilder->setSubject($subject);
+
+        $payRequestBuilder->setOutTradeNo($out_trade_no);
+
+        $payRequestBuilder->setTotalAmount($total_amount);
+
+        $payRequestBuilder->setTimeExpress($timeout_express);
+
+        $payResponse = new AlipayTradeService($config);
+        $config['return_url'] = config('front_domain')."success";
+        $config['notify_url'] = config('back_domain')."/home/Notify/aliPaySpyNotify";
+        $payResponse->wapPay($payRequestBuilder,$config['return_url'],$config['notify_url']);
+
+    }
 
 
 }

@@ -88,7 +88,7 @@ class Notify extends Controller
             $order = Db::table('sql_shop_spy_record')->where('spy_sn', $orderCode)->find();
             if ($arr['trade_status'] == 'TRADE_SUCCESS') {
                 $total_fee = $arr['total_amount'];
-                $res = Db::table('sql_shop_spy_record')->where('id', $order['id'])->update(['status' => 2, 'money' => $total_fee],'payment' => '1');
+                $res = Db::table('sql_shop_spy_record')->where('id', $order['id'])->update(['status' => 2, 'paymoney' => $total_fee],'payment' => '1');
                 if ($res) {
                     return 'success';
                 }

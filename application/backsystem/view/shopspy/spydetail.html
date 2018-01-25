@@ -39,7 +39,7 @@
                           <th>原价</th>
                           <th>商品图</th>
                           <th>参数</th>
-                          <th>窥探还是抢购</th>
+                          <!-- <th>窥探还是抢购</th> -->
                           <th>中奖轮次</th>
                           <th>中奖时间</th>
                           <th>处理意见</th>
@@ -53,7 +53,7 @@
                             <td>{$successdata['goodsprice']}</td>
                             <td><img src="{$successdata['goodsimgurl']}" width="120"></td>
                             <td><img src="{$successdata['goodscanshu']}" width="120"></td>
-                            <td>{$successdata['is_spy'] ? "窥探中奖" : "抢购中奖"}</td>
+                            <!-- <td>{$successdata['is_spy'] ? "窥探中奖" : "抢购中奖"}</td> -->
                             <td>{$successdata['times']}</td>
                             <td>{$successdata['created_at']}</td>
                             <td>{$successdata['remark']}</td>
@@ -100,7 +100,7 @@
                             <td>{$vo['amount']}</td>
                             <td>{$vo['sur_price']}</td>
                             <td>{$vo['goodsname']}</td>
-                            <td>{$vo['payment']}</td>
+                            <td>{if $vo['payment']==1}支付宝{elseif $vo['payment']==2}微信{elseif $vo['payment']==3}余额{/if}</td>
                             <td>{$vo['times']}</td>
                             <td>{$vo['created_at']}</td>
                         </tr>
@@ -150,9 +150,9 @@
                             <td>{$vo['buyer_name']}</td>
                             <td>{$vo['buyer_phone']}</td>
                             <td>{$vo['province']}/{$vo['city']}/{$vo['area']}</td>
-                            <td>{$vo['status']}</td>
+                            <td>{if $vo['status']==1}抢购中{elseif $vo['status']==2}抢购失败{elseif $vo['status']==3}抢购成功{/if}</td>
                             <td>{$vo['times']}</td>
-                            <td>{$vo['payment']}</td>
+                            <td>{if $vo['payment']==1}支付宝{elseif $vo['payment']==2}微信{elseif $vo['payment']==3}余额{/if}</td>
                             <td>{$vo['created_at']}</td>
                         </tr>
                         {/volist}

@@ -134,8 +134,8 @@ class Shopspy extends Base
             return json(['code'=>0, 'data'=>'', 'msg'=>'提交失败']);
         }
 
-        $recorddata = Db::name('shop_spy_record')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
-        $spyingdata = Db::name('shop_spying_goods')->where(['goodsid'=>$successdata['goodsid']])->order('created_at','ASC')->select();
+        $recorddata = Db::name('shop_spy_record')->where(['goodsid'=>$successdata['goodsid'],'times'=>$successdata['times']])->order('created_at','ASC')->select();
+        $spyingdata = Db::name('shop_spying_goods')->where(['goodsid'=>$successdata['goodsid'],'times'=>$successdata['times']])->order('created_at','ASC')->select();
         
         $this->assign('successdata',$successdata);
         $this->assign('spyingdata',$spyingdata);

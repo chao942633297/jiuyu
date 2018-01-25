@@ -79,6 +79,7 @@ class ShopSpyRecordModel extends Model
             }
 
             // $result = $this->validate('ShopSpyRecord')->insert($param);
+            $param['paymoney'] = $param['amount'];
             $result = Db::name('shop_spy_record')->insert($param);
             if($result <= 0){
                 // 添加记录失败
@@ -160,14 +161,14 @@ class ShopSpyRecordModel extends Model
         try{
             // $result =  $this->validate('RoleValidate')->save($param);
             $result =  $this->insertGetId($param);
-            if(false === $result){
+            if($result){
                 // 验证失败 输出错误信息
-                return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
+                return $result;
             }else{
-                return ['code' => 1, 'data' => '', 'msg' => '添加抢购记录成功'];
+                return -1;
             }
         }catch( PDOException $e){
-            return ['code' => -2, 'data' => '', 'msg' => $e->getMessage()];
+            return -2;
         }
     }
 

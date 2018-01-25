@@ -61,7 +61,7 @@ class Shoporder extends Base
 		$where['status'] = $status;
 		// 
 		if ($status > 0) {
-			$orderData = Db::name('shop_order')->where($where)->field('order_sn,amount,status')->select();
+			$orderData = Db::name('shop_order')->where($where)->field('order_sn,amount,status')->order('id DESC')->select();
 			$ShopOrder = new ShopOrderModel();
 			foreach ($orderData as $key => $value) {
 				//待付款 和取消的 订单详情 里面 商品价格需要重新获取
