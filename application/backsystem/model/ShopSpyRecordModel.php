@@ -57,13 +57,14 @@ class ShopSpyRecordModel extends Model
     {
         Db::startTrans();
         try{
+            $user = UserModel::get($param['userid']);
             $param['created_at'] = date('Y-m-d H:i:s');
             if ($param['payment'] == 3) {
                 // 扣除用户余额并产生一条消费记录
                 // 扣除用户余额
                 UserModel::get($param['userid'])->setDec('balance',$param['amount']);
                 // 增加用户余额消费记录
-                $user = UserModel::get($param['userid']);
+                
                 $accountData = [];
                 $accountData['uid'] = $param['userid'];
                 $accountData['balance'] = $param['amount']; //变动金额
@@ -78,9 +79,12 @@ class ShopSpyRecordModel extends Model
             }
 
             // $result = $this->validate('ShopSpyRecord')->insert($param);
-            $result = Db::name('shop_spy_record')->insert($param);
+            $param['paymoney'] = $param['amount'];
+            $result = Db::name('shop_spy_record')->insertGetId($param);
             if($result <= 0){
                 // 添加记录失败
+
+
                 Db::rollback();
                 return ['code' => -1, 'data' => '', 'msg' => $this->getError()];
             }else{
@@ -107,7 +111,6 @@ class ShopSpyRecordModel extends Model
                     $successData['payment'] = $param['payment'];
                     $successData['created_at'] = $param['created_at'];
                     Db::name('shop_spy_success')->insert($successData);
-                    Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('times');
                     Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('hot');    // 销量
                     Db::name('shop_goods')->where('id',$param['goodsid'])->setInc('realhot'); // 销量
                     // status  0： 正常  1：进入间隔期
@@ -124,7 +127,8 @@ class ShopSpyRecordModel extends Model
 
 
                     Db::commit();
-                    return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '恭喜您在窥探游戏中获得奖品 '.$re["name"].' ，我们会尽快与您取得联系并发放奖品'];
+                    // code 返回100 表示窥探中奖
+                    return ['code' => 100, 'data' => $re['sur_price'], 'msg' => $re["name"]];
                     exit;
                 }
                 
@@ -136,7 +140,9 @@ class ShopSpyRecordModel extends Model
                 //     $re['spy_price'] = " 价格低于30%不予显示";
                 // }
                 Db::commit();
-                return ['code' => 1, 'data' => $re['sur_price'], 'msg' => '窥探成功'];
+                $data['sur_price'] = $re['sur_price'];
+                $data['balance'] = $user->balance;
+                return ['code' => 1, 'data' => $data, 'msg' => '窥探成功'];
             }
         }catch( PDOException $e){
             Db::rollback();
@@ -144,6 +150,28 @@ class ShopSpyRecordModel extends Model
         }
     }
 
+
+
+    /**
+     * 插入商城窥探记录shop_spy_record 同时插入shop_spy_record
+     * @param $param  userid once_price spy_num amount goodsid goodsname goodsimgurl
+     * @param 
+     */
+    public function addOneSpyRecord($param)
+    {
+        try{
+            // $result =  $this->validate('RoleValidate')->save($param);
+            $result =  $this->insertGetId($param);
+            if($result){
+                // 验证失败 输出错误信息
+                return $result;
+            }else{
+                return -1;
+            }
+        }catch( PDOException $e){
+            return -2;
+        }
+    }
 
 
 

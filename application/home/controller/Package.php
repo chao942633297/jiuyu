@@ -53,10 +53,6 @@ class Package extends Controller
 		}
 		$packageDetail = Db::table('sql_goods')->field('id,name,price,img,unit')
 			->where('id',$packageId)->find();
-		$user = UserModel::get($this->userId);
-		if(!strstr($user['pusers']['level'],$packageDetail['unit'])){
-			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
-		}
 		if($request->has('addrId')){
 			$where['id'] = $request->param('addrId');
 		}else{
@@ -88,6 +84,7 @@ class Package extends Controller
 			->where(['uid'=>['in',$agentId],'status'=>2])->select();
 		foreach($serviceData as $key=>$val){
 			$serviceData[$key]['headimgurl'] = $val['user']['headimgurl'];
+			unset($serviceData[$key]['user']);
 		}
 		return json(['data'=>$serviceData,'msg'=>'查询成功','code'=>200]);
 	}
@@ -102,13 +99,13 @@ class Package extends Controller
 	 */
 	public function actSubmit(Request $request){
 		$input = $request->post();
-		$packageId = $input['packageId'];
-		$addrId = $input['addrId'];
-		$agentId = $input['agentId'];
-		if(empty($packageId) || empty($agentId)){
+		$packageId = isset($input['packageId'])?$input['packageId']:'';
+		$addrId = isset($input['addrId'])?$input['addrId']:'';
+		$agentId = isset($input['agentId'])?$input['agentId']:'';
+		if(empty($packageId)){
 			$packageId = session('home_package_id');
 		}
-		if(empty($packageId)){
+		if(empty($packageId)  || empty($agentId)){
 			return json(['msg'=>'参数错误','code'=>1001]);
 		}
 		if(empty($addrId)){
@@ -117,11 +114,7 @@ class Package extends Controller
 		}
 		$package = Db::table('sql_goods')
 			->where('id',$packageId)->find();
-		$user =  UserModel::get($this->userId);
-		if(!strstr($user['pusers']['level'],$package['unit'])){
-			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
-		}
-		$qrcode = Db::table('sql_qrcode')
+		$qrcode = Db::table('sql_qcode')
 			->field('uid,wqcode,aqcode')
 			->where('uid',$agentId)->find();
 		return json(['data'=>['qrcode'=>$qrcode,'packageMoney'=>$package['price']],'msg'=>'查询成功','code'=>200]);
@@ -144,7 +137,7 @@ class Package extends Controller
 		$packageId = $input['packageId'];
 		$addrId = $input['addrId'];
 		$type = $input['type'];           //1支付宝支付 2 微信支付
-		$prentId = $input['agentId'];           //报单中心id
+		$prentId = Db::table('sql_apply')->where('id',$input['agentId'])->value('uid');   //报单中心id
 		//获取套餐信息
 		$package = Db::table('sql_goods')
 			->field('name,price,img,unit')
@@ -166,16 +159,13 @@ class Package extends Controller
 			return json(['msg'=>'支付凭证不能为空','code'=>1001]);
 		}
 
-		if(!strstr($user['pusers']['level'],$package['unit'])){
-			return json(['msg'=>'上级未购买此套餐,暂不能购买','code'=>1002]);
-		}
  		//获取收货地址,省,市,区/县
 		$address = Db::table('sql_address')
-			->field('id,province,city,area')
+			->field('id,consignee,mobile,province,city,area,detail')
 			->where('id',$addrId)->find();
-		$list = VoucherModel::getVoucherData($this->userId,$prentId,$package['price'],$package['unit'],$type,$package['name'],$package['price'],$package['img'],$address['province'],$address['city'],$address['area'],$address['detail']);
+		$list = VoucherModel::getVoucherData($this->userId,$prentId,$package['price'],$package['unit'],$type,$package['name'],$package['price'],$package['img'],$address['consignee'],$address['mobile'],$address['province'],$address['city'],$address['area'],$address['detail']);
 		$res = VoucherModel::create($list);
-		if(empty($res['img'])){
+		if(empty($res['package_img'])){
 			VoucherModel::get($res['id'])->delete();
 			return json(['msg'=>'提交失败','code'=>1001]);
 		}

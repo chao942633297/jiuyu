@@ -112,18 +112,18 @@ class Account extends Base{
         if(!$validate->check($input)){
             return json(['meg'=>$validate->getError(),'code'=>1001]);
         }
-        $type = $input['type'];           //提现方式1支付宝2微信
+        $type = $input['type'];           //提现方式1微信2支付宝
         $money = $input['money'];
         $user = UserModel::get($this->userId);
-        if($type == 1){
-            if(empty($user['alipay'])){
-                return json(['msg'=>'请先绑定支付宝','code'=>1011]);
-            }
-        }else{
+      /*  if($type == 1){
             if(empty($user['openid'])){
                 return json(['msg'=>'请先绑定微信','code'=>1012]);
             }
-        }
+        }else{*/
+            if(empty($user['alipay'])){
+                return json(['msg'=>'请先绑定支付宝','code'=>1011]);
+            }
+//        }
         if(md5($input['password']) !== $user['two_password']){
             return json(['msg'=>'支付密码错误','code'=>1006]);
         }

@@ -48,10 +48,10 @@ class Rebate extends Controller
         $this->matchB = $conf['actB'];                    //匹配报单中心奖励
         $this->matchC = $conf['actC'];                    //匹配报单中心奖励
 
-        $this->area_ach = bcmul($conf['area_ach'],0.01);            //县级报单中心业绩比例
-        $this->city_ach = bcmul($conf['city_ach'],0.01);            //市级报单中心业绩比例
-        $this->province_ach = bcmul($conf['province_ach'],0.01);    //省级报单中心业绩比例
-        $this->head_ach = bcmul($conf['head_ach'],0.01);    //总部报单中心
+        $this->area_ach = $conf['area_ach']*0.01;            //县级报单中心业绩比例
+        $this->city_ach = $conf['city_ach']*0.01;            //市级报单中心业绩比例
+        $this->province_ach = $conf['province_ach']*0.01;    //省级报单中心业绩比例
+        $this->head_ach = $conf['head_ach']*0.01;    //总部报单中心
 //        $this->manage = $conf['manage'];    //管理奖
     }
 
@@ -147,8 +147,9 @@ class Rebate extends Controller
      */
     public function superRebate($userId, $prentId = '', $voucherId)
     {
+        $user = UserModel::get($userId);
         if (empty($prentId)) {
-            $prentId = db('users')->where('id', $userId)->value('pid');
+            $prentId = $user['pid'];
         }
         //用户没有上级
         if (empty($prentId)) {
@@ -162,6 +163,9 @@ class Rebate extends Controller
         //拼接直推奖金额
         $direct = 'direct' . $packageType;
 
+        if(!strstr($user['pusers']['level'],$packageType)){          //上级未购买此套餐,无法获得直推奖
+            return false;
+        }
         Db::startTrans();
         try {
             //上级余额增加
@@ -172,8 +176,9 @@ class Rebate extends Controller
                 'total_price' => ['exp', 'total_price + ' . $this->$direct]
             ];
             Db::table('sql_users')->update($prentList);
-
-
+            //增加余额记录
+            $list = AccountModel::getAccountData($prentId, $this->$direct, '直推奖', 1, 1,$packageType, $userId,2);
+            AccountModel::create($list);
             //查看上级是否存在上级, 上二级冻结金额转化为余额  -- 指定套餐的直推奖
             $twoId = db('users')->where('id', $prentId)->value('pid');
             if ($twoId) {
@@ -191,7 +196,8 @@ class Rebate extends Controller
 
             //判断激活用户是否是上级第一个直推人,是的话就判断上级是否存在感恩奖
             $row = 'sql_row' . $packageType;
-            if ($prentId != 1 && db('users')->where(['pid' => $prentId, 'class' => ['GT', 1]])->count() < 2) {      //判断是否是上级用户第一个直推人
+            if ($prentId != 1 && db('users')->where(['pid' => $prentId, 'class' => ['GT', 1]])->count() < 2) {
+                //判断是否是上级用户第一个直推人
                 $selfCount = Db::table($row)->where(['user_id' => $prentId, 'position' => 1])->select();   //获取上级用户出局情况,(是否获得感恩奖)
                 if ($selfCount) {    //若已获得感恩奖,则解冻获得的感恩奖
                     $list = [];
@@ -231,8 +237,7 @@ class Rebate extends Controller
             }
             Db::commit();
             return true;
-        } catch
-        (Exception $e) {
+        } catch(Exception $e) {
             Db::rollback();
             return false;
 //            return $e->getMessage();
@@ -241,13 +246,10 @@ class Rebate extends Controller
     }
 
     //成为合伙人进入公排
-    public function goQualifying($userId, $user_phone, $voucherId, $prentId = '')
+    public function goQualifying($userId, $user_phone, $voucherId, $prentId = '',$recast = '')
     {
         if (empty($prentId)) {
             $prentId = db('users')->where('id', $userId)->value('pid');
-        }
-        if (empty($prentId)) {
-            return false;
         }
         $voucher = Db::table('sql_voucher')->where('id', $voucherId)->find();
         if (empty($voucher)) {
@@ -263,7 +265,13 @@ class Rebate extends Controller
             $list = RowModel::getRowData($userId, $user_phone, $time, $position);
             $rowlist = Db::table($row)->insert($list);
         } else {
-            return false;                  //若上级7人小组满,则新建小组
+            if($recast == 1){
+                return false;                  //若上级7人小组满,则新建小组(复投)
+            }else{                                     //首次购买
+                $lastId = Db::table($row)->order('time','desc')->value('time');
+                $rowData = RowModel::getRowData($userId,$user_phone,$lastId+1,1);
+                Db::table($row)->insert($rowData);
+            }
         }
         //用户进入公排,第一名获得3000奖励
         $rows = Db::table($row)

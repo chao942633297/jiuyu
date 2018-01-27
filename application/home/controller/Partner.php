@@ -310,7 +310,7 @@ class Partner extends Base
     public function applyCenter(Request $request)
     {
         if(db('apply')->where(['uid'=>$this->userId,'status'=>1])->count() >= 1){
-            return json(['msg'=>'您已提交申请,请等待后台处理','code'=>1001]);
+            return json(['msg'=>'您已提交申请,请勿重复提交','code'=>1001]);
         }
         if(db('users')->where(['id'=>$this->userId])->value('class') < 2){
             return json(['msg'=>'您还不是合伙人,暂无法申请','code'=>1001]);

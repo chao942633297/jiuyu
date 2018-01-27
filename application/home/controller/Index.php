@@ -2,6 +2,7 @@
 
 namespace app\home\controller;
 
+use app\backsystem\model\ApplyModel;
 use app\backsystem\model\ClassModel;
 use app\backsystem\model\GoodsModel;
 use think\Controller;
@@ -82,6 +83,28 @@ class Index extends Controller
             $return[$key]['name'] = $val['class'];
         }
         return json(['data'=>$return,'msg'=>'查询成功','code'=>200]);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \think\response\Json
+     * 选择报单中心
+     */
+    public function selectAgent(Request $request){
+        $input = $request->post();
+        if(empty($input['province']) || empty($input['city']) || empty($input['area'])){
+            return json(['msg'=>'参数错误','code'=>1001]);
+        }
+        $agentId = getAgentId($input['province'],$input['city'],$input['area']);
+        $apply = new ApplyModel();
+        $serviceData = $apply->field('id,uid,name,phone,province,city,area')
+            ->where(['uid'=>['in',$agentId],'status'=>2])->select();
+        foreach($serviceData as $key=>$val){
+            $serviceData[$key]['headimgurl'] = $val['user']['headimgurl'];
+            unset($serviceData[$key]['user']);
+        }
+        return json(['data'=>$serviceData,'msg'=>'查询成功','code'=>200]);
     }
 
 

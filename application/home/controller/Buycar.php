@@ -5,7 +5,6 @@ namespace app\home\controller;
 use app\backsystem\model\AccountModel;
 use app\backsystem\model\GoodsModel;
 use app\backsystem\model\OrderModel;
-use app\backsystem\model\UserModel;
 use think\Controller;
 use think\Db;
 use think\Exception;
@@ -32,11 +31,11 @@ class Buycar extends Base
      */
     public function index(Request $request){
         //一个账号只能购买一辆车
-        $count = Db::table('sql_order')
+   /*     $count = Db::table('sql_order')
             ->where(['uid'=>$this->userId,'status'=>['EGT',2]])->count();
         if($count >= 1){
             return json(['msg'=>'一个账号只能购买一辆车','code'=>1001]);
-        }
+        }*/
         $carId = $request->param('carId');
         if(empty($carId)){
             $carId = session('home_car_id');
@@ -49,6 +48,7 @@ class Buycar extends Base
         $goods = GoodsModel::get($carId);
         $return['carName'] = $goods['name'];
         $return['carPrice'] = $goods['price'];
+        $return['carImg'] = $goods['img'];
         $return['carNumber'] = 1;
 
         if($request->has('addrId')){
@@ -57,7 +57,7 @@ class Buycar extends Base
             $where['uid'] = $this->userId;
         }
         $address = Db::table('sql_address')
-            ->field('consignee,phone,province,city,area,detail')
+            ->field('id,consignee,mobile,province,city,area,detail')
             ->where($where)->order('is_default','desc')->find();
         $return['balance'] = db('users')->where('id',$this->userId)->value('balance');
         return json(['data'=>['carDetail'=>$return,'addr'=>$address],'msg'=>'查询成功','code'=>200]);
@@ -108,7 +108,7 @@ class Buycar extends Base
             $data['good_name'] = $good['name'];
             $data['good_img'] = $good['img'];
             $data['good_price'] = $good['price'];
-            $data['status'] = 1;
+            $data['status'] = 2;
             $data['payment'] = 3;
             $data['created_at'] = date('YmdHis');
             $order= OrderModel::create($data);
@@ -121,7 +121,7 @@ class Buycar extends Base
             }else{
                 session('home_car_id',null);
                 Db::commit();
-                return json(['msg'=>'提交购车成功','code'=>200]);
+                return json(['data'=>$this->service_phone,'msg'=>'提交购车成功','code'=>200]);
             }
         }catch(Exception $e){
             Db::rollback();
@@ -230,7 +230,7 @@ class Buycar extends Base
             $orderData['status'] = 2;
             Db::table('sql_order')->update($orderData);
             Db::commit();
-            return json(['msg'=>'提交购车成功','code'=>200]);
+            return json(['data'=>$this->service_phone,'msg'=>'提交购车成功','code'=>200]);
         }catch(Exception $e){
             Db::rollback();
             return json(['msg'=>'余额不足,提车失败','code'=>1005]);

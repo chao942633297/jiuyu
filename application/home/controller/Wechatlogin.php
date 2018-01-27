@@ -70,7 +70,7 @@ class Wechatlogin extends Controller{
                 if($res){
                     return "<script> alert('绑定成功!');window.href='http://www.jiuyushangmao.com' </script>";
                 }
-                return json(['msg'=>'绑定失败','code'=>1002]);
+                return "<script> alert('绑定失败!');window.href='http://www.jiuyushangmao.com' </script>";
             }else{
                 return "<script> alert('用户已绑定微信!');window.href='http://www.jiuyushangmao.com' </script>";
             }
@@ -93,7 +93,7 @@ class Wechatlogin extends Controller{
                     $login->saveUserRelation($userId,$pid);
                 }
             }
-            $url = 'http://admin.jiuyushangmao.com/home/Login/webRegister?prentId='.$unique;
+            $url = config('back_domain').'/home/Login/webRegister?prentId='.$unique;
             header('Location:'.$url);
         }
 

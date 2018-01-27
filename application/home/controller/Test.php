@@ -8,6 +8,7 @@
 namespace app\home\controller;
 use app\backsystem\model\CodeModel;
 use app\backsystem\model\RowModel;
+use app\backsystem\model\VoucherModel;
 use think\Controller;
 use think\Db;
 use think\Exception;
@@ -53,8 +54,15 @@ class Test extends Validate{
 
 
     public function test(){
-      $alipay = new Alipay();
-        $alipay->webPay();
+        $voucherId = 156;
+        $voucherData = VoucherModel::get($voucherId);
+        if(db('config')->where('id',1)->value('switch') == 1){
+            $rebate = new Rebate();
+            $rebate->superRebate($voucherData['user']['id'],$voucherData['user']['pid'],$voucherData['id']);  //返佣- 直推奖
+            $rebate->goQualifying($voucherData['user']['id'],$voucherData['user']['phone'],$voucherData['id']);
+        }else{
+            echo 2;
+        }
 
     }
 

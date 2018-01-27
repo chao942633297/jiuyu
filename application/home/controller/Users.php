@@ -386,6 +386,19 @@ class Users extends Base
     }
 
 
+    /**
+     * @return \think\response\Json
+     * 判断用户是否可生成二维码
+     */
+    public function puckQcode(){
+        $user = UserModel::get($this->userId);
+        if ($user['class'] < 2) {
+            return json(['msg' => '需成为代理合伙人后,才生成推广二维码', 'code' => 1001]);
+        }
+        return json(['msg' => '成功', 'code' => 200]);
+    }
+
+
     //我的二维码
     public function myQcode()
     {
