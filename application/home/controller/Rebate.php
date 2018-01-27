@@ -68,9 +68,9 @@ class Rebate extends Controller
         if(empty($voucherId)){
             return false;
         }
+
         $voucher = Db::table('sql_voucher')->where('id',$voucherId)->find();
         $match = 'match'.$voucher['type'];          //套餐对应报单中心奖励
-
 
 
         $achievement = 0;
@@ -123,7 +123,8 @@ class Rebate extends Controller
                 'total_price' => ['exp', 'total_price + ' . $money],
                 'id' => $actId
             ];
-            db('users')->update($newList);
+            $user = new UserModel();
+            $user->saveAll($newList);
             //增加余额记录
             $lists[$i] = AccountModel::getAccountData($actId, $this->$match, '激活奖', 8, 1,$voucher['type'], $userId);
             $i ++;

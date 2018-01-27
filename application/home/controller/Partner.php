@@ -90,8 +90,8 @@ class Partner extends Base
         if($voucherData['activation']['balance'] < $voucherData['money']){
             return json(['msg'=>'余额不足,暂不能激活','code'=>1002]);
         }
-
-       if(!isset($input['password']) || md5($input['password']) !== $voucherData['activation']['two_password']){
+        $password = $request->param('password');
+       if(empty($password) || md5($password) !== $voucherData['activation']['two_password']){
             return json(['msg'=>'支付密码不正确','code'=>1002]);
         }
         Db::startTrans();
@@ -125,7 +125,7 @@ class Partner extends Base
                 $rebate->goQualifying($voucherData['user']['id'],$voucherData['user']['phone'],$voucherData['id']);
             }
             Db::commit();
-            return json(['msg'=>'激活成功','code'=>200]);
+            return json(['data'=>$voucherData['money'],'msg'=>'激活成功','code'=>200]);
         }catch(Exception $e){
             Db::rollback();
             return json(['msg'=>$e->getMessage(),'code'=>1003]);
@@ -205,7 +205,17 @@ class Partner extends Base
     {
         $user = UserModel::get($this->userId);
         $balance = $user['balance'];
-        $packageId = [1,2,3];
+        $packageArr = [
+            '1' => 'A',
+            '2' => 'B',
+            '3' => 'C'
+        ];
+        $packageId = [];
+        foreach($packageArr as $key=>$val){
+            if(strstr($user['level'],$val)){
+                $packageId[] = $key;
+            }
+        }
         $package = Db::table('sql_goods')
             ->field('id,price')
             ->whereIn('id',$packageId)->select();
@@ -240,12 +250,15 @@ class Partner extends Base
         if($input['phone'] != $codeData['phone'] && $code != $codeData['code']){
             return json(['msg'=>'验证码不正确','code'=>1002]);
         }
-     /*   if(strtotime($codeData['created_at']) < $time ){
+        if(strtotime($codeData['created_at']) < $time ){
             return json(['msg'=>'验证码已失效,请重新获取','code'=>1010]);
-        }*/
+        }
         $user = UserModel::get($this->userId);
         if(!isset($input['password']) || md5($input['password']) !== $user['two_password']){
             return json(['msg'=>'支付密码不正确','code'=>1003]);
+        }
+        if(!strstr($user['level'],$package['unit'])){
+            return json(['msg'=>'购买错误','code'=>1003]);
         }
         if($user['balance'] < $package['price']){
             return json(['msg'=>'余额不足','code'=>1002]);
@@ -267,6 +280,7 @@ class Partner extends Base
             $userData['password'] = md5($falg['password']);
             $userData['two_password'] = md5($falg['two_password']);
             $userData['class'] = 2;
+            $userData['level'] = $package['unit'];
             $userData['created_at'] = date('YmdHis');
             $newUser = UserModel::create($userData);
 
@@ -274,7 +288,7 @@ class Partner extends Base
             $list = AccountModel::getAccountData($this->userId,$package['price'],'注册新合伙人',8,2,$package['unit'],$newUser['id']);
             AccountModel::create($list);
 
-            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],$input['consignee'],$input['mobile'],$input['province'],$input['city'],$input['area'],$input['detail']);
+            $list = VoucherModel::getVoucherData($newUser['id'],$this->userId,$package['price'],$package['unit'],3,$package['name'],$package['price'],$package['img'],$input['consignee'],$input['mobile'],$input['province'],$input['city'],$input['area'],$input['detail'],2);
             $voucher = VoucherModel::create($list);
 
             //激活合伙人-报单中心返佣(及余额记录)

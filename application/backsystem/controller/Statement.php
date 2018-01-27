@@ -12,6 +12,8 @@ use app\backsystem\model\VoucherModel;
 use app\backsystem\model\WithdrawModel;
 use app\backsystem\model\UserModel;
 use app\backsystem\model\RechargeModel;
+use think\Db;
+use think\Request;
 
 class Statement extends Base{
     const USER = 'users';//用户表
@@ -69,6 +71,10 @@ class Statement extends Base{
                     $query->where('uid','in',$uids);
                 }
             });
+            $send_type = [
+                '1' => '未发货',
+                '2' => '已发货'
+            ];
             foreach($selectResult as $key=>$vo){
                 if($param['excel'] != 'to_excel'){
                     $selectResult[$key]['id'] = $vo['id'];
@@ -81,6 +87,17 @@ class Statement extends Base{
                 $selectResult[$key]['act_nickname'] = $vo['activation']['nickname'];
                 $selectResult[$key]['act_phone'] = $vo['activation']['phone'];
                 $selectResult[$key]['create_at'] = $vo['created_at'];
+                $operate = [];
+                if($vo['status'] == 2){
+                    if($vo['send_type'] == 1){
+                        $operate = [
+                            '去发货' => "javascript:sendGoods('".$vo['id']."')",
+                        ];
+                    }
+                }
+                $selectResult[$key]['operate'] = showOperate($operate);
+                $selectResult[$key]['status'] = config('voucher_status')[$vo['status']];
+                $selectResult[$key]['send_type'] = $send_type[$vo['send_type']];
             }
             if(isset($param['excel']) && $param['excel'] == 'to_excel'){    //导出到excel
                 $content = [];
@@ -110,4 +127,22 @@ class Statement extends Base{
 
         return $this->fetch();
     }
+
+
+    /**
+     * 发货
+     */
+    public function sendGoods(Request $request){
+        $input = $request->get();
+        if(empty($input['id']) || empty($input['express_code'])){
+            return json(['msg'=>'参数错误','code'=>1001]);
+        }
+        $res = Db::table('sql_voucher')->where('id',$input['id'])->update(['express_code'=>$input['express_code'],'send_type'=>2]);
+        if($res){
+            return json(['msg'=>'发货成功','code'=>200]);
+        }
+        return json(['msg'=>'发货失败','code'=>1002]);
+    }
+
+
 }

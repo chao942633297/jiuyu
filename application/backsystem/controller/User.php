@@ -339,10 +339,10 @@ class User extends Base{
             $where['city'] = $data['city'];
             $where['level'] = 4;
         }
- /*       if ($data['level'] == 3) {                  //县级可以有多个报单中心
+        if ($data['level'] == 3) {                  //县级可以有多个报单中心
             $where['area'] = $data['area'];
             $where['level'] = 3;
-        }*/
+        }
         $where['status'] =2;
         $count = db('apply')->where($where)->count();
         if($count >= 1){

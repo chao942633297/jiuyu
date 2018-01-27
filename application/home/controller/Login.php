@@ -87,7 +87,7 @@ class Login extends Controller
             return json(['msg' => $validate->getError(), 'code' => 1001]);
         }
         //TODO:获取验证码
-        $code = $input['code'];             //判断注册验证码
+   /*     $code = $input['code'];             //判断注册验证码
         $codeData = db('code')->where(['phone' => $input['phone'], 'type' => 1, 'status' => 1])->order('id', 'desc')->find();
         if ($input['phone'] != $codeData['phone'] || $code != $codeData['code']) {
             return json(['msg' => '验证码不正确', 'code' => 1002]);
@@ -95,7 +95,7 @@ class Login extends Controller
         $time = time() - 600;
         if (strtotime($codeData['created_at']) < $time) {
             return json(['msg' => '验证码已失效,请重新获取', 'code' => 1010]);
-        }
+        }*/
         Db::startTrans();
         try {
             //增加用户
@@ -133,7 +133,7 @@ class Login extends Controller
             $result = $msg->sendMsg($userData['phone'],4,$falg);
             if ($result) {
                 //修改验证码使用状态
-                Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);
+//                Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);
                 session('replay_unique',null);
                 session('replay_openid',null);
                 Db::commit();

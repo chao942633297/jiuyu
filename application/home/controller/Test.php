@@ -54,16 +54,13 @@ class Test extends Validate{
 
 
     public function test(){
-        $voucherId = 156;
-        $voucherData = VoucherModel::get($voucherId);
-        if(db('config')->where('id',1)->value('switch') == 1){
-            $rebate = new Rebate();
-            $rebate->superRebate($voucherData['user']['id'],$voucherData['user']['pid'],$voucherData['id']);  //返佣- 直推奖
-            $rebate->goQualifying($voucherData['user']['id'],$voucherData['user']['phone'],$voucherData['id']);
-        }else{
-            echo 2;
-        }
+        $voucherId = 159;
 
+            $rebate = new Rebate();
+//            $rebate->superRebate($voucherData['user']['id'],$voucherData['user']['pid'],$voucherData['id']);  //返佣- 直推奖
+
+        $res = $rebate->partnerRebate(128,129,167);
+        dump($res);
     }
 
     public function z($a){

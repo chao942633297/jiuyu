@@ -44,7 +44,7 @@ class Index extends Controller
             $user = Db::table('sql_users')->where('id',session('home_user_id'))->find();
             $allid = json_decode($user['notice_id'],true);
             $readNum = count($allid);
-            $totalCount = Db::table('sql_article')->count();
+            $totalCount = Db::table('sql_article')->where('type','系统公告')->count();
             $unreadNum = $totalCount - $readNum;
         }
         return json(['code'=>200,'goods'=>$goodInfo,'lunbo'=>$lunbo,'noticeNum'=>$unreadNum,'broadcast'=>$broadcast,'shopGoods'=>$shopGoods,'msg'=>'查询成功']);

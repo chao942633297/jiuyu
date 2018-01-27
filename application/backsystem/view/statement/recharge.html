@@ -60,19 +60,21 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="button" style="margin-top:5px" id="search"><strong>搜 索</strong>
+                        <button class="btn btn-primary" type="button" style="margin-top:5px" id="search"><strong>搜
+                            索</strong>
                         </button>
                     </div>
                     <div class="form-group">
                         <button class="btn btn-primary" type="button" style="margin-top:5px" id="to_excel"><strong>导出到Excel</strong>
                         </button>
-                        <a href="/uploads/file.xlsx" download="充值表.xlsx" id="download_excel" style="display:none;"><p>下载excel</p></a>
+                        <a href="/uploads/file.xlsx" download="充值表.xlsx" id="download_excel" style="display:none;"><p>
+                            下载excel</p></a>
                     </div>
                 </div>
             </form>
             <!--搜索框结束-->
             <!--<div class="form-group clearfix col-sm-1">-->
-                <!--<a href="./userAdd"><button class="btn btn-outline btn-primary" type="button">添加用户</button></a>-->
+            <!--<a href="./userAdd"><button class="btn btn-outline btn-primary" type="button">添加用户</button></a>-->
             <!--</div>-->
             <div class="hr-line-dashed"></div>
 
@@ -90,6 +92,9 @@
                         <th data-field="act_nickname">激活人昵称</th>
                         <th data-field="act_phone">激活人手机号</th>
                         <th data-field="create_at">下单时间</th>
+                        <th data-field="status">激活状态</th>
+                        <th data-field="send_type">发货状态</th>
+                        <th data-field="operate">操作</th>
                         </thead>
                     </table>
                 </div>
@@ -98,7 +103,23 @@
         </div>
     </div>
 </div>
-
+<!--确认 发货-->
+<div class="ibox-content" id="ibox-content" style="display:none;">
+    <form class="form-horizontal m-t">
+        <input type="hidden" id="voucherId">
+        <div class="form-group">
+            <label class="col-sm-4 control-label">请填写快递单号:</label>
+            <div class="input-group col-sm-5">
+                <input id="money" type="text" class="form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-4 col-sm-offset-5">
+                <button class="btn btn-primary" type="button" id="button">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
 <!-- End Panel Other -->
 <script src="__JS__/jquery.min.js?v=2.1.4"></script>
 <script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
@@ -122,37 +143,37 @@
             striped: true,  //表格显示条纹
             pagination: true, //启动分页
             pageSize: 10,  //每页显示的记录数
-            pageNumber:1, //当前第几页
+            pageNumber: 1, //当前第几页
             pageList: [5, 10, 15, 20, 25],  //记录数可选列表
             sidePagination: "server", //表示服务端请求
             //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
             //设置为limit可以获取limit, offset, search, sort, order
-            queryParamsType : "undefined",
+            queryParamsType: "undefined",
             queryParams: function queryParams(params) {   //设置查询参数
                 var param = {
                     pageNumber: params.pageNumber,
                     pageSize: params.pageSize,
-                    name:$('#name').val(),
-                    phone:$('#phone').val(),
-                    buyer_name:$('#buyer_name').val(),
-                    buyer_phone:$('#buyer_phone').val(),
-                    type:$('#type').val(),
-                    start:$('#start').val(),
-                    end:$('#end').val(),
-                    excel:$('#excel').val(),
+                    name: $('#name').val(),
+                    phone: $('#phone').val(),
+                    buyer_name: $('#buyer_name').val(),
+                    buyer_phone: $('#buyer_phone').val(),
+                    type: $('#type').val(),
+                    start: $('#start').val(),
+                    end: $('#end').val(),
+                    excel: $('#excel').val(),
                 };
                 return param;
             },
-            onLoadSuccess: function(){  //加载成功时执行
-                layer.msg("加载成功", {time : 1000},function(){
-                    if($('#excel').val() == 'to_excel'){
+            onLoadSuccess: function () {  //加载成功时执行
+                layer.msg("加载成功", {time: 1000}, function () {
+                    if ($('#excel').val() == 'to_excel') {
                         $('#download_excel>p').click();
                         $('#excel').val('');
                         initTable();
                     }
                 });
             },
-            onLoadError: function(){  //加载失败时执行
+            onLoadError: function () {  //加载失败时执行
                 layer.msg("加载数据失败");
             }
         });
@@ -165,21 +186,53 @@
         //当点击查询按钮的时候执行
         $("#search").bind("click", initTable);
         //导出excel表格事件
-        $('#to_excel').bind('click',function(){
-           $('#excel').val('to_excel');
-           initTable();
+        $('#to_excel').bind('click', function () {
+            $('#excel').val('to_excel');
+            initTable();
         });
     });
-    layui.use('layer',function(){
-       layer = layui.layer;
+    layui.use('layer', function () {
+        layer = layui.layer;
     });
 
-    function toBig(id){
+    function toBig(id) {
         layer.photos({
-            photos: ".img"+id //格式见API文档手册页
-            ,anim: 1 //0-6的选择，指定弹出图片动画类型，默认随机
+            photos: ".img" + id //格式见API文档手册页
+            , anim: 1 //0-6的选择，指定弹出图片动画类型，默认随机
         });
     }
+
+    //解冻直推金额
+    function sendGoods(id) {
+        w = layer.open({
+            type: 1,
+            shade: false,
+            title: '为id是' + id + '的订单发货', //不显示标题
+            area: ['500px', '210px'],
+            content: $('#ibox-content'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            success: function () {
+                $('#voucherId').val(id);
+            }
+        });
+    }
+
+    $('#button').on('click',function(){
+        var id = $('#voucherId').val();
+        var money = $('#money').val();
+        $.getJSON('./sendGoods', {'id' : id,'express_code':money}, function(res){
+            if(res.code == 200){
+                layer.msg('发货成功',{
+                    time : '1000'
+                },function(){
+                    initTable();
+                    layer.close(w);
+                });
+
+            }else{
+                layer.alert(res.msg);
+            }
+        });
+    });
 
 </script>
 </body>

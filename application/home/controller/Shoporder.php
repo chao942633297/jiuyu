@@ -34,9 +34,9 @@ class Shoporder extends Base
 	/*
 	 *
 	 * @param limit 每页显示数量 默认10条
-	 * @param page 页码 
-	 * @param status 订单状态 
-	 * 
+	 * @param page 页码
+	 * @param status 订单状态
+	 *
 	 */
 	public function orderList()
 	{
@@ -57,7 +57,7 @@ class Shoporder extends Base
 		$where['is_delete'] = '0';
 		$where['uid'] = $this->userId;
 		$where['status'] = $status;
-		// 
+		//
 		if ($status > 0) {
 			$orderData = Db::name('shop_order')->where($where)->field('order_sn,amount,status')->select();
 			$ShopOrder = new ShopOrderModel();
@@ -86,7 +86,7 @@ class Shoporder extends Base
 				$orderData[$key]['order_sn'] = $value['spy_sn'];
 				$orderData[$key]['amount'] = $value['sur_price'];
 				$orderData[$key]['status'] = '0';
-				$orderData[$key]['lefttime'] = '1';  //前端参数  
+				$orderData[$key]['lefttime'] = '1';  //前端参数
 				$orderData[$key]['timeout'] = '1'; //前端参数
 				$orderData[$key]['endtime'] = date("Y-m-d H:i:s",strtotime($value['created_at'])+(3600*$goodsInfo['countdown'])); //结束时间
 				$orderData[$key]['goodsInfo'][0]['goodsnum'] = '1';
@@ -94,19 +94,14 @@ class Shoporder extends Base
 				$orderData[$key]['goodsInfo'][0]['name'] = $value['goodsname'];
 				$orderData[$key]['goodsInfo'][0]['imgurl'] = $value['goodsimgurl'];
 			}
-
-
-
 		}
-
-
 		return json(['code'=>1,'data'=>$orderData,'msg'=>'success']);
 	}
 
 
 	/**商城订单详情
 	 * @param orderid  根据订单id或者订单号查询
-	 * @param order_sn 
+	 * @param order_sn
 	 *
 	 */
 	public function orderDetail()
@@ -114,11 +109,11 @@ class Shoporder extends Base
 		if (!input('?param.orderid') && !input('?param.order_sn')) {
 			return json(['code'=>0,'data'=>'','msg'=>'参数异常']);
 		}
-		$orderid = input('param.orderid'); 
-		$order_sn = input('param.order_sn'); 
+		$orderid = input('param.orderid');
+		$order_sn = input('param.order_sn');
 		$orderInfo = [];
 		if (!empty($orderid)) {
-			$orderInfo = Db::name('shop_order')->where(['id'=>$orderid])->field('id,order_sn,buyer_name,buyer_phone,amount,province,city,area,detail,status,payment,waybill_no,created_at,remark')->find(); 
+			$orderInfo = Db::name('shop_order')->where(['id'=>$orderid])->field('id,order_sn,buyer_name,buyer_phone,amount,province,city,area,detail,status,payment,waybill_no,created_at,remark')->find();
 		}else{
 			$orderInfo = Db::name('shop_order')->where(['order_sn'=>$order_sn])->field('id,order_sn,buyer_name,buyer_phone,amount,province,city,area,detail,status,payment,waybill_no,created_at,remark')->find();
 		}
@@ -170,15 +165,15 @@ class Shoporder extends Base
 				$orderInfo['goodsinfo'][0]['price'] = $spyOrderInfo['sur_price'];
 				$orderInfo['goodsinfo'][0]['goodsnum'] = '1';
 			}else{
-				return json(['code'=>1,'data'=>'','msg'=>'未查到相关订单']);			
+				return json(['code'=>1,'data'=>'','msg'=>'未查到相关订单']);
 			}
 		}
-		
-		return json(['code'=>1,'data'=>$orderInfo,'msg'=>'success']);	
+
+		return json(['code'=>1,'data'=>$orderInfo,'msg'=>'success']);
 	}
 
 	/** 抢购中的订单详情
-	 * orderid 根据orderid 或者 spy_sn 
+	 * orderid 根据orderid 或者 spy_sn
 	 * spy_sn
 	 *
 	 */
@@ -188,31 +183,31 @@ class Shoporder extends Base
 		if (!input('?post.orderid') && !input('?post.spy_sn')) {
 			return json(['code'=>0,'data'=>'','msg'=>'参数异常']);
 		}
-		$orderid = input('post.orderid'); 
-		$spy_sn = input('post.spy_sn'); 
+		$orderid = input('post.orderid');
+		$spy_sn = input('post.spy_sn');
 		$orderInfo = [];
 		if (!empty($orderid)) {
-			$orderInfo = Db::name('shop_spying_goods')->where(['id'=>$orderid])->field('id,spy_sn,buyer_name,buyer_phone,province,city,area,detail,status,payment,created_at,goodsid')->find(); 
+			$orderInfo = Db::name('shop_spying_goods')->where(['id'=>$orderid])->field('id,spy_sn,buyer_name,buyer_phone,province,city,area,detail,status,payment,created_at,goodsid')->find();
 		}else{
 			$orderInfo = Db::name('shop_spying_goods')->where(['spy_sn'=>$spy_sn])->field('id,spy_sn,buyer_name,buyer_phone,province,city,area,detail,status,payment,created_at,goodsid')->find();
 		}
 
 		//抢购成功的商品信息 从success表中读取
 		if ($orderInfo['status'] == 3) {
-			$goodsInfo = Db::name('shop_spy_success')->where('spyingid',$orderInfo['id'])->field("*")->find(); 
+			$goodsInfo = Db::name('shop_spy_success')->where('spyingid',$orderInfo['id'])->field("*")->find();
 		}else{
-			$goodsInfo = Db::name('shop_goods')->where('id',$orderInfo['goodsid'])->field("name,price,imgurl,countdown")->find(); 
+			$goodsInfo = Db::name('shop_goods')->where('id',$orderInfo['goodsid'])->field("name,price,imgurl,countdown")->find();
 		}
 
 
 		$orderInfo['goodsinfo'] = $goodsInfo;
-		return json(['code'=>1,'data'=>$orderInfo,'msg'=>'success']);	
+		return json(['code'=>1,'data'=>$orderInfo,'msg'=>'success']);
 	}
 
-	
-	
+
+
 	/** 获取各个状态的订单数量
-	 *  
+	 *
 	 * 返回 data[0=>'抢购订单数量'，1=>'待付款'，2=>'待发货'，3=>'待收货',4=>'完成']
 	 */
 	public function orderCount()
@@ -228,19 +223,19 @@ class Shoporder extends Base
 		$where['status'] = '1';
 		$data[1] = Db::name('shop_order')->where($where)->count();  //待付款
 		$where['status'] = '2';
-		$data[2] = Db::name('shop_order')->where($where)->count();  //待发货 
+		$data[2] = Db::name('shop_order')->where($where)->count();  //待发货
 		$where['status'] = '3';
-		$data[3] = Db::name('shop_order')->where($where)->count();  //待收货 
+		$data[3] = Db::name('shop_order')->where($where)->count();  //待收货
 		$where['status'] = '4';
 		$data[4] = Db::name('shop_order')->where($where)->count();  //完成
-		return json(['code'=>1,'data'=>$data,'msg'=>'success']);	
+		return json(['code'=>1,'data'=>$data,'msg'=>'success']);
 	}
 
 	/**
 	 * 生成订单
-	 * 请求方式 
+	 * 请求方式
 	 * @param  商品信息 二维数组 goodsinfo array(array('goodsid'=>**,'goodsnum'=>**),array('goodsid'=>**,'goodsnum'=>**),)
-	 * @param 
+	 * @param
 	 */
 	public function orderAdd()
 	{
@@ -263,20 +258,20 @@ class Shoporder extends Base
 		    'buyer_phone'=>'手机号不能为空|请输入正确的手机号',
 		];
 
-		// $_POST['cartid'] = ['21','22']; 
-		// $_POST['province'] = '河南省'; 
-		// $_POST['city'] = '郑州市'; 
-		// $_POST['area'] = '金水区'; 
-		// $_POST['detail'] = '北三环中州大道963号康杰大酒店'; 
-		// $_POST['buyer_name'] = '王先生'; 
-		// $_POST['buyer_phone'] = '18236952689'; 
+		// $_POST['cartid'] = ['21','22'];
+		// $_POST['province'] = '河南省';
+		// $_POST['city'] = '郑州市';
+		// $_POST['area'] = '金水区';
+		// $_POST['detail'] = '北三环中州大道963号康杰大酒店';
+		// $_POST['buyer_name'] = '王先生';
+		// $_POST['buyer_phone'] = '18236952689';
 		// $_POST['goodsinfo'] = array(
 		// 	//商城区
 		// 	array('goodsid'=>31,'goodsnum'=>'1'),
 		// 	array('goodsid'=>35,'goodsnum'=>'3'),
-		// 	array('goodsid'=>37,'goodsnum'=>'1'),	
-		// 	array('goodsid'=>30,'goodsnum'=>'1'),	
-		// ); 
+		// 	array('goodsid'=>37,'goodsnum'=>'1'),
+		// 	array('goodsid'=>30,'goodsnum'=>'1'),
+		// );
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -301,7 +296,7 @@ class Shoporder extends Base
 
 		$cid = ''; //不同区的商品不能合并结算 套餐和商品不能合并结算
 		foreach ($goodsInfo as $key => $value) {
-			//查询商品库存 和 是否下架  
+			//查询商品库存 和 是否下架
 			$goodsInfo = Db::name('shop_goods')->where('id',$value['goodsid'])->field('name,num,is_under,cid')->find();
 			if ($goodsInfo['is_under'] == '1' || empty($goodsInfo)) {
 				return json(['code'=>0,'data'=>'','msg'=>$goodsInfo['name'].'商品已经下架,请重新下单！']);
@@ -316,7 +311,7 @@ class Shoporder extends Base
 				return json(['code'=>0,'data'=>'','msg'=>'请将窥探和商城分开下单！']);
 			}
 			$cid = $goodsInfo['cid'];
-			
+
 		}
 
 		$insertData['goodsinfo'] = $input['goodsinfo'];
@@ -339,8 +334,8 @@ class Shoporder extends Base
 
 	/**
 	 * 未支付订单 发起支付
-	 * 请求方式 
-	 * @param 
+	 * 请求方式
+	 * @param
 	 */
 	public function orderPay()
 	{
@@ -355,9 +350,9 @@ class Shoporder extends Base
 		    'payment.require'=>'支付方式不能为空',
 		];
 
-		// $_POST['order_sn'] = '201801121515718028447'; 
-		// $_POST['two_password'] = '123456'; 
-		// $_POST['payment'] = '3'; 
+		// $_POST['order_sn'] = '201801121515718028447';
+		// $_POST['two_password'] = '123456';
+		// $_POST['payment'] = '3';
 
 		$input = input('post.');
 		$validate = new Validate($rule,$msg);
@@ -376,22 +371,22 @@ class Shoporder extends Base
 		if ($orderData['status'] >= 2) {
 			return json(['msg'=>'订单已经支付过','code'=>0]);
 		}
-		
-		
+
+
 		// 支付方式 1:支付宝  2：微信 3：余额
 		if (input('post.payment') == 3) {
 			// 检查账户余额是否充足 根据订单号重新计算商品总额，防止商品价格变动产生的影响
 			$ShopOrder = new ShopOrderModel();
 			$sum = $ShopOrder->sumGoodsByordersn(input('post.order_sn')); // float 型
-			
+
 			if($sum > $user->balance){
 			    return json(['msg'=>'余额不足','code'=>0]);
 			}else if($sum <= 0){
-				//订单总金额小于0 
+				//订单总金额小于0
 			    return json(['msg'=>'订单金额错误','code'=>0]);
 			}
 
-			//扣除余额 修改订单状态status为2：已支付 
+			//扣除余额 修改订单状态status为2：已支付
 			Db::startTrans();
 			try{
 			    //扣除用户余额
@@ -405,10 +400,10 @@ class Shoporder extends Base
 			    $accountData['inc'] = 2;
 			    $accountData['type'] = 12;  // 扣币类型 12：商城订单支付
 			    $accountData['create_at'] = date('YmdHis');
-			    
+
 			    AccountModel::create($accountData);
 			    //更新订单状态  更新订单 详情信息 （商品单价等）
-			    Db::name('shop_order')->where('order_sn',input('post.order_sn'))->setField(['status'=>2,'amount'=>$sum,'payment'=>3]); 
+			    Db::name('shop_order')->where('order_sn',input('post.order_sn'))->setField(['status'=>2,'amount'=>$sum,'payment'=>3]);
 
         		$goodsinfo = Db::name('shop_order_detail')->where('order_sn',input('post.order_sn'))->select();
         		$newData = [];
@@ -422,14 +417,14 @@ class Shoporder extends Base
         		    Db::name('shop_goods')->where('id',$value['goodsid'])->setInc('hot',$value['goodsnum']);
         		    Db::name('shop_goods')->where('id',$value['goodsid'])->setInc('realhot',$value['goodsnum']);
         		}
-			    
+
 			    Db::commit();
 			    return json(['msg'=>'支付成功','code'=>1]);
 			}catch(Exception $e){
 			    Db::rollback();
 			    return json(['msg'=>$e->getMessage(),'code'=>0]);
 			}
-			
+
 		}
 			
 	}
