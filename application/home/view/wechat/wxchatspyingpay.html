@@ -20,10 +20,10 @@
                      // alert(JSON.stringify(res));
                     // return;
                     if(result == 'get_brand_wcpay_request:ok'){
-                        var url = 'http://web.jiuyushangmao.com/success';
+                        var url = '{$url}';
                     }else{
                         alert('你已经点击了取消支付');
-                        var url = 'http://web.jiuyushangmao.com/order?status=1';
+                        var url = 'http://web.jiuyushangmao.com/spyGames';
                     }
                     window.location.href = url;
                 }

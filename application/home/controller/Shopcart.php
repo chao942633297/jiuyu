@@ -2,6 +2,8 @@
 
 namespace app\home\controller;
 use app\backsystem\model\UserModel;
+use app\backsystem\model\ShopSpyRecordModel;
+use app\home\controller\Shopspy;
 use think\Controller;
 use think\Request;
 use think\Validate;
@@ -159,11 +161,29 @@ class Shopcart extends Base
 		$reData['amount'] = 0;
 		$reData['goodsamount'] = 0;
 		foreach ($input as $key => $value) {
-			$goodsInfo[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field('is_under,cid,name as goodsname,imgurl as goodsimgurl,price,times')->find();
+			$goodsInfo[$key] = Db::name('shop_goods')->where('id',$value['goodsid'])->field('is_under,cid,name as goodsname,imgurl as goodsimgurl,price,times,once_price,sur_price,id')->find();
 			if ($goodsInfo[$key]['is_under'] == '1' || empty($goodsInfo[$key])) {
 				return json(['code'=>0,'data'=>'','msg'=>'部分商品已经下架,请重新下单']);
 			}
 			if ($goodsInfo[$key]['cid'] == 2) {
+				// // 抢购按钮包含一次窥探功能 价格减少一个单位   抢购失败返钱少返一个单位
+				// $spy = new Shopspy();
+				// $spy->accountAdd($userid, $goodsInfo[$key]['once_price'], '2', '13', $remark = "窥探消费");
+				// $insertData['userid'] = $userid;
+				// $insertData['username'] = $user->nickname;
+				// $insertData['once_price'] = $goodsInfo['once_price'];
+				// $insertData['spy_num'] = '1';
+				// $insertData['amount'] = $goodsInfo['once_price'];
+				// $insertData['sur_price'] = $goodsInfo['sur_price'] - $insertData['amount']; // 窥探后剩余价格
+				// $insertData['goodsid'] = $goodsInfo['id'];
+				// $insertData['goodsname'] = $goodsInfo['goodsname'];
+				// $insertData['goodsimgurl'] = $goodsInfo['goodsimgurl'];
+				// $insertData['times'] = $goodsInfo['times'];
+				// $insertData['payment'] = $input['payment'];
+				// $insertData['status'] = '3';
+				// $insertData['spy_sn'] = $spy->getSpyRecordSn();
+				// $ShopSpy = new ShopSpyRecordModel();
+				// $ShopSpy->addOneSpyRecord($insertData);
 				// 窥探商品需要从spy_record里面查询
 				$spyPrice = Db::name('shop_spy_record')->field('sur_price')->where(['goodsid'=>$value['goodsid'],'userid'=>$userid,'times'=>$goodsInfo[$key]['times']])->order('id desc')->limit('1')->find(); 
 				if (empty($spyPrice)) {
