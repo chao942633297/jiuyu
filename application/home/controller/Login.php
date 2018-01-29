@@ -56,9 +56,8 @@ class Login extends Controller
                 ->value('phone');
         }
         if(session('replay_openid')){
-            $phone = Db::table('sql_users')
-                ->where('openid',session('replay_openid'))
-                ->value('phone');
+            $user = UserModel::get(['openid'=>session('replay_openid')]);
+            $phone = $user['pusers']['phone'];
         }
         return json(['data'=>$phone,'msg'=>'查询成功','code'=>200]);
     }
@@ -130,7 +129,8 @@ class Login extends Controller
             }
             //TODO:发送短信,告知用户账号密码
             $msg = new MsgCode();
-            $result = $msg->sendMsg($userData['phone'],4,$falg);
+   //         $result = $msg->sendMsg($userData['phone'],4,$falg);
+            $result = true;
             if ($result) {
                 //修改验证码使用状态
 //                Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);

@@ -288,6 +288,7 @@ class Rebate extends Controller
             AccountModel::create($list);
         }
         //判断第七名进入公排
+
         if (isset($rowlist) && count($rows) == 7) {
             $this->reCast($rows, $voucherId);
         }
@@ -378,9 +379,7 @@ class Rebate extends Controller
                 $list = AccountModel::getAccountData($user['pid'], $this->$direct, '复投直推奖', 1, 1,$voucher['type'], $user['id'], '', $status);
                 AccountModel::create($list);
             }
-
-            $last = db('row')->order('time', 'desc')->value('time');
-
+            $last = Db::table($row)->order('time', 'desc')->value('time');
             /*====================第二名带着下两级公排================*/
             $twoData[0] = RowModel::getRowData($rows[1]['user_id'], $rows[1]['user_phone'], $last + 1, 1);
             $twoData[1] = RowModel::getRowData($rows[3]['user_id'], $rows[3]['user_phone'], $last + 1, 2);

@@ -72,7 +72,7 @@ class Rowc extends Base{
         Db::startTrans();
         try{
             $list = RowModel::getRowData($user['id'],$user['phone'],$input['time'],$input['position']);
-            Db::table('sql_rowC')->update($list);
+            Db::table('sql_rowC')->insert($list);
             //用户进入公排,第一名获得3000感恩奖,奖励
             $row = Db::table('sql_rowC')
                 ->field('id,user_id,user_phone,time,position')

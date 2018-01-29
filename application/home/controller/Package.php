@@ -151,21 +151,20 @@ class Package extends Controller
 			return json(['msg'=>'您已经购买过次套餐,暂不能购买','code'=>1002]);
 		}
 		$file = $request->file('voucher');
-		$data = [];
+		$img = '';
 		if(isset($file)){
 			$imgurl = File::upload($file);
-			$data['img'] = $imgurl->getData()['data'];
+			$img = $imgurl->getData()['data'];
 		}else{
 			return json(['msg'=>'支付凭证不能为空','code'=>1001]);
 		}
-
  		//获取收货地址,省,市,区/县
 		$address = Db::table('sql_address')
 			->field('id,consignee,mobile,province,city,area,detail')
 			->where('id',$addrId)->find();
-		$list = VoucherModel::getVoucherData($this->userId,$prentId,$package['price'],$package['unit'],$type,$package['name'],$package['price'],$package['img'],$address['consignee'],$address['mobile'],$address['province'],$address['city'],$address['area'],$address['detail']);
+		$list = VoucherModel::getVoucherData($this->userId,$prentId,$package['price'],$img,$package['unit'],$type,$package['name'],$package['price'],$package['img'],$address['consignee'],$address['mobile'],$address['province'],$address['city'],$address['area'],$address['detail']);
 		$res = VoucherModel::create($list);
-		if(empty($res['package_img'])){
+		if(empty($res['img'])){
 			VoucherModel::get($res['id'])->delete();
 			return json(['msg'=>'提交失败','code'=>1001]);
 		}

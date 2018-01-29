@@ -108,7 +108,7 @@ class Buycar extends Base
             $data['good_name'] = $good['name'];
             $data['good_img'] = $good['img'];
             $data['good_price'] = $good['price'];
-            $data['status'] = 2;
+            $data['status'] = 1;
             $data['payment'] = 3;
             $data['created_at'] = date('YmdHis');
             $order= OrderModel::create($data);
@@ -134,10 +134,10 @@ class Buycar extends Base
      * @param Request $request
      * @return \think\response\Json
      * 我的订单-购车订单
-     * 传入status  1代付款2待提车3已完成
+     * 传入status  0代付款1待提车2已完成
      */
     public function myOrder(Request $request){
-        $status = $request->param('status',1);
+        $status = $request->param('status',0);
         $carOrderData = Db::table('sql_order')
             ->field('id,order_sn,good_name,good_price,good_img,price')
             ->where(['uid'=>$this->userId,'status'=>$status])

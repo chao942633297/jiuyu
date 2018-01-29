@@ -9,14 +9,17 @@ namespace app\home\controller;
 use app\backsystem\model\CodeModel;
 use app\backsystem\model\RowModel;
 use app\backsystem\model\VoucherModel;
+use Service\Wechat;
 use think\Controller;
 use think\Db;
 use think\Exception;
 use think\Log;
 use think\Request;
 use think\Validate;
+use wechatH5\WxPayConf_pub;
 
-
+vendor('wechatH5.WxMainMethod');
+vendor('wechatH5.WxPayConf_pub');
 class Test extends Validate{
     #判断微信
     public function ww(){
@@ -35,8 +38,10 @@ class Test extends Validate{
 
 
     public function index(Request $request){
-        $uid = $request->param('uid');
-        session('home_user_id',$uid);
+        $fourId = [
+           128,129,129,136
+        ];
+        db('account')->where(['uid' =>1, 'type' => 2, 'from_uid' => ['in', $fourId], 'status' => 1])->update(['status' => 2]);
     }
 
 
@@ -54,13 +59,11 @@ class Test extends Validate{
 
 
     public function test(){
-        $voucherId = 159;
-
-            $rebate = new Rebate();
-//            $rebate->superRebate($voucherData['user']['id'],$voucherData['user']['pid'],$voucherData['id']);  //返佣- 直推奖
-
-        $res = $rebate->partnerRebate(128,129,167);
-        dump($res);
+        $openid = 'oknGV1fCoVZ9wnxYlZhctYPUr8cw';
+        $wechat_config = new WxPayConf_pub();
+        $wechat = new Wechat($wechat_config);
+        $userInfo = $wechat->getUserInfo($openid);
+        dump($userInfo);
     }
 
     public function z($a){

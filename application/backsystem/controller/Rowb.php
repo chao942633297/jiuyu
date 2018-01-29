@@ -76,7 +76,7 @@ class Rowb extends Base{
         Db::startTrans();
         try{
             $list = RowModel::getRowData($user['id'],$user['phone'],$input['time'],$input['position']);
-            Db::table('sql_rowB')->update($list);
+            Db::table('sql_rowB')->insert($list);
             //用户进入公排,第一名获得3000感恩奖,奖励
          /*   $row = RowModel::all(function($query)use($input){
                 $query->order('id','asc');

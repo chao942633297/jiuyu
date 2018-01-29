@@ -280,7 +280,7 @@ class User extends Base{
                 $query->limit($offset,$limit);
             });
             $level = config('user_class');
-            $status = config('Withdraw_status');
+            $status = config('voucher_status');
             foreach($selectResult as $key=>$vo){
                 $selectResult[$key]['user_name'] = $vo['user']['nickname'];
                 $selectResult[$key]['user_phone'] = $vo['user']['phone'];

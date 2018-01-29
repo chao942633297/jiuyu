@@ -53,7 +53,7 @@ class Notify extends Controller
     public function aliPayNotify()
     {
         $arr = $_POST;
-//        $this->log_result('ali_notify.log', json_encode($arr));
+        $this->log_result('ali_notify.log', json_encode($arr));
         $config = \vendor\AliPay\Config::config();
         $alipayService = new AlipayTradeService($config);
         $result = $alipayService->check($arr);
