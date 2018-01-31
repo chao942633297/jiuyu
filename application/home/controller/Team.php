@@ -34,14 +34,13 @@ class Team extends Base{
             $query->order('id','desc');
         });
         $return = [];
-        $key = 0;
+        $totalNum = Db::table('sql_user_relation')->where('pid',$this->userId)->count();
         foreach($allUser as $key=>$val){
             $return[$key]['nickname'] = $val['user']['nickname'];
             $return[$key]['phone'] = $val['user']['phone'];
             $return[$key]['headimgurl'] = $val['user']['headimgurl'];
             $return[$key]['created_at'] = $val['user']['created_at'];
         }
-        $totalNum = $key + 1;
         return json(['data'=>['return'=>$return,'totalNum'=>$totalNum],'msg'=>'查询成功','code'=>200]);
     }
 

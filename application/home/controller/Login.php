@@ -75,15 +75,16 @@ class Login extends Controller
     public function actRegister(Request $request)
     {
         $input = $request->post();
-        $prentPhone = isset($input['prentPhone'])? $input['prentPhone'] : 0;
         $where = [];
-        if($prentPhone != 0){
-            $where['phone'] = $prentPhone;
-        }
-        $prentId = Db::table('sql_users')->where($where)->value('id');
         $validate = Loader::validate('Users');
         if (!$validate->scene('register')->check($input)) {
             return json(['msg' => $validate->getError(), 'code' => 1001]);
+        }
+        $prentPhone = isset($input['prentPhone'])? $input['prentPhone'] : 0;
+        $prentId = 0;
+        if($prentPhone != 0){
+            $where['phone'] = $prentPhone;
+            $prentId = Db::table('sql_users')->where($where)->value('id');
         }
         //TODO:获取验证码
    /*     $code = $input['code'];             //判断注册验证码
@@ -129,8 +130,7 @@ class Login extends Controller
             }
             //TODO:发送短信,告知用户账号密码
             $msg = new MsgCode();
-   //         $result = $msg->sendMsg($userData['phone'],4,$falg);
-            $result = true;
+            $result = $msg->sendMsg($userData['phone'],4,$falg);
             if ($result) {
                 //修改验证码使用状态
 //                Db::table('sql_code')->where('id',$codeData['id'])->update(['status'=>2]);

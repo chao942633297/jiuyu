@@ -40,11 +40,11 @@ class Wxpay extends Controller
                 $code = $_GET['code'];
                 $jsApi->setCode($code);
                 $openid = $jsApi->getOpenId();
+                $orderData = ShopOrderModel::get($orderId);
             }
         }
-        $orderData = ShopOrderModel::get($orderId);
         $out_trade_no = $orderData['order_sn'];
-     //   $total_fee = (int)$orderData['amount'] * 100;
+        $total_fee = (int)$orderData['amount'] * 100;
         #TODO 测试金额
         $total_fee = 1;
 

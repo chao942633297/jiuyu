@@ -80,10 +80,11 @@ class Package extends Controller
 		$address = Db::table('sql_address')->where('id',$addrId)->find();
 		$agentId = getAgentId($address['province'],$address['city'],$address['area']);
 		$apply = new ApplyModel();
-		$serviceData = $apply->field('id,uid,name,phone,province,city,area')
+		$serviceData = $apply->field('uid,name,phone,province,city,area')
 			->where(['uid'=>['in',$agentId],'status'=>2])->select();
 		foreach($serviceData as $key=>$val){
 			$serviceData[$key]['headimgurl'] = $val['user']['headimgurl'];
+			$serviceData[$key]['id'] = $val['uid'];
 			unset($serviceData[$key]['user']);
 		}
 		return json(['data'=>$serviceData,'msg'=>'查询成功','code'=>200]);
@@ -137,7 +138,7 @@ class Package extends Controller
 		$packageId = $input['packageId'];
 		$addrId = $input['addrId'];
 		$type = $input['type'];           //1支付宝支付 2 微信支付
-		$prentId = Db::table('sql_apply')->where('id',$input['agentId'])->value('uid');   //报单中心id
+		$prentId = $input['agentId'];   //报单中心id
 		//获取套餐信息
 		$package = Db::table('sql_goods')
 			->field('name,price,img,unit')
@@ -148,10 +149,9 @@ class Package extends Controller
 		}
 		$user = UserModel::get($this->userId);
 		if(strpos($user['level'],$package['unit']) !== false){
-			return json(['msg'=>'您已经购买过次套餐,暂不能购买','code'=>1002]);
+			return json(['msg'=>'您已经购买过此套餐,暂不能购买','code'=>1002]);
 		}
 		$file = $request->file('voucher');
-		$img = '';
 		if(isset($file)){
 			$imgurl = File::upload($file);
 			$img = $imgurl->getData()['data'];
@@ -172,8 +172,6 @@ class Package extends Controller
 		$user = Db::table('sql_users')->field('truename,phone')->where('id',$res['actid'])->find();
 		return json(['data'=>$user,'msg'=>'提交成功','code'=>200]);
 	}
-
-
 
 
 

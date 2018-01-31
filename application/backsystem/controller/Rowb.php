@@ -90,11 +90,11 @@ class Rowb extends Base{
 
             if(in_array($input['position'],[4,5,6,7])){
                 UserModel::get($row[0]['user_id'])->setInc('frozen_price',self::$thanksB);
-                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksB, '感恩奖', 2, 1,'B', 1);
+                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksB, '感恩奖', 2, 1,'B', $user['id']);
                 AccountModel::create($list);
             }
             //若添加的是第七名
-            if(isset($res) && $res['position'] == 7){
+            if(isset($res) && $input['position'] == 7){
                 $rebate = new Rebate();
                 $result = $rebate->reCast($row,2);
                 Log::info($result);

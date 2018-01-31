@@ -48,7 +48,7 @@ class Account extends Base{
         $fundData = AccountModel::all(function($query)use($inc,$page,$list){
             $query->order('id','desc');
             $query->limit($page,$list);
-            $query->field('balance,package_type,status,type,withdraw_id,create_at,from_uid');
+            $query->field('balance,package_type,status,type,remark,withdraw_id,create_at,from_uid');
             $query->where(['inc'=>$inc,'uid'=>$this->userId]);
         });
         $return = [];
@@ -73,7 +73,7 @@ class Account extends Base{
             }else if($val['type'] == 7){
                 $return[$key]['message'] = '购买车辆';
             }else if($val['type'] == 8){
-                $return[$key]['message'] = '激活合伙人';
+                $return[$key]['message'] = $val['remark'];
             }else if($val['type'] == 9){
                 $return[$key]['message'] = '业绩分红';
             }else if($val['type'] == 10){
@@ -340,6 +340,16 @@ class Account extends Base{
         return json(['data'=>['return'=>$return,'totalPrice'=>$totalPrice],'msg'=>'查询成功','code'=>200]);
     }
 
+
+    /**
+     * 套餐记录
+     */
+    public function packageRecord(){
+        $voucherData = Db::table('sql_voucher')
+            ->field('package_name,package_price,package_img,status,send_type,express_code')
+            ->where('uid',$this->userId)->select();
+        return json(['data'=>$voucherData,'msg'=>'查询成功','code'=>200]);
+    }
 
 
 

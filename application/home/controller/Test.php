@@ -59,19 +59,19 @@ class Test extends Validate{
 
 
     public function test(){
-        $openid = 'oknGV1fCoVZ9wnxYlZhctYPUr8cw';
+        $openid = 'oknGV1WAwj3NNXPFkEGuR2oAofhk';
         $wechat_config = new WxPayConf_pub();
         $wechat = new Wechat($wechat_config);
         $userInfo = $wechat->getUserInfo($openid);
         dump($userInfo);
     }
 
-    public function z($a){
-        $a ++;
-        if($a < 5){
-            $this->z($a);
-        }
-        return $a;
+    public function z(){
+        $prentId = '';
+        $row = 'sql_rowA';
+        $rebate = new Rebate();
+        $res = $rebate->getPosition($prentId,$row);
+        dump($res);
     }
 
 

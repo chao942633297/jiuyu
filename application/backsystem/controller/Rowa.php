@@ -70,8 +70,6 @@ class Rowa extends Base{
         if(empty($user['pid']))
             return json(['msg'=>'该用户没有上级,不能进入公排','code'=>1004]);
 
-        $res = [];
-        $row = [];
         Db::startTrans();
         try{
             $list = RowModel::getRowData($user['id'],$user['phone'],$input['time'],$input['position']);
@@ -88,11 +86,11 @@ class Rowa extends Base{
                 ->order('id','asc')->select();
             if(in_array($input['position'],[4,5,6,7])){
                 UserModel::get($row[0]['user_id'])->setInc('frozen_price',self::$thanksA);
-                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksA, '感恩奖', 2, 1,'A', 1);
+                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksA, '感恩奖', 2, 1,'A', $user['id']);
                 AccountModel::create($list);
             }
             //若添加的是第七名
-            if(isset($res) && $res['position'] == 7){
+            if($res && $input['position'] == 7){
                 $rebate = new Rebate();
                 $result = $rebate->reCast($row,1);
                 Log::info($result);

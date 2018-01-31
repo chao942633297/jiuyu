@@ -10,6 +10,7 @@ namespace app\backsystem\controller;
 use app\backsystem\model\AccountModel;
 use app\backsystem\model\UserModel;
 use app\backsystem\model\ApplyModel;
+use app\home\Controller\Login;
 use app\home\controller\Rebate;
 use think\Db;
 use think\Exception;
@@ -114,6 +115,9 @@ class User extends Base{
                 $p = db('users')->where(['phone'=>$param['p_phone']])->find();
                 if($p){
                     $param['pid'] = $p['id'];
+                    Db::table('sql_user_relation')->where(['user_id'=>$param['id'],'pid'=>$p['id']])->delete();
+                    $login = new Login();
+                    $login->saveUserRelation($param['id'],$p['id']);
                 }else{
                     return json(['code'=>1001,'msg'=>'上级手机号不存在']);
                 }
@@ -345,7 +349,7 @@ class User extends Base{
         }
         $where['status'] =2;
         $count = db('apply')->where($where)->count();
-        if($count >= 1){
+        if($data['level'] != 3 && $count >= 1){
             return json(['msg'=>'该地区已有报单中心','code'=>1001]);
         }
         Db::startTrans();

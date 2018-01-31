@@ -61,6 +61,7 @@ class Wechatlogin extends Controller
     public function index(Request $request)
     {
         $unique = $request->param('unique');
+        $web_url = config('front_domain').'/';
         if (false !== strpos($unique, 'bind_')) {           //授权绑定openid
             $unique = substr($unique, 5);
             $user = Db::table('sql_users')
@@ -71,11 +72,11 @@ class Wechatlogin extends Controller
                 $user['openid'] = $result['openid'];
                 $res = Db::table('sql_users')->update($user);
                 if ($res) {
-                    return "<script> alert('绑定成功!');window.href='http://www.jiuyushangmao.com' </script>";
+                    return "<script> alert('绑定成功!');window.location.href=".$web_url." </script>";
                 }
-                return "<script> alert('绑定失败!');window.href='http://www.jiuyushangmao.com' </script>";
+                return "<script> alert('绑定失败!');window.location.href=".$web_url." </script>";
             } else {
-                return "<script> alert('用户已绑定微信!');window.href='http://www.jiuyushangmao.com' </script>";
+                return "<script> alert('用户已绑定');window.location.href=".$web_url." </script>";
             }
         } else {                                      //扫码注册绑定上下级
             if (is_weixin()) {
@@ -86,11 +87,17 @@ class Wechatlogin extends Controller
                     $userInfo = $wechat->getUserInfo($result['openid']);
                     $userInfo = json_decode($userInfo, true);
                     $pid = Db::table('sql_users')->where('unique', $result['unique'])->value('id');
+                    $nickname = '用户' . foo(4);
+                    $headimgurl = config('back_domain') . '/uploads/default.png';
+                    if(!empty($userInfo['nickname'])){           //用户关注公众号,获取用户信息
+                        $nickname = $userInfo['nickname'];
+                        $headimgurl = $userInfo['headimgurl'];
+                    }
                     $userId = Db::table('sql_users')->insertGetId([
                         'pid' => $pid,
                         'openid' => $result['openid'],
-                        'nickname' => $userInfo['nickname'],
-                        'headimgurl' => $userInfo['headimgurl']
+                        'nickname' => $nickname,
+                        'headimgurl' => $headimgurl
                     ]);
                     $login = new Login();
                     $login->saveUserRelation($userId, $pid);

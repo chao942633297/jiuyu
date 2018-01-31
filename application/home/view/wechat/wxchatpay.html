@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 </head>
 <body>
-<script type="text/javascript">
+    <script type="text/javascript">
     //调用微信JS api 支付
     function jsApiCall()
     {
@@ -17,19 +17,18 @@
                 function(res){
                     WeixinJSBridge.log(res.err_msg);
                     var result = res.err_msg;
-                     alert(JSON.stringify(res));
+                     // alert(JSON.stringify(res));
                     // return;
                     if(result == 'get_brand_wcpay_request:ok'){
-                        var url = 'http://www.oto178.com/pay_success.html';
+                        var url = 'http://web.jiuyushangmao.com/success';
                     }else{
                         alert('你已经点击了取消支付');
-                        var url = 'http://www.oto178.com/myOrder.html?type=1';
+                        var url = 'http://web.jiuyushangmao.com/order?status=1';
                     }
                     window.location.href = url;
                 }
         );
     }
-
     if (typeof WeixinJSBridge == "undefined"){
         if( document.addEventListener ){
             document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);

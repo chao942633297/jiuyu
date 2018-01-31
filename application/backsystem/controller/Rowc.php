@@ -80,11 +80,11 @@ class Rowc extends Base{
                 ->order('id','asc')->select();
             if(in_array($input['position'],[4,5,6,7])){
                 UserModel::get($row[0]['user_id'])->setInc('frozen_price',self::$thanksC);
-                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksC, '感恩奖', 2, 1,'B', 1);
+                $list = AccountModel::getAccountData($row[0]['user_id'], self::$thanksC, '感恩奖', 2, 1,'C', $user['id']);
                 AccountModel::create($list);
             }
             //若添加的是第七名
-            if(isset($res) && $res['position'] == 7){
+            if(isset($res) && $input['position'] == 7){
                 $rebate = new Rebate();
                 $result = $rebate->reCast($row,3);
                 Log::info($result);

@@ -81,8 +81,8 @@ class Rebate extends Controller
         }
         if($reword['class'] <= 4){            //市级报单中心,判断省级报单中心是否存在,并计算业绩
             $achievement = bcmul($voucher['money'],$this->city_ach);           //激活者业绩分红
-            $provinceId = Db::table('sql_voucher')
-                ->where(['province'=>$voucher['province'],'status'=>2])->value('uid');
+            $provinceId = Db::table('sql_apply')
+                ->where(['province'=>$voucher['province'],'level'=>5,'status'=>2])->value('uid');
             if(!empty($provinceId)){
                 $provinceAchievement = bcmul($voucher['money'],$this->province_ach);
                 if($provinceAchievement > 0){
@@ -100,7 +100,7 @@ class Rebate extends Controller
         if($reword['class'] == 3){          //县级报单中心,判断市级报单中心是否存在,并计算业绩
             $achievement = bcmul($voucher['money'],$this->area_ach);           //激活者业绩分红
             $cityId = Db::table('sql_apply')
-                ->where(['province'=>$voucher['province'],'city'=>$voucher['city'],'status'=>2])->value('uid');
+                ->where(['province'=>$voucher['province'],'city'=>$voucher['city'],'level'=>4,'status'=>2])->value('uid');
             if(!empty($cityId)){
                 $cityAchievement = bcmul($voucher['money'],$this->city_ach);
                 if($cityAchievement > 0){
@@ -303,16 +303,23 @@ class Rebate extends Controller
      */
     public function getPosition($prentId, $row)
     {
-        $parent = Db::table($row)->where('user_id', $prentId)
-            ->order('id', 'desc')->find();
-        if (empty($parent)) {
-            return false;
+        $time = Db::table($row)->where('user_id', $prentId)
+            ->order('id', 'desc')->value('time');
+        if (empty($time)) {
+            $groupUser = Db::table('sql_rowA')
+                ->field("count(time) as count,time")->group('time')
+                ->order('id','asc')->select();
+            foreach($groupUser as $key=>$val){
+                if($val['count'] < 7){
+                    $time = $val['time'];
+                    break;
+                }
+            }
         }
         $position = [1, 2, 3, 4, 5, 6, 7];
-        $rowPosition = Db::table($row)->where(['time' => $parent['time']])->order('position')->column('position');
+        $rowPosition = Db::table($row)->where(['time' => $time])->order('position')->column('position');
         $result = array_values(array_diff($position, $rowPosition)) ?: 0;
-
-        return ['time' => $parent['time'], 'position' => $result[0]];
+        return ['time' => $time, 'position' => $result[0]];
     }
 
 
@@ -354,7 +361,7 @@ class Rebate extends Controller
                 $lists[$i] = AccountModel::getAccountData($user['id'], $conversion, '冻结金额转化', 10, 1, $voucher['type'], $rows[6]['user_id']);
                 $i += 1;
             }
-            $lists[$i] = AccountModel::getAccountData($user['id'], $money, '复投激活合伙人', 8, 2, $voucher['type'], $user['id']);
+            $lists[$i] = AccountModel::getAccountData($user['id'], $money, '复投激活', 8, 2, $voucher['type'], $user['id']);
             db('account')->insertAll($lists);
             //第一名复投 扣除10000
             $user['frozen_price'] -= $money;
@@ -391,12 +398,14 @@ class Rebate extends Controller
             $threeData[2] = RowModel::getRowData($rows[6]['user_id'], $rows[6]['user_phone'], $last + 2, 3);
             Db::table($row)->insertAll($threeData);
             /*====================第一名复投,从新公排================*/
-            $result = $this->goQualifying($rows[0]['user_id'], $rows[0]['user_phone'], $voucherId);          //出局找上级,
-            if (!$result) {                                 //没有找到上级则从新公排
-                $rows[0]['time'] = $last + 3;
-                $rows[0]['created_at'] = date('YmdHis');
-                unset($rows[0]['id']);
-                Db::table($row)->insert($rows[0]);
+            if($rows[0]['user_id'] != 1 &&  Db::table($row)->where(['user_id'=>$rows[0]['user_id'],'position'=>1])->count() < 5){  //5轮出局
+                $result = $this->goQualifying($rows[0]['user_id'], $rows[0]['user_phone'], $voucherId);          //出局找上级,
+                if (!$result) {                                 //没有找到上级则从新公排
+                    $rows[0]['time'] = $last + 3;
+                    $rows[0]['created_at'] = date('YmdHis');
+                    unset($rows[0]['id']);
+                    Db::table($row)->insert($rows[0]);
+                }
             }
             Db::commit();
             return true;
