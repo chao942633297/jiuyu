@@ -24,9 +24,10 @@ class Index extends Base
         $all_money = db('order')->where(['status'=>['>',1]])->sum('price');
         $user_all_money = db('users')->sum('balance');                         //会员账户余额总计
         $day_order = db('order')->where(['status'=>['>',1]])->whereTime('created_at','today')->count();//今日订单统计
+        $day_order_shop = db('shop_order')->where(['status'=>['>',1]])->whereTime('created_at','today')->count();//今日订单统计
         $apply_day_partner = db('voucher')->whereTime('created_at','today')->count();   //今日申请合伙人统计
         $withdraw_true = db('withdraw')->where(['status'=>2])->sum('money');//已发放提现总额
-        $day_withdraw_money = db('withdraw')->whereTime('created_at','today')->sum('money');//今日提现总额
+        $day_withdraw_money = db('withdraw')->where('status',2)->whereTime('created_at','today')->sum('money');//今日提现总额
         $day_withdraw_user_nums = db('withdraw')->whereTime('created_at','today')->count();//今日提现人数
         $day_withdraw_false = db('withdraw')->where(['status'=>3])->whereTime('created_at','today')->count();//今日已驳回提现
         $one_user = db('users')->where(['class'=>1])->count();//未消费会员
@@ -39,6 +40,7 @@ class Index extends Base
             'all_user'=>$all_user,
             'all_money'=>$all_money,
             'day_order'=>$day_order,
+            'day_order_shop'=>$day_order_shop,
             'user_all_money'=>$user_all_money,
             'apply_day_partner'=>$apply_day_partner,
             'withdraw_true'=>$withdraw_true,
